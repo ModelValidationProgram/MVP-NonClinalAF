@@ -1,0 +1,17 @@
+20210312 Initiate Repo
+
+* transfered 20200224_Multi_m0.05_CG_2phen_2envi_5x10_coastline_keep.slim from repo MVP_prelim
+and renamed it Case1_CoreSimEstuary2TraitsWithPleiotropy.slim
+
+Plan:
+
+Part 1:
+- run this sim
+- run the R Markdown on the output, make sure it works
+- add neutral mutations with pyslim
+- run the RDA, see if can ID adaptive alleles
+- add OutFLANK code
+
+Part 2:
+- Expand this case to the 2 traits without pleiotropy
+- Expand this case to the 1 trait without pleiotropy

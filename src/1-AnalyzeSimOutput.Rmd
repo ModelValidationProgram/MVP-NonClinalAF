@@ -1,0 +1,635 @@
+---
+title: "1-AnalyzeSims"
+author: "KE Lotterhos"
+date: "3/12/2021"
+output: html_document
+---
+
+setwd("~/Documents/GitHub/MVP-NonClinalAF/src")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr"))
+
+for (i in 1:length(packages_needed)){
+  if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
+}
+
+#  require(ggplot2)}
+
+for (i in 1:length(packages_needed)){
+  library( packages_needed[i], character.only = TRUE)
+}
+```
+
+## 
+```{r load data, include=FALSE}
+path <- "../sim_outputs/"
+outpath <- "../results/"
+
+seed <- 2549986039929
+
+# Individual phenotype and fitness data in home pop
+indPhen_df <- read.table(paste0(path,seed,"_ind.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",8)))
+head(indPhen_df)
+
+# Local adaptation through time df
+LA_df <- read.table(paste0(path,seed,"_LA.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",10)),
+                    na.strings = "NAN")
+str(LA_df)
+head(LA_df)
+tail(LA_df)
+
+# Mutation stats for MAF > 0.01
+muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",6)))
+head(muts_df)
+
+info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
+                         colClasses = c("character", "character",
+                                        rep("numeric",13)))
+info
+
+# VCF file
+vcf <- read.vcfR(paste0(path,seed,"_VCF_causal.txt"))
+head(vcf)
+head(vcf@fix, 50)
+dim(vcf@fix)
+# example of how to find a specific mutation in the vcf file
+  muts_df[1,]
+  vcf@fix[grep(muts_df$mutID[1], vcf@fix[,"INFO"]),]
+```
+
+```{r, echo=FALSE, eval=FALSE}
+# Sanity check
+# the fitness column in the indPhen_df gives
+  # the fitnesses in the home population (subpop)
+# these should match the fitnesses in the same
+  # subpop in the common garden data frame
+# Individual common garden data
+indCG_df<- read.table(paste0(path,seed,"_fitnessmat_ind.txt"))
+dim(indCG_df)
+rownames(indCG_df) = c("popID", 1:(nrow(indCG_df)-1))
+head(indCG_df[,1:20])
+  # the first row in this is popID
+    head(indPhen_df)
+ head(indCG_df[,1:10])
+ cbind(round(indPhen_df$fitness[1:10],6), 
+            unlist(round(indCG_df[2,1:10],6)))
+  
+  # hard coding
+  cbind(round(indPhen_df$fitness[1990:2000],6), 
+            unlist(round(indCG_df[21,1990:2000],6)))
+  
+  cor(indPhen_df$fitness,indPhen_df$sal_opt)
+  cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
+
+```
+
+First, I want to figure out which individuals are migrants. Sampling in the simulation occurred after migration but before selection, so for analysis I want to make sure to only include individuals that would have survived to reproduce.
+
+My goal is to start with a dataset of 50 pops * 20 individuals = 1000 individuals, with approximately equal number of individuals per population.
+
+
+(Part 1) I tried to subset the data to individuals who have highest fitness in their home population, but this does not give equal numbers.
+
+(Part 2) Decision: sample 30 individuals from each population with probability equal to their fitness. This will make the sampling less artificial.
+
+Note that this sampling doesn't really make a huge difference in terms of the correlation between salinity and temperature.
+```{r find high fitness individuals}
+
+### Part 1 ####
+  # sum(indPhen_df[,"fitness"]>0.8)
+  # sum(indPhen_df[,"fitness"]>0.9)
+  # sum(indPhen_df[,"fitness"]>0.95)
+  # 
+  # subset <- which(indPhen_df[,"fitness"]>0.95)
+  # length(subset)
+  # table(indPhen_df[subset,"subpop"])
+  
+### Part 2 ####
+  npops <- length(levels(factor(indPhen_df$subpop)))
+  n = 10 # number of individual per pop
+  subset <- c()
+  for (i in 1:npops){
+    #set.seed(139982)
+    bob <- sample(indPhen_df$indID[indPhen_df$subpop==i], size = n,
+                  replace=FALSE, prob = indPhen_df$fitness[indPhen_df$subpop==i])
+    subset <- c(subset, bob)
+  }
+  length(subset)
+  head(subset)
+  indPhen_df$subset <- FALSE
+  indPhen_df$subset[sort((subset+1))] <- rep(TRUE, length(subset))
+    # add one to subset here because indID starts at 0
+  sum(indPhen_df$subset)
+  # visualize all individuals
+  boxplot(indPhen_df$fitness~indPhen_df$subpop, ylab = "fitness", xlab="pop", main="all", ylim=c(0,1))
+  
+  boxplot(indPhen_df$fitness[indPhen_df$subset]~indPhen_df$subpop[indPhen_df$subset], ylab = "fitness", xlab="pop", main="subset", ylim=c(0,1))
+  # looks good to me
+  
+  cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
+  cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
+  cor(indPhen_df$phen_temp,indPhen_df$temp_opt)
+```
+
+
+```{r show cool patterns of mutation}
+plot(muts_df$mutSalEffect, muts_df$mutTempEffect, ylim=c(-0.7, 0.7), xlim=c(-0.7,0.7))
+abline(h=0, col="grey")
+abline(v=0, col="grey")
+```
+
+
+```{r filter VCF and reformat}
+# This website has code I can recycle here
+# https://github.com/TestTheTests/TTT_RecombinationGenomeScans/blob/master/src/b_Proc_Sims.R
+
+head(muts_df)
+dim(muts_df)
+dim(vcf@gt)
+head(vcf@gt[,1:5])
+
+head(vcf@fix)
+
+geno <- vcf@gt[,-1] 
+position <- getPOS(vcf)
+
+if (sum(duplicated(position)) != 0){
+  print("This simulation has duplicated locus positions")
+}
+
+G <- matrix(NA, nrow = nrow(geno), ncol = ncol(geno))
+G[geno %in% c("0/0", "0|0")] <- 0
+G[geno  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
+G[geno %in% c("1/1", "1|1")] <- 2
+
+a_freq <- rowSums(G)/(2*ncol(G))
+hist(a_freq)
+
+vcf_muts0 <- stringr::str_extract_all(vcf@fix[,"INFO"], "MID=(\\d*);", simplify=TRUE)
+head(vcf_muts0)
+vcf_muts1 <- sub("MID=", "", vcf_muts0)
+vcf_muts <- as.numeric(sub(";", "", vcf_muts1))
+head(vcf_muts)
+
+
+keepmuts <- which(vcf_muts %in% muts_df$mutID)
+head(keepmuts)
+
+
+vcf_muts_subset <- vcf_muts[keepmuts]
+muts_df$mutID
+
+
+if(length(keepmuts) != dim(muts_df)[1]){
+  print("Error: mutants with MAF >0.01 from sim are a different number from VCF file")
+  break
+}
+
+if (!identical(sort(vcf_muts[keepmuts]), sort(muts_df$mutID))){
+  print("Error: mutations not lining up")
+  break
+}
+
+keepinds <- which(indPhen_df$subset)
+
+dim(G)
+
+G_subset <- G[keepmuts,keepinds]
+dim(G_subset)
+  # should have 1000 individuals
+
+rownames(G_subset)=vcf_muts_subset
+colnames(G_subset)=keepinds
+G_subset[,1:10]
+
+## This is my subset of individuals
+length(keepinds)
+subset_indPhen_df <- indPhen_df[keepinds,]
+```
+
+Keep in mind the correlations in the muts_df are based on the entire population
+of 5000 individuals
+```{r}
+head(muts_df)
+```
+
+## This code estimates the AF and temp of each population
+Used for calculation of the correlation and degree of cline
+```{r af as function of temperature}
+dim(G_subset)
+str(indPhen_df[indPhen_df$subset,])
+
+pop_temp <- data.frame(subpop=subset_indPhen_df$subpop,temp_opt=subset_indPhen_df$temp_opt)
+pop_temp <- pop_temp[-which(duplicated(pop_temp)),]  
+pop_temp
+temp_levels <- unique(subset_indPhen_df$temp_opt)
+
+af_temp <- matrix(NA, nrow=nrow(pop_temp), ncol=nrow(G_subset))
+n_ind <- table(subset_indPhen_df$subpop)
+
+vcf_muts_df <- data.frame(mutID=vcf_muts_subset, 
+                          af_cor_temp = NA,
+                          af_slope_temp = NA)
+
+for (row in 1:nrow(G_subset)){
+    counts <- table(G_subset[row,], indPhen_df$subpop[indPhen_df$subset])
+      # this give a table of the number of alleles for individuals at that temperature
+    
+    forSum <- counts*as.numeric(rownames(counts))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_temp[,row] <- (colSums(forSum))/(2*n_ind)
+  corrtemp <- cor.test(af_temp[,row], pop_temp$temp_opt, method="spearman")
+  vcf_muts_df$af_cor_temp[row] <- corrtemp$estimate
+  vcf_muts_df$af_cor_temp_P[row] <- corrtemp$p.value
+  vcf_muts_df$af_slope_temp[row] <- lm(af_temp[,row]~pop_temp$temp_opt)$coef[2]
+  
+}
+
+colnames(af_temp) <- vcf_muts_subset
+rownames(af_temp) <- pop_temp$temp_opt
+head(af_temp)
+
+# Sanity check that what I calculate here (from the subsample)
+# is similar to what I outputted from SliM in muts_df
+par(mfrow=c(1,1))
+plot(vcf_muts_df$af_cor_temp[order(vcf_muts_df$mutID)],
+     muts_df$cor_temp[order(muts_df$mutID)])
+abline(0,1)
+
+```
+
+## This code estimates the AF and temp of each population
+Used for calculation of the correlation and degree of cline
+```{r af as function of temperature}
+dim(G_subset)
+str(indPhen_df[indPhen_df$subset,])
+
+pop_sal <- data.frame(subpop=subset_indPhen_df$subpop,sal_opt=subset_indPhen_df$sal_opt)
+pop_sal <- pop_sal[-which(duplicated(pop_sal)),]  
+pop_sal
+sal_levels <- unique(subset_indPhen_df$sal_opt)
+
+af_sal <- matrix(NA, nrow=nrow(pop_sal), ncol=nrow(G_subset))
+n_ind <- table(subset_indPhen_df$subpop)
+
+vcf_muts_df$af_cor_sal = NA
+vcf_muts_df$af_slope_sal=NA
+
+for (row in 1:nrow(G_subset)){
+    counts <- table(G_subset[row,], indPhen_df$subpop[indPhen_df$subset])
+      # this give a table of the number of alleles for individuals at that salerature
+    
+    forSum <- counts*as.numeric(rownames(counts))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_sal[,row] <- (colSums(forSum))/(2*n_ind)
+  
+   corrsal <- cor.test(af_sal[,row], pop_sal$sal_opt, method="spearman")
+  vcf_muts_df$af_cor_sal[row] <- corrsal$estimate
+  vcf_muts_df$af_cor_sal_P[row] <- corrsal$p.value
+  
+    vcf_muts_df$af_slope_sal[row] <- lm(af_sal[,row]~pop_sal$sal_opt)$coef[2]
+}
+
+colnames(af_sal) <- vcf_muts_subset
+rownames(af_sal) <- pop_sal$sal_opt
+head(af_sal)
+
+# Sanity check that what I calculate here (from the subsample)
+# is similar to what I outputted from SliM in muts_df
+par(mfrow=c(1,1))
+plot(vcf_muts_df$af_cor_sal[order(vcf_muts_df$mutID)],
+     muts_df$cor_sal[order(muts_df$mutID)])
+abline(0,1)
+```
+
+This code looks at VA across metapopulation.
+Is this the right way? Or should I look at VA explained in each subpop?
+```{r histogram of correlations and slopes}
+
+muts_df$Va_temp <- muts_df$MAF*(1-muts_df$MAF)*muts_df$mutTempEffect^2
+muts_df$Va_temp_prop <- muts_df$Va_temp/sum(muts_df$Va_temp)
+muts_df$Va_sal <- muts_df$MAF*(1-muts_df$MAF)*muts_df$mutSalEffect^2
+muts_df$Va_sal_prop <- muts_df$Va_sal/sum(muts_df$Va_sal)
+
+muts_all <- merge(muts_df, vcf_muts_df, by="mutID")
+dim(muts_all)
+head(muts_all)
+
+alpha <- 0.05/nrow(muts_all)
+sig_temp <- muts_all$af_cor_temp_P<alpha
+sig_sal <- muts_all$af_cor_sal_P<alpha
+
+# Percent of VA explained by clinal patterns (e.g. sig. correlations)
+sum(muts_all$Va_temp_prop[sig_temp]) # sanity check
+sum(muts_all$Va_sal_prop[sig_sal]) # sanity check
+
+sum(sig_temp) # number significant 
+sum(sig_sal) # number significant
+
+sum(sig_temp/nrow(muts_all))
+sum(sig_sal/nrow(muts_all))
+
+muts_all$FalseNegCorType <- NA
+muts_all$FalseNegCorType[!sig_temp & !sig_sal] <- "Both_FN"
+muts_all$FalseNegCorType[sig_temp & !sig_sal] <- "Temp_TP_Sal_FN"
+muts_all$FalseNegCorType[!sig_temp & sig_sal] <- "Temp_FN_Sal_TP"
+muts_all$FalseNegCorType[sig_temp & sig_sal] <- "Both_TP"
+
+table(muts_all$FalseNegCorType)/nrow(muts_all)
+
+# some visualization
+plot(abs(muts_all$Va_temp_prop), abs(muts_all$af_slope_temp))
+plot(abs(muts_all$Va_temp_prop), abs(muts_all$af_cor_temp))
+
+plot(abs(muts_all$Va_sal_prop), abs(muts_all$af_slope_sal))
+plot(abs(muts_all$Va_sal_prop), abs(muts_all$af_cor_sal))
+
+hist(vcf_muts_df$af_cor_temp)
+hist(vcf_muts_df$af_cor_sal)
+
+hist(abs(vcf_muts_df$af_cor_temp))
+hist(abs(vcf_muts_df$af_cor_sal))
+
+hist(abs(vcf_muts_df$af_slope_temp))
+hist(abs(vcf_muts_df$af_slope_sal))
+```
+
+
+## This code estimates the AF of all populations at the same temp/sal
+Used for plotting
+```{r af as function of salinity}
+
+sal_levels <- unique(subset_indPhen_df$sal_opt)
+sal_levels
+af_sal <- matrix(NA, nrow=length(sal_levels), ncol=nrow(G_subset))
+n_ind <- table(indPhen_df$sal_opt[indPhen_df$subset])
+
+vcf_muts_df$af_cor_sal = NA
+
+for (row in 1:nrow(G_subset)){
+    counts <- table(G_subset[row,], indPhen_df$sal_opt[indPhen_df$subset])
+      # this give a table of the number of alleles for individuals at that salinity
+    
+    forSum <- counts*as.numeric(rownames(counts))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_sal[,row] <- (colSums(forSum))/(2*n_ind)
+  vcf_muts_df$af_cor_sal[row] <- cor(af_sal[,row], sal_levels)
+
+}
+
+colnames(af_sal) <- vcf_muts_subset
+rownames(af_sal) <- sal_levels
+head(af_sal)
+
+# Sanity check that what I calculate here (from the subsample)
+# is similar to what I outputted from SliM in muts_df
+plot(vcf_muts_df$af_cor_sal[order(vcf_muts_df$mutID)],
+     muts_df$cor_sal[order(muts_df$mutID)])
+abline(0,1)
+
+hist(vcf_muts_df$af_cor_sal)
+```
+
+
+# Plot phenotype vs. AF clines
+
+1st column:
+Phenotypic clines for temp (top) and salinity (bottom)
+
+2nd column:
+AF clines for temp (top) and salinity (bottom)
+
+```{r}
+  par(mfrow=c(2,2), mar=c(4,6,0.5,0.5))
+
+  cond <- indPhen_df$subset
+
+  plot(indPhen_df$temp_opt[cond], indPhen_df$phen_temp[cond], xlab="Deme\nTemperature", ylab="Individual optimum\ntemperature",pch=18, , las=1, bty="n", col=adjustcolor("purple",0.1))
+  abline(lm(indPhen_df$phen_temp[cond]~indPhen_df$temp_opt[cond]))
+    
+  plot(jitter(indPhen_df$sal_opt[cond]), indPhen_df$phen_sal[cond],
+       xlab="Deme\nSalinity", ylab="Individual optimum\nsalinity", pch=20, col=adjustcolor("blue",0.1), las=1, bty="n"
+       )
+  abline(lm(indPhen_df$phen_sal[cond]~indPhen_df$sal_opt[cond]))
+  
+ 
+```
+
+
+
+```{r make af vs. temp plot}
+pdf("tempAF.pdf", width=4, height=2)
+par(mar=c(4,4,1,4))
+plot(temp_af$Temp, rep(0, length(temp_af$Temp)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n")
+
+head(temp_af)
+
+#viridis(10)
+col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
+for (i in 1:ncol(af_temp)){
+  cor_mut <- cor(temp_af$Temp, af_temp[,i])
+  if(abs(cor_mut)<0.3){lwd=2}else{lwd=1}
+  lines(temp_af$Temp, af_temp[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+}
+legend.col(col, lev=seq(0,1,by=0.1))
+dev.off()
+```
+
+
+
+```{r make af vs. sal plot}
+pdf("SalAF.pdf", width=4, height=2)
+par(mar=c(4,4,1,4))
+plot(sal_af$Sal, rep(0, length(sal_af$Sal)), ylim=c(0,1), xlab="Salinity", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n")
+#viridis(10)
+col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
+for (i in 1:ncol(af_sal)){
+  cor_mut <- cor(sal_af$Sal, af_sal[,i])
+  if(abs(cor_mut)<0.3){lwd=2}else{lwd=1}
+  lines(sal_af$Sal, af_sal[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+}
+legend.col(col, lev=seq(0,1,by=0.1))
+dev.off()
+```
+
+```{r genotype heatmaps}
+
+NEED TO EDIT THISE SO THE GRAPHING IS 3 colors
+
+
+a<-heatmap(t(G_subset), Rowv = NA,  main="All genotypes",cexCol = 0.3,
+           #Colv = NA,
+           labRow = indPhen_df$subpop[keepinds])
+str(a)
+par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(2,4,6,2), xpd=FALSE)
+
+### Visualize genotypes at different salinities ###
+new=subset_indPhen_df$sal_opt
+
+heatmap(t(G_subset[a$colInd,new==-1]), Rowv = NA, Colv = NA, 
+        main="Low salinity genotypes", 
+        labRow = subset_indPhen_df$subpop[new==-1],
+        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
+        ylab="Southern<---Population--->Northern")
+  # this is cool. The low salinity sites, which are not connected by dispersal, evolve unique and different adaptations to salinity
+
+heatmap(t(G_subset[a$colInd,new==0]), Rowv = NA, Colv = NA, 
+        main="Intermediate salinity\ngenotypes", 
+        labRow = subset_indPhen_df$subpop[new==0],
+        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
+        ylab="Southern<---Population--->Northern")
+  # 
+
+heatmap(t(G_subset[a$colInd,new==1]), Rowv = NA,  Colv = NA,
+        main="High salinity genotypes",
+        labRow = subset_indPhen_df$subpop[new==1],
+         xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Southern<---Population--->Northern")
+  # The high salinity sites, which are connected by dispersal, evolve a more clinal allele frequency pattern with salinity
+```
+
+
+```{r NOT USING}
+### Visualize genotypes at different temps ####
+new_temp=subset_indPhen_df$temp_opt
+
+#northern pops
+heatmap(t(G_subset[a$colInd,new_temp==1]), Rowv = NA,  Colv = NA,
+        main="High temp (north) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-0.111111]), Rowv = NA,  Colv = NA,
+        main="Mid-latitude genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-0.111111],
+        xlab="Mutation ID",  cexCol = 0.3,  
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-1]), Rowv = NA,  Colv = NA,
+        main="Low temp (south) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+```
+
+
+```{r}
+
+X <- t(G_subset)
+Y <- cbind(indPhen_df$sal_opt[which(indPhen_df$subset)], indPhen_df$temp_opt[which(indPhen_df$subset)])
+str(X)
+str(Y)
+
+
+set.seed(12380923)
+rm <- sort(sample(indPhen_df$indID[-keepinds], 200, replace=FALSE)) # 200 random individuals
+head(cbind(indPhen_df$indID[rm+1], rm))
+rm <- rm+1 # because individuals start at 0, this can be an index now
+indPhen_df$test <- FALSE
+indPhen_df$test[rm] <- TRUE
+
+indPhen_df[which(indPhen_df$subset & indPhen_df$test),]
+  # shows no overlap
+
+# unit test - make sure test and train individuals do not overlap
+if (sum((indPhen_df$subset & indPhen_df$test))){
+  print("Error: overlap in subset and test set")}
+
+test_indPhen_df <- indPhen_df[rm,]
+
+trainX <- X
+trainY <- Y
+testX <- t(G[keepmuts, rm])
+testY_true <- cbind(indPhen_df$sal_opt[rm], indPhen_df$temp_opt[rm])
+dim(testY_true)
+testXsampName <- test_indPhen_df$indID
+
+```
+
+
+NEED TO EDIT THIS
+```{r show cool patterns of fitness, fig.height=6, fig.width=4}
+head(indPhen_df)
+env_df <- unique(indPhen_df[,c("subpop","sal_opt","temp_opt")])
+head(env_df)
+(npops <- nrow(indCG_df)-1)
+
+# choose an individual who has high fitness at cold end of range
+# and in low salinity sites
+head(indCG_df[,1:20], 10)
+tail(indCG_df[,1:20], 10)
+
+env_df$ind1_fit <- indCG_df[2:nrow(indCG_df), 1]
+env_df$ind1_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in low salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind2_fit <- indCG_df$V2000[2:nrow(indCG_df)]
+env_df$ind2_pch <- c(1,21)
+
+# choose an individual who has high fitness at cold end of range
+# and in HIGH salinity sites
+head(indCG_df[,101:120], 10)
+env_df$ind3_fit <- indCG_df$V107[2:nrow(indCG_df)]
+env_df$ind3_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in HIGH salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind4_fit <- indCG_df$V1994[2:nrow(indCG_df)]
+env_df$ind4_pch <- c(1,21)
+
+### Start plot ####
+par(mar=c(2,4,3,0.1), mfrow=c(2,1), oma=c(4,0,0,0))
+### Plot low salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind1_fit, pch=env_df$ind1_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="Low salinity adapted")
+    points(ind1_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. A", col="blue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. B", col="red", adj=0)
+  
+### Plot high salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind3_fit, pch=env_df$ind3_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="High salinity adapted")
+    points(ind3_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. C", col="darkblue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. D", col="darkred", adj=0)
+
+### Plot legend
+par(xpd=NA)  
+legend(-1,-0.4,  legend=c("high sal.", "low sal."), bty="n", adj=0, fill=c("grey", NA), horiz=TRUE)
+mtext("temperature", side=1, outer=TRUE, adj=0.6)
+```
+

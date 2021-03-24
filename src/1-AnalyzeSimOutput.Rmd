@@ -10,7 +10,7 @@ setwd("~/Documents/GitHub/MVP-NonClinalAF/src")
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr"))
+packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm")
 
 for (i in 1:length(packages_needed)){
   if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
@@ -61,6 +61,14 @@ dim(vcf@fix)
 # example of how to find a specific mutation in the vcf file
   muts_df[1,]
   vcf@fix[grep(muts_df$mutID[1], vcf@fix[,"INFO"]),]
+  
+
+# VCF with mutations
+vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode.vcf.gz"))
+head(vcf_full)
+head(vcf_full@fix, 50)
+dim(vcf_full@fix)
+
 ```
 
 ```{r, echo=FALSE, eval=FALSE}
@@ -185,6 +193,15 @@ head(keepmuts)
 vcf_muts_subset <- vcf_muts[keepmuts]
 muts_df$mutID
 
+head(vcf@fix[keepmuts,], 50)
+
+
+if(length(keepmuts) != sum(vcf_full@fix[,"REF"]!="0")){
+  print("Error: mutants with MAF >0.01 from sim are a different number from VCF_FULL file")
+  break
+}
+
+
 
 if(length(keepmuts) != dim(muts_df)[1]){
   print("Error: mutants with MAF >0.01 from sim are a different number from VCF file")
@@ -212,6 +229,59 @@ G_subset[,1:10]
 length(keepinds)
 subset_indPhen_df <- indPhen_df[keepinds,]
 ```
+
+
+```{r filter VCF_FULL and reformat}
+
+geno_full <- vcf_full@gt[,-1] 
+position_full <- getPOS(vcf_full)
+
+head(geno_full[,1:5])
+
+
+G_full <- matrix(NA, nrow = nrow(geno_full), ncol = ncol(geno_full))
+G_full[geno_full %in% c("0/0", "0|0")] <- 0
+G_full[geno_full  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
+G_full[geno_full %in% c("1/1", "1|1")] <- 2
+
+head(G_full[,1:5])
+
+a_freq_full <- rowSums(G_full)/(2*ncol(G_full))
+hist(a_freq_full)
+
+if (!identical(sort(unique(unlist(as.numeric(G_full)))), as.numeric(0:2))){
+  print("Error: full genotype matrix not uniquely 012")
+  break
+}
+
+G_full_subset <- G_full[,keepinds]
+dim(G_full_subset)
+  # should have 1000 individuals
+
+# vcf_full@fix[,"POS"]
+rown <- as.numeric(str_remove(vcf_full@fix[,"REF"], "\t"))
+rownames(G_full_subset)=rown
+colnames(G_full_subset)=keepinds
+
+## This is my subset of individuals
+length(keepinds)
+```
+
+```{r}
+# Sanity Check G_subset and G_full_subset give same genotypes
+# First individual (column)
+# adaptive alleles in G_full_subset given by which(rown!=0)
+G_subset[,1:2]
+G_full_subset[which(rown!=0),1:2]
+
+# Not lining up
+cbind(G[,1], G_full[which(rown!=0),1])
+ 
+# Not lining up     
+cbind(G_subset[,1], G_full_subset[which(rown!=0),1])
+
+```
+
 
 Keep in mind the correlations in the muts_df are based on the entire population
 of 5000 individuals
@@ -508,6 +578,66 @@ heatmap(t(G_subset[a$colInd,new==1]), Rowv = NA,  Colv = NA,
         ylab="Southern<---Population--->Northern")
   # The high salinity sites, which are connected by dispersal, evolve a more clinal allele frequency pattern with salinity
 ```
+
+## RDA
+
+```{r vegan}
+library(vegan)
+
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt)
+
+
+subset_indPhen_df$x <- (unique(subset_indPhen_df$sal_opt)+1)*2
+subset_indPhen_df$y <- round((unique(subset_indPhen_df$temp_opt)+1)*9/2,0)
+m <- as.matrix(cbind(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt))
+
+subset_indPhen_df$rand_env <- dmvnorm(m,
+  mean=c(0,0), sigma=matrix(c(1, 0.5, 0.5, 1), ncol=2))
+  # This is a saddle, I think 
+
+subset_indPhen_df$rand_env2 <- dmvnorm(m,
+  mean=c(1,1), sigma=matrix(c(1, 0, 0, 1), ncol=2))
+  # This is like disease - it increases with salinity and temperature
+
+
+
+plot(subset_indPhen_df$sal_opt,  subset_indPhen_df$temp_opt)
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env)
+plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env)
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env2)
+plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env2)
+
+rdaout <- rda(t(G_subset)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt + subset_indPhen_df$rand_env + subset_indPhen_df$rand_env2)
+summary(rdaout)
+screeplot(rdaout)
+plot(rdaout)
+scores <- scores(rdaout, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+head(loci.sc)
+head(ind.sc)
+str(loci.sc)
+
+plot(loci.sc[,1], loci.sc[,2])
+
+head(subset_indPhen_df)
+subset_indPhen_df$RDA1 <- ind.sc[,1]
+subset_indPhen_df$RDA2 <- ind.sc[,2]
+subset_indPhen_df$RDA3 <- ind.sc[,3]
+plot(subset_indPhen_df$temp_opt ~ subset_indPhen_df$RDA1)
+plot(scale(subset_indPhen_df$phen_temp) ~ scale(subset_indPhen_df$RDA1))
+abline(0,1, col="red")
+
+plot(subset_indPhen_df$sal_opt ~ subset_indPhen_df$RDA2)
+plot(subset_indPhen_df$phen_sal ~ subset_indPhen_df$RDA2)
+
+p <- subset_indPhen_df$RDA2*0.53*0.41 + subset_indPhen_df$RDA3*0.84*0.29
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+plot(subset_indPhen_df$sal_opt ~ p)
+plot(scale(subset_indPhen_df$phen_sal) ~ scale(p))
+abline(0,1, col="red")
+```
+
 
 
 ```{r NOT USING}

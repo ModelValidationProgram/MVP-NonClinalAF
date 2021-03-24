@@ -1,0 +1,64 @@
+# YYYYMMDD 
+
+
+### Plan:	
+[] add neutral mutations with pyslim
+[] show that RDA can predict individuals environments when we know the adaptive architecture perfectly
+[] show that RDA gets messed up when adding complex environments
+	[] add color to RDA plots to show the temp and salinity optimums of individuals - maybe use green to blue for salinity and light to dark for temperature
+[] ID outliers with LFMM - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
+[] ID outliers with RDA - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
+[] ID outliers with OUTFLANK - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
+
+Graph improvements:
+* fix heat maps so the colors are constrained
+
+## Pyslim
+
+`pip install pyslim`
+
+`Successfully installed humanize-3.2.0 kastore-0.3.1 msprime-0.7.4 pyslim-0.600 svgwrite-1.4.1 tskit-0.3.4`
+
+* copied pyslim script from neutral recombination paper
+
+```
+cd /Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/src
+python
+```
+
+```
+Python 3.7.4 (default, Aug 13 2019, 15:17:50)
+[Clang 4.0.1 (tags/RELEASE_401/final)] :: Anaconda, Inc. on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+```
+
+* recapitation started at 6:47am
+* it didn't finish by 11:45am. I think this is the issue Aki ran into - 
+TO DO REVIEW HIS RECAP CODE:
+https://github.com/TestTheTests/TTT_Offset_Vulnerability_GF_Sims/blob/master/src/Pyslim_code/TSR_time_AJL.py
+
+
+## three ideas to flush out
+
+- two types of demography
+	- oyster estuary
+	- 2D trees
+
+- 3 subcategories of demography
+	- equal N, equal m
+	- N cline
+	- m variable
+
+- categories of architecture
+	- pleiotropy with selection (no genetic correlation)
+	- no pleiotropy with selection
+	- equal fitness (control - genetic drift)
+	- pleiotropy with selection (+ genetic correlation)
+	- pleiotropy with selection (- genetic correlation)
+	- 2 traits with plasticity
+
+Other idea - maybe use multivariate distance as a prediction of the multivariate trait from the RDA?
+
+### Q: how to predict optimal salinity of an individual from multiple RDA axes?
+A: predicted environment phenotype is the RDA loading * eigenvalue of axis * loading of environment on that axis
+

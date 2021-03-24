@@ -1,11 +1,11 @@
-20210312 Initiate Repo
+# 20210312 Initiate Repo
 
 * transfered 20200224_Multi_m0.05_CG_2phen_2envi_5x10_coastline_keep.slim from repo MVP_prelim
 and renamed it Case1_CoreSimEstuary2TraitsWithPleiotropy.slim
 
 
 
-Part 1:
+## Part 1:
 [x] run this sim
 	* added seed info to output tables
 	* added simulation name to "info table"
@@ -56,14 +56,30 @@ thought: it's not about discovery - it's about whether discovery can tell us abo
 (ii)  if we take the loci with significant correlations with temperature, how much of 
 the additive genetic variance in the trait is explained? For example, if we take the loci with significant correlations with temperature, how much of 
 the additive genetic variance in the trait is explained?
-	- this is straightforward for temp, not so much for RDA
+	- this is straightforward for corrs, not so much for RDA
+
+I think I need a population-specific approach - for 6 categories of populations, in each one calculate which alleles are needed to explain the VA in that pop.
+- high salinity high temp
+- low salinity high temp
+- high salinity med temp
+- low salinity med temp
+- high salinity intermediate temp
+- low salinity intermediate temp
+
+## RDA
+[x] run the RDA on data I have, see what it gives
+
+Results are interesting. When I model the genetic basis perfectly, the loci scores are crap, but the individual loadings can accurately predict an individual's temp or salinity phenotype. 
+
+[x] add sub pop xy locations to output
 	
-	
-Plan:	
-[] run the RDA on data I have, see what it gives
+
+## Plan:	
 [] add neutral mutations with pyslim
-[] run RDA with neutral background, see if can ID adaptive alleles
-[] add OutFLANK code
+[] show that RDA can predict individuals environments when we know the adaptive architecture perfectly
+[] ID outliers with LFMM - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
+[] ID outliers with RDA - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
+[] ID outliers with OUTFLANK - TEST IF RDA CAN PREDICT IND ENVIIRONMENTS
 
 Part 2:
 - Expand this case to the 2 traits without pleiotropy

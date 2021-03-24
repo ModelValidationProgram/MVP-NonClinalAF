@@ -1,7 +1,7 @@
 initialize()
 {
 	//setSeed(1894051124631);
-	defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs");
+	defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs/");
 	defineConstant("MY_SEED", getSeed());
 	defineConstant("C_num", 10);							// number of chromosomes
 	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome
@@ -29,7 +29,7 @@ initialize()
 	// set up spatially autocorrelated environmental variables
 	defineConstant("xv", rep(seq(-1.0, 1.0, length=METAPOP_SIDE_x), METAPOP_SIDE_y));
 	defineConstant("yv", repEach(seq(-1.0, 1.0, length=METAPOP_SIDE_y), METAPOP_SIDE_x));
-	defineConstant("OPTS_0", xv);
+	defineConstant("OPTS_0", xv); =
 	defineConstant("OPTS_1", yv);
 	
 	
@@ -161,16 +161,16 @@ function (void)outputMigration(string$ path)
 		sim.addSubpop(i, N);
 	setUpMigration();
 	
-	outputMigration(MY_RESULTS_PATH+MY_SEED +"mig_mat.txt");
+	outputMigration(MY_RESULTS_PATH+MY_SEED +"_mig_mat.txt");
 	//sim.rescheduleScriptBlock(s1, Burnin);
 	//sim.rescheduleScriptBlock(s2, Burnin, Sim_Len);
 	//sim.rescheduleScriptBlock(s3, Sim_Len);
 	
 	
 	// write information to file
-	info_head = "seed MIG_x MIG_y N mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y S SIGMA_K SIGMA_QTN";
+	info_head = "seed sim_type MIG_x MIG_y N mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y S SIGMA_K SIGMA_QTN";
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info_head, append=F);
-	info=paste(c(getSeed(),MIG_x, MIG_y, N, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, S, SIGMA_K, SIGMA_QTN));
+	info=paste(getSeed(), "Case1_EstuaryPleiotropy",MIG_x, MIG_y, N, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, S, SIGMA_K, SIGMA_QTN);
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info, append=T);
 	
 	// write local adaptation file
@@ -335,7 +335,7 @@ late() {
 			//thismutfreqs = freq[i,];
 			cor_sal_muts = cor(all_opt0, drop(freq[i,]));
 			cor_temp_muts = cor(all_opt1, drop(freq[i,]));
-			out_i = paste(c(MY_SEED, mutNames_whichmuts[i], MAF_whichmuts[i], cor_sal_muts,  cor_temp_muts, mutSalEffect_whichmuts[i], mutTempEffect_whichmuts[i]));
+			out_i = paste(MY_SEED, mutNames_whichmuts[i], MAF_whichmuts[i], cor_sal_muts,  cor_temp_muts, mutSalEffect_whichmuts[i], mutTempEffect_whichmuts[i]);
 			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_muts.txt"), sep=""), out_i, append=T);
 		}
 	
@@ -354,7 +354,7 @@ late() {
 		
 		k=0;	
 		for (i in seqAlong(inds)){
-			out_i = paste(c(MY_SEED, k, inds[i].index, indsubpop[i].id, phenotype0[i], phenotype1[i], indsubpop[i].getValue("scaled_opt0"), indsubpop[i].getValue("scaled_opt1"), inds[i].getValue("fitness")));
+			out_i = paste(MY_SEED, k, inds[i].index, indsubpop[i].id, phenotype0[i], phenotype1[i], indsubpop[i].getValue("scaled_opt0"), indsubpop[i].getValue("scaled_opt1"), inds[i].getValue("fitness"));
 			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_ind.txt"), sep=""), out_i, append=T);
 			k=k+1;
 		}// end loop through individuals
@@ -381,7 +381,7 @@ late() {
 		cor_sal_ind = cor(phenotype0_all, all_opt0_inds);
 		cor_temp_ind = cor(phenotype1_all, all_opt1_inds);
 		
-		LA = paste(c(MY_SEED, sim.generation, sympatric, allopatric, local_adapt, mexan(mean_phen0), mean(mean_phen1), cor_sal_popmean, cor_temp_popmean, cor_sal_ind, cor_temp_ind));
+		LA = paste(MY_SEED, sim.generation, sympatric, allopatric, local_adapt, mean(mean_phen0), mean(mean_phen1), cor_sal_popmean, cor_temp_popmean, cor_sal_ind, cor_temp_ind);
 		catn(sim.generation + ":" + sympatric +" "+ allopatric +" "+ local_adapt +" "+mean(mean_phen0)+" "+mean(mean_phen1)+" "+ cor_sal_popmean +" "+ cor_temp_popmean +" "+ cor_sal_ind +" "+cor_temp_ind);
 		//catn(sim.generation + ":" +mean(mean_phen0)+" "+mean(mean_phen1));
 		

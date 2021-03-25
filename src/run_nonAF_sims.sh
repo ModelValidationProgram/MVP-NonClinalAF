@@ -10,6 +10,7 @@ start=10900  #10900 10950
 finish=$(($start + $nreps-1))
 echo -e $start $finish
 
+
 for i in $(seq $start $finish)
 do
     cd $mypath
@@ -36,6 +37,8 @@ do
         echo "trees file for ${i} not found, skipping"
         continue # skip rest of code and go to next $i
     fi
+    
+    gzip -f ${outpath}${i}"_VCF_causal.vcf"
 
     ##############
     #### run python script to process tree sequence results  (takes 1 min)
@@ -58,8 +61,16 @@ do
     
     vcftools --vcf ${outpath}${i}"_PlusNeuts".vcf --maf 0.01 --out ${outpath}${i}"_plusneut_MAF01" --recode --recode-INFO-all
     
-    gzip -f ${outpath}${i}"_plusneut_MAF01.recode.vcf"
     
+    # the sed lines fixes a bug with pyslim output. See 20210324_pyslim.md for info
+    
+    #sed -i 's/[.]\t\t/[.]\t0\t/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" #maybe will work in Linux
+    
+    sed 's/\.		/\.	0	/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" > ${outpath}${i}"_plusneut_MAF01.recode2.vcf" #this works on my mac
+    
+    gzip -f ${outpath}${i}"_plusneut_MAF01.recode2.vcf"
+    
+    rm ${outpath}${i}"_plusneut_MAF01.recode.vcf"
     rm ${outpath}${i}"_PlusNeuts".vcf
     
     

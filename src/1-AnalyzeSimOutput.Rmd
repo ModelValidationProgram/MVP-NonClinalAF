@@ -69,8 +69,8 @@ head(vcf_full)
 head(vcf_full@fix, 50)
 dim(vcf_full@fix)
 
-vcf_full@fix[15:16,]
-vcf_full@gt[15:16,1:10]
+#vcf_full@fix[15:16,]
+#vcf_full@gt[15:16,1:10]
 ```
 
 
@@ -197,8 +197,9 @@ head(keepmuts)
 
 ```{r VCF_FULL keepmuts}
 geno_full <- vcf_full@gt[,-1] 
+dim(geno_full)
 position_full <- getPOS(vcf_full)
-rown <- as.numeric(str_remove(vcf_full@fix[,"REF"], "\t"))
+rown <- as.numeric(vcf_full@fix[,"ALT"])
 keepmuts_full <- which(rown %in% muts_df$mutID)
 position_full[keepmuts_full]
 ```
@@ -207,48 +208,27 @@ position_full[keepmuts_full]
 dim(vcf@gt[keepmuts,])
 dim(vcf_full@gt[keepmuts_full,])
 
-cbind(position[keepmuts], position_full[keepmuts_full]+1)
+if(!identical(as.numeric(position[keepmuts]), position_full[keepmuts_full]+1)){
+  print("Error: positions in causal vcf vs. casual mutations in full vcf not the same")
+}
 
-tail(vcf@gt[keepmuts,1:10])
-  # FORMAT IS GT  
-
-head(vcf_full@gt[,1:10])
-
+if(!identical(vcf@gt[keepmuts,2], vcf_full@gt[keepmuts_full,2])){
+   print("Error: genotypes in causal vcf vs. casual mutations in full vcf not the same")
+}
 
 
-tail(vcf_full@gt[keepmuts_full,1:10])
-  # AHA! I found the problem. IT WAS SHIFTED TO THE LEFT IN FORMAT.
-  # THIS MAY BE DUE TO VCF TOOLS, or pyslim!
+if (!identical(sort(vcf_muts[keepmuts]), sort(muts_df$mutID))){
+  print("Error: mutations in VCF not lining up with muts_df")
+  break
+}
 
-vcf_full@fix[15:16,]
-vcf_full@gt[15:16,1:10]
-
-cbind(vcf@gt[keepmuts,2], vcf_full@gt[keepmuts_full,1])
 ```
 
-```{r}
+```{r subset causal mutations MAF}
 vcf_muts_subset <- vcf_muts[keepmuts]
 muts_df$mutID
 
 head(vcf@fix[keepmuts,], 50)
-
-
-if(length(keepmuts) != sum(vcf_full@fix[,"REF"]!="0")){
-  print("Error: mutants with MAF >0.01 from sim are a different number from VCF_FULL file")
-  break
-}
-
-
-
-if(length(keepmuts) != dim(muts_df)[1]){
-  print("Error: mutants with MAF >0.01 from sim are a different number from VCF file")
-  break
-}
-
-if (!identical(sort(vcf_muts[keepmuts]), sort(muts_df$mutID))){
-  print("Error: mutations not lining up")
-  break
-}
 
 keepinds <- which(indPhen_df$subset)
 
@@ -266,8 +246,8 @@ G_subset[,1:10]
 length(keepinds)
 subset_indPhen_df <- indPhen_df[keepinds,]
 
-cbind(vcf@gt[,2], G[,1])
-cbind(vcf@gt[keepmuts,2], G[keepmuts,1]) # looks good 
+#cbind(vcf@gt[,2], G[,1])
+#cbind(vcf@gt[keepmuts,2], G[keepmuts,1]) # looks good 
 ```
 
 
@@ -305,6 +285,8 @@ colnames(G_full_subset)=keepinds
 
 ## This is my subset of individuals
 length(keepinds)
+
+G_full_subset[1:20,1:10]
 ```
 
 
@@ -326,7 +308,7 @@ for (i in 1:nrow(muts_df)){
 
 ## ADD INFO FROM PYSLIM VCF FILE
 for (i in 1:nrow(muts_df)){
-  ind = grep(muts_df$mutID[i], vcf_full@fix[,"REF"])
+  ind = grep(muts_df$mutID[i], vcf_full@fix[,"ALT"])
   if (length(ind)==1){
     muts_df$position_pyslim[i] <- position_full[ind]
     muts_df$af_pyslim[i] <- a_freq_full[ind]
@@ -339,35 +321,8 @@ plot(muts_df$af_slimVCF, muts_df$af_pyslim)
 abline(0,1)
 ```
 
-```{r}
-# Sanity Check G_subset and G_full_subset give same genotypes
-# First individual (column)
-# adaptive alleles in G_full_subset given by which(rown!=0)
-
-
-
-cbind(G_subset[,1], G_full_subset[which(rown!=0),1])
-
-
-G_subset[,1:2]
-G_full_subset[which(rown!=0),1:2]
-
-# Not lining up
-dim(G[keepmuts,])
-dim(G_full[which(rown!=0),])
-
-cbind(G[keepmuts,1], G_full[which(rown!=0),1])
- 
-# Not lining up     
-
-```
-
-
 Keep in mind the correlations in the muts_df are based on the entire population
 of 5000 individuals
-```{r}
-head(muts_df)
-```
 
 ## This code estimates the AF and temp of each population
 Used for calculation of the correlation and degree of cline
@@ -418,6 +373,55 @@ plot(vcf_muts_df$af_cor_temp[order(vcf_muts_df$mutID)],
 abline(0,1)
 
 ```
+
+
+
+# TO DO STARTING HERE
+
+1. Use full VCF file
+2. Calculate proportion of causal and neutral loci that show sig. correlations with temp (output correlation and slope)
+  
+Table 1: mutations
+  *`mut_ID` mutation ID, if not equal to 1, a causal mutation
+  *`POS` position
+  *`corr_temp` correlation between allele frequency and temperature
+  *`corr_sal` correlation between allele frequency and salinity
+  *`slope_temp` slope between allele frequency and temperature
+  *`slope_sal` slope between allele frequency and salinity
+  *`LFMM_vXX_p` p-value from LFMM version XXX
+  *`RDA_p` p-value from RDA in vegan as explained by Capblanq
+  * `prop_Va_metapop` proportion of VA explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment)
+  * `prop_Va_temp=1_sal=1`
+  * `prop_Va_temp=1_sal=-1`
+  * `prop_Va_temp=-1_sal=-1`
+  * `prop_Va_temp=-1_sal=1`
+  * `prop_Va_temp~0_sal=0`
+  
+Table 2: summary of sim
+  *`seed` 
+  *`num_causal` number of causal loci in sim
+  *`num_neut` number of neutral loci in sim
+  *`prop_causal_sig_temp_corr` proportion of causal loci that have significant correlations with temperature
+  *`prop_causal_sig_sal_corr` proportion of causal loci that have significant correlations with salinity
+  *`prop_neut_sig_temp_corr` proportion of neutral loci that have significant correlations with temperature
+  *`prop_neut_sig_sal_corr` proportion of neutral loci that have significant correlations with salinity
+  *`median_causal_temp_slope` median slope between allele frequency and temperature for causal loci
+  *`median_causal_sal_slope` median slope between allele frequency and salinity for causal loci
+  *`median_neut_temp_slope` median slope between allele frequency and temperature for neutral loci
+  *`median_neut_sal_slope` median slope between allele frequency and salinity for neutral loci
+  *`prop_causal_sig_LFMM` proportion of causal loci that are significant by LFMM
+  *`prop_causal_sig_RDA` proportion of causal loci that are significant by RDA
+  *`prop_VA_outliers_LFMM`  proportion of Va explained by LFMM outliers
+  *`prop_VA_outliers_RDA` proportion of Va explained by RDA outliers
+  *`prop_VA_outliers_RDA_LFMM` proportion of Va explained by both outliers from methods
+  *`cor_RDAcausal_RDloadings_tempPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+  *`cor_RDAcausal_RDloadings_salPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+  *`cor_RDAalloutliers_RDloadings_tempPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+  *`cor_RDAalloutliers_RDloadings_salPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+  *`cor_RDAallSNPs_RDloadings_tempPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+  *`cor_RDAallSNPs_RDloadings_salPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+
+
 
 ## This code estimates the AF and temp of each population
 Used for calculation of the correlation and degree of cline

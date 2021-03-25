@@ -6,10 +6,10 @@ Parameters as interpreted:
 	--vcf ../sim_outputs/2549986039929_PlusNeuts.vcf
 	--recode-INFO-all
 	--maf 0.01
-	--out ../sim_outputs/2549986039929_plusneut_MAF05
+	--out ../sim_outputs/2549986039929_plusneut_MAF01
 	--recode
 
 After filtering, kept 5000 out of 5000 Individuals
 Outputting VCF file...
 After filtering, kept 5238 out of a possible 10388 Sites
-Run Time = 19.00 seconds
+Run Time = 17.00 seconds

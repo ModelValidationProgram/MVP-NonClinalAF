@@ -29,7 +29,7 @@ initialize()
 	// set up spatially autocorrelated environmental variables
 	defineConstant("xv", rep(seq(-1.0, 1.0, length=METAPOP_SIDE_x), METAPOP_SIDE_y));
 	defineConstant("yv", repEach(seq(-1.0, 1.0, length=METAPOP_SIDE_y), METAPOP_SIDE_x));
-	defineConstant("OPTS_0", xv); =
+	defineConstant("OPTS_0", xv); 
 	defineConstant("OPTS_1", yv);
 	
 	
@@ -340,7 +340,7 @@ late() {
 		}
 	
 		inds = sim.subpopulations.individuals;
-		inds.genomes.outputVCF(paste(c(MY_RESULTS_PATH, getSeed(), "_VCF_causal.txt"), sep=""));
+		inds.genomes.outputVCF(paste(c(MY_RESULTS_PATH, getSeed(), "_VCF_causal.vcf"), sep=""));
 	
 		phenotype0 = inds.getValue("phenotype0");
 		phenotype1 = inds.getValue("phenotype1");
@@ -358,7 +358,9 @@ late() {
 			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_ind.txt"), sep=""), out_i, append=T);
 			k=k+1;
 		}// end loop through individuals
+		
 		sim.treeSeqOutput(paste(c(MY_RESULTS_PATH,MY_SEED,".trees"), sep=""));
+		
 	}//end if
 		//////////////////////////////////////////////////
 		//////////// END FINAL GEN OUTPUT ////////////////////

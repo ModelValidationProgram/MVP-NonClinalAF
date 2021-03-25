@@ -64,12 +64,16 @@ dim(vcf@fix)
   
 
 # VCF with mutations
-vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode.vcf.gz"))
+vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
 head(vcf_full)
 head(vcf_full@fix, 50)
 dim(vcf_full@fix)
 
+vcf_full@fix[15:16,]
+vcf_full@gt[15:16,1:10]
 ```
+
+
 
 ```{r, echo=FALSE, eval=FALSE}
 # Sanity check
@@ -178,18 +182,51 @@ G[geno %in% c("1/1", "1|1")] <- 2
 
 a_freq <- rowSums(G)/(2*ncol(G))
 hist(a_freq)
+```
 
+```{r figure out mtuations to keep}
 vcf_muts0 <- stringr::str_extract_all(vcf@fix[,"INFO"], "MID=(\\d*);", simplify=TRUE)
 head(vcf_muts0)
 vcf_muts1 <- sub("MID=", "", vcf_muts0)
 vcf_muts <- as.numeric(sub(";", "", vcf_muts1))
 head(vcf_muts)
-
-
 keepmuts <- which(vcf_muts %in% muts_df$mutID)
 head(keepmuts)
 
+```
 
+```{r VCF_FULL keepmuts}
+geno_full <- vcf_full@gt[,-1] 
+position_full <- getPOS(vcf_full)
+rown <- as.numeric(str_remove(vcf_full@fix[,"REF"], "\t"))
+keepmuts_full <- which(rown %in% muts_df$mutID)
+position_full[keepmuts_full]
+```
+
+```{r check vcf files line up}
+dim(vcf@gt[keepmuts,])
+dim(vcf_full@gt[keepmuts_full,])
+
+cbind(position[keepmuts], position_full[keepmuts_full]+1)
+
+tail(vcf@gt[keepmuts,1:10])
+  # FORMAT IS GT  
+
+head(vcf_full@gt[,1:10])
+
+
+
+tail(vcf_full@gt[keepmuts_full,1:10])
+  # AHA! I found the problem. IT WAS SHIFTED TO THE LEFT IN FORMAT.
+  # THIS MAY BE DUE TO VCF TOOLS, or pyslim!
+
+vcf_full@fix[15:16,]
+vcf_full@gt[15:16,1:10]
+
+cbind(vcf@gt[keepmuts,2], vcf_full@gt[keepmuts_full,1])
+```
+
+```{r}
 vcf_muts_subset <- vcf_muts[keepmuts]
 muts_df$mutID
 
@@ -228,13 +265,16 @@ G_subset[,1:10]
 ## This is my subset of individuals
 length(keepinds)
 subset_indPhen_df <- indPhen_df[keepinds,]
+
+cbind(vcf@gt[,2], G[,1])
+cbind(vcf@gt[keepmuts,2], G[keepmuts,1]) # looks good 
 ```
+
 
 
 ```{r filter VCF_FULL and reformat}
 
-geno_full <- vcf_full@gt[,-1] 
-position_full <- getPOS(vcf_full)
+
 
 head(geno_full[,1:5])
 
@@ -259,7 +299,7 @@ dim(G_full_subset)
   # should have 1000 individuals
 
 # vcf_full@fix[,"POS"]
-rown <- as.numeric(str_remove(vcf_full@fix[,"REF"], "\t"))
+
 rownames(G_full_subset)=rown
 colnames(G_full_subset)=keepinds
 
@@ -267,18 +307,58 @@ colnames(G_full_subset)=keepinds
 length(keepinds)
 ```
 
+
+```{r sanity check individual phenotypes}
+
+## ADD INFO FROM SLIM VCF FILE
+vcf@fix[keepmuts,"INFO"]
+head(muts_df)
+dim(muts_df)
+for (i in 1:nrow(muts_df)){
+  ind = grep(muts_df$mutID[i], vcf@fix[,"INFO"])
+  if (length(ind)==1){
+    muts_df$INFO[i] <-  vcf@fix[ind,"INFO"]
+    muts_df$position[i] <- position[ind]
+    muts_df$af_slimVCF[i] <- a_freq[ind]
+  }
+}
+
+
+## ADD INFO FROM PYSLIM VCF FILE
+for (i in 1:nrow(muts_df)){
+  ind = grep(muts_df$mutID[i], vcf_full@fix[,"REF"])
+  if (length(ind)==1){
+    muts_df$position_pyslim[i] <- position_full[ind]
+    muts_df$af_pyslim[i] <- a_freq_full[ind]
+  }
+}
+
+head(muts_df)
+
+plot(muts_df$af_slimVCF, muts_df$af_pyslim)
+abline(0,1)
+```
+
 ```{r}
 # Sanity Check G_subset and G_full_subset give same genotypes
 # First individual (column)
 # adaptive alleles in G_full_subset given by which(rown!=0)
+
+
+
+cbind(G_subset[,1], G_full_subset[which(rown!=0),1])
+
+
 G_subset[,1:2]
 G_full_subset[which(rown!=0),1:2]
 
 # Not lining up
-cbind(G[,1], G_full[which(rown!=0),1])
+dim(G[keepmuts,])
+dim(G_full[which(rown!=0),])
+
+cbind(G[keepmuts,1], G_full[which(rown!=0),1])
  
 # Not lining up     
-cbind(G_subset[,1], G_full_subset[which(rown!=0),1])
 
 ```
 

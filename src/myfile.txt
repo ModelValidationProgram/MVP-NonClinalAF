@@ -1,0 +1,4 @@
+adsfab
+.\t\t1
+a .		1
+a x .	1

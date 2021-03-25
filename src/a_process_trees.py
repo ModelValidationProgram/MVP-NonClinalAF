@@ -7,6 +7,12 @@ import ast
 import sys
 import os
 
+#seed = '2549986039929'
+#r = 1e-6
+#N = 100
+#mu = 1e-7
+#gen = 3000
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--seed", required = True)
 parser.add_argument("-r", "--recom", required = True)
@@ -55,11 +61,48 @@ mutatedT2 = pyslim.SlimTreeSequence(msprime.mutate(recapT2, rate=mu, random_seed
 
 print(f"The tree sequence now has {mutatedT2.num_trees} trees,"
       f" and {mutatedT2.num_mutations} mutations.")
-      
+ 
+mutatedT2.metadata['SLiM']['generation']
+mutatedT2.slim_generation
+mutatedT2.metadata['SLiM']['stage']
+mutatedT2.slim_time(0)
+
+ 
+ # Below is some of Aki's code for outputing individual information
+ # I don't need this because I only output tree sequences at one time point
+ 
+# Add individual IDs     
+# T2ind = mutatedT2.individuals_alive_at(0)    
+# # 
+# # 
+# indivlist_T2 = []
+# indivnames_T2 = []
+# # 
+# # 
+# with open("../sim_outputs/"+str(seed)+"_tree_individuals.txt", "w") as indfile:
+#     indfile.writelines("\t".join(["vcf_label", "tskit_id", "slim_id"] + ["birth_time_ago", "age"]) + "\n")
+#     for i in T2ind:
+#         indivlist_T2.append(i)
+#         ind = T2.individual(i)
+#         vcf_label = f"{ind.metadata.pedigree_id}"
+#         indivnames_T2.append(vcf_label)
+#         data = [vcf_label, str(ind.id), str(ind.metadata.pedigree_id), str(ind.time),str(ind.metadata.age)]
+#         indfile.writelines("\t".join(data) + "\n")
+     
+# this takes a subset if needed
+#with open("../sim_outputs/"+str(seed)+"_subset_T2.txt", "w") as indfile:
+#    indfile.writelines("vcf_label" + "\n")
+#    Start = np.arange(0,10001,100)
+#    Stop = np.arange(100,10001,100)
+#    for i in range(0, (len(Start)-1)):
+#      samp = random.sample(indivnames_T2[Start[i]:Stop[i]],10)
+#      indfile.writelines("\n".join(samp) + "\n")
+
+  
 
 with open("../sim_outputs/" + str(seed) + "_PlusNeuts.vcf", "w") as vcf_file:
-    mutatedT2.write_vcf(vcf_file)
-
+    #mutatedT2.write_vcf(vcf_file, individuals=indivlist_T2, individual_names=indivnames_T2)
+	mutatedT2.write_vcf(vcf_file)
 
 
 # Calculate tree heights, giving uncoalesced sites the maximum time

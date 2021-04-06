@@ -54,7 +54,7 @@ info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE,
 info
 
 # VCF file
-vcf <- read.vcfR(paste0(path,seed,"_VCF_causal.txt"))
+vcf <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
 head(vcf)
 head(vcf@fix, 50)
 dim(vcf@fix)
@@ -108,7 +108,7 @@ My goal is to start with a dataset of 50 pops * 20 individuals = 1000 individual
 
 (Part 1) I tried to subset the data to individuals who have highest fitness in their home population, but this does not give equal numbers.
 
-(Part 2) Decision: sample 30 individuals from each population with probability equal to their fitness. This will make the sampling less artificial.
+(Part 2) Decision: sample X individuals from each population with probability equal to their fitness. This will make the sampling less artificial.
 
 Note that this sampling doesn't really make a huge difference in terms of the correlation between salinity and temperature.
 ```{r find high fitness individuals}
@@ -124,7 +124,7 @@ Note that this sampling doesn't really make a huge difference in terms of the co
   
 ### Part 2 ####
   npops <- length(levels(factor(indPhen_df$subpop)))
-  n = 10 # number of individual per pop
+  n = 20 # number of individual per pop
   subset <- c()
   for (i in 1:npops){
     #set.seed(139982)
@@ -144,9 +144,10 @@ Note that this sampling doesn't really make a huge difference in terms of the co
   boxplot(indPhen_df$fitness[indPhen_df$subset]~indPhen_df$subpop[indPhen_df$subset], ylab = "fitness", xlab="pop", main="subset", ylim=c(0,1))
   # looks good to me
   
-  cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
-  cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
-  cor(indPhen_df$phen_temp,indPhen_df$temp_opt)
+  all_corr_phen_sal <- cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
+  subsamp_corr_phen_sal <- cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
+  all_corr_phen_temp <- cor(indPhen_df$phen_temp,indPhen_df$temp_opt)
+  subsamp_corr_phen_temp <- cor(indPhen_df$phen_temp[indPhen_df$subset],indPhen_df$temp_opt[indPhen_df$subset])
 ```
 
 
@@ -192,16 +193,16 @@ vcf_muts <- as.numeric(sub(";", "", vcf_muts1))
 head(vcf_muts)
 keepmuts <- which(vcf_muts %in% muts_df$mutID)
 head(keepmuts)
-
 ```
 
 ```{r VCF_FULL keepmuts}
 geno_full <- vcf_full@gt[,-1] 
 dim(geno_full)
 position_full <- getPOS(vcf_full)
-rown <- as.numeric(vcf_full@fix[,"ALT"])
-keepmuts_full <- which(rown %in% muts_df$mutID)
-position_full[keepmuts_full]
+rown <- as.numeric(vcf_full@fix[,"ALT"]) # mutation ID
+  # rown = 1 is a neutral mutation
+keepmuts_full <- which(rown %in% muts_df$mutID) # causal mutations
+position_full[keepmuts_full] # positions of causal mutations
 ```
 
 ```{r check vcf files line up}
@@ -224,6 +225,7 @@ if (!identical(sort(vcf_muts[keepmuts]), sort(muts_df$mutID))){
 
 ```
 
+The following code is for the subset VCF file of just causal mutations, subset to sampled individuals
 ```{r subset causal mutations MAF}
 vcf_muts_subset <- vcf_muts[keepmuts]
 muts_df$mutID
@@ -252,42 +254,6 @@ subset_indPhen_df <- indPhen_df[keepinds,]
 
 
 
-```{r filter VCF_FULL and reformat}
-
-
-
-head(geno_full[,1:5])
-
-
-G_full <- matrix(NA, nrow = nrow(geno_full), ncol = ncol(geno_full))
-G_full[geno_full %in% c("0/0", "0|0")] <- 0
-G_full[geno_full  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
-G_full[geno_full %in% c("1/1", "1|1")] <- 2
-
-head(G_full[,1:5])
-
-a_freq_full <- rowSums(G_full)/(2*ncol(G_full))
-hist(a_freq_full)
-
-if (!identical(sort(unique(unlist(as.numeric(G_full)))), as.numeric(0:2))){
-  print("Error: full genotype matrix not uniquely 012")
-  break
-}
-
-G_full_subset <- G_full[,keepinds]
-dim(G_full_subset)
-  # should have 1000 individuals
-
-# vcf_full@fix[,"POS"]
-
-rownames(G_full_subset)=rown
-colnames(G_full_subset)=keepinds
-
-## This is my subset of individuals
-length(keepinds)
-
-G_full_subset[1:20,1:10]
-```
 
 
 ```{r sanity check individual phenotypes}
@@ -324,10 +290,76 @@ abline(0,1)
 Keep in mind the correlations in the muts_df are based on the entire population
 of 5000 individuals
 
+The following code is for the subset VCF file of ALL mutations, subset to sampled individuals
+```{r filter VCF_FULL and reformat}
+
+head(geno_full[,1:5])
+
+
+G_full <- matrix(NA, nrow = nrow(geno_full), ncol = ncol(geno_full))
+G_full[geno_full %in% c("0/0", "0|0")] <- 0
+G_full[geno_full  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
+G_full[geno_full %in% c("1/1", "1|1")] <- 2
+
+head(G_full[,1:5])
+
+a_freq_full <- rowSums(G_full)/(2*ncol(G_full))
+hist(a_freq_full)
+
+if (!identical(sort(unique(unlist(as.numeric(G_full)))), as.numeric(0:2))){
+  print("Error: full genotype matrix not uniquely 012")
+  break
+}
+
+G_full_subset <- G_full[,keepinds]
+dim(G_full_subset)
+a_freq_subset <- rowSums(G_full_subset)/(2*ncol(G_full_subset))
+  # should have 1000 individuals
+
+# vcf_full@fix[,"POS"]
+
+rownames(G_full_subset)=vcf_full@fix[,"POS"]
+colnames(G_full_subset)=keepinds
+
+## This is my subset of individuals
+length(keepinds)
+
+G_full_subset[1:20,1:10]
+```
+
+```{r set up full mutations table}
+muts_full <- data.frame(seed = as.character(seed),
+  VCFrow = 1:nrow(vcf_full@gt),
+                        mutID = vcf_full@fix[,"ALT"],
+                        pos_pyslim = as.integer(vcf_full@fix[,"POS"]),
+                        a_freq_full = a_freq_full,
+                        a_freq_subset = a_freq_subset)
+dim(muts_full)
+
+#THE CODE IS DOING WHAT I THINK IT SHOULD:
+plot(muts_full$VCFrow, muts_full$pos_pyslim)
+
+muts_full <- merge(muts_full, muts_df[,c("mutID", "mutSalEffect",
+                                         "mutTempEffect", "INFO")], by="mutID", all.x=TRUE)
+dim(muts_full)
+
+head(muts_full)
+head(muts_full[muts_full$mutID!=1,]) # causal mutations
+plot(muts_full$VCFrow)
+
+muts_full <- muts_full[order(muts_full$pos_pyslim),]
+plot(muts_full$VCFrow)
+plot(muts_full$VCFrow, muts_full$pos_pyslim)
+
+muts_full$causal <- FALSE
+muts_full$causal[muts_full$mutID!=1] <- TRUE
+sum(muts_full$causal)
+```
+
 ## This code estimates the AF and temp of each population
 Used for calculation of the correlation and degree of cline
 ```{r af as function of temperature}
-dim(G_subset)
+dim(G_full_subset)
 str(indPhen_df[indPhen_df$subset,])
 
 pop_temp <- data.frame(subpop=subset_indPhen_df$subpop,temp_opt=subset_indPhen_df$temp_opt)
@@ -335,15 +367,19 @@ pop_temp <- pop_temp[-which(duplicated(pop_temp)),]
 pop_temp
 temp_levels <- unique(subset_indPhen_df$temp_opt)
 
-af_temp <- matrix(NA, nrow=nrow(pop_temp), ncol=nrow(G_subset))
+af_temp <- matrix(NA, nrow=nrow(pop_temp), ncol=nrow(G_full_subset))
+
 n_ind <- table(subset_indPhen_df$subpop)
 
-vcf_muts_df <- data.frame(mutID=vcf_muts_subset, 
-                          af_cor_temp = NA,
-                          af_slope_temp = NA)
+muts_full$af_cor_temp <- NA
+muts_full$af_slope_temp <- NA
+muts_full$af_cor_temp_P <- NA
+muts_full$af_cor_sal <- NA
+muts_full$af_slope_sal <- NA
+muts_full$af_cor_sal_P <- NA
 
-for (row in 1:nrow(G_subset)){
-    counts <- table(G_subset[row,], indPhen_df$subpop[indPhen_df$subset])
+for (row in 1:nrow(G_full_subset)){
+    counts <- table(G_full_subset[row,], indPhen_df$subpop[indPhen_df$subset])
       # this give a table of the number of alleles for individuals at that temperature
     
     forSum <- counts*as.numeric(rownames(counts))
@@ -355,78 +391,84 @@ for (row in 1:nrow(G_subset)){
       # also accounts for situations when only 2 genotypes found at a locus
   af_temp[,row] <- (colSums(forSum))/(2*n_ind)
   corrtemp <- cor.test(af_temp[,row], pop_temp$temp_opt, method="spearman")
-  vcf_muts_df$af_cor_temp[row] <- corrtemp$estimate
-  vcf_muts_df$af_cor_temp_P[row] <- corrtemp$p.value
-  vcf_muts_df$af_slope_temp[row] <- lm(af_temp[,row]~pop_temp$temp_opt)$coef[2]
+  muts_full$af_cor_temp[row] <- corrtemp$estimate
+  muts_full$af_cor_temp_P[row] <- corrtemp$p.value
+  muts_full$af_slope_temp[row] <- lm(af_temp[,row]~pop_temp$temp_opt)$coef[2]
   
 }
+# this error message is common:
+# 50: In cor.test.default(af_temp[, row], pop_temp$temp_opt,  ... :
+#  Cannot compute exact p-value with ties
 
-colnames(af_temp) <- vcf_muts_subset
+colnames(af_temp) <- muts_full$pos_pyslim
 rownames(af_temp) <- pop_temp$temp_opt
-head(af_temp)
+dim(af_temp)
 
 # Sanity check that what I calculate here (from the subsample)
 # is similar to what I outputted from SliM in muts_df
 par(mfrow=c(1,1))
-plot(vcf_muts_df$af_cor_temp[order(vcf_muts_df$mutID)],
-     muts_df$cor_temp[order(muts_df$mutID)])
+bobx <- muts_full$af_cor_temp[which(muts_full$causal)]
+boby<- muts_df$cor_temp[order(muts_df$position)]
+plot(bobx, boby)
 abline(0,1)
 
+
+
+
+# these graphs do not account for linkage. It might help to have a neutral chromosome in the simulation I can use for comparison
+ggplot(muts_full, aes(af_cor_temp, fill=causal)) + 
+  geom_density(alpha=0.5) + xlab("Cor(p, temp)") + xlim(-1,1)
+
+ggplot(muts_full, aes(af_slope_temp, fill=causal)) + 
+  geom_density(alpha=0.5) + xlab("Slope(p, temp)") + xlim(-1,1)
+
+muts_full$pos_pyslim <- as.integer(muts_full$pos_pyslim)
+
+plot(muts_full$pos_pyslim, abs(muts_full$af_cor_temp))
+points(muts_full$pos_pyslim[muts_full$causal], abs(muts_full$af_cor_temp[muts_full$causal]), col="blue", pch=20)
+
+table(muts_full$af_cor_temp[muts_full$af_cor_temp>0.5 & muts_full$af_cor_temp<0.55])
+```
+
+WHY THE HORIZONAL LINE?
+For some reason a bunch of loci have correlations in the range 0.521-0.522
+```{r check}
+nm <- which(muts_full$af_cor_temp>0.521 & muts_full$af_cor_temp<0.522)
+
+af_temp[,nm[1:5]]
+
+cor(af_temp[,nm[1]], pop_temp$temp_opt)
+cor(af_temp[,nm[5]], pop_temp$temp_opt)
+
+# it checks out. Seems to be driven by alleles present in only most extreme temp poopulation
+
+
+# could improve by sampling 1000 neut and adding causal on top
+# whats going on in neutral genome is weird...
+for (i in 1:1000){
+  af <- tapply(af_temp[,i], pop_temp$temp_opt, mean)
+  if (i==1){
+    plot(temp_levels, af, col=adjustcolor("blue", 0.1), type="l", ylim=c(0,1))
+  }else{
+    if (muts_full$causal[i]==TRUE){
+      points(temp_levels, af, col="red", type="l", lwd=4)
+      }else{
+      points(temp_levels, af, col=adjustcolor("blue", 0.1), type="l", ylim=c(0,1))
+    }
+  }
+}
+head(muts_full$af_cor_temp)
 ```
 
 
 
-# TO DO STARTING HERE
-
-1. Use full VCF file
-2. Calculate proportion of causal and neutral loci that show sig. correlations with temp (output correlation and slope)
-  
-Table 1: mutations
-  *`mut_ID` mutation ID, if not equal to 1, a causal mutation
-  *`POS` position
-  *`corr_temp` correlation between allele frequency and temperature
-  *`corr_sal` correlation between allele frequency and salinity
-  *`slope_temp` slope between allele frequency and temperature
-  *`slope_sal` slope between allele frequency and salinity
-  *`LFMM_vXX_p` p-value from LFMM version XXX
-  *`RDA_p` p-value from RDA in vegan as explained by Capblanq
-  * `prop_Va_metapop` proportion of VA explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment)
-  * `prop_Va_temp=1_sal=1`
-  * `prop_Va_temp=1_sal=-1`
-  * `prop_Va_temp=-1_sal=-1`
-  * `prop_Va_temp=-1_sal=1`
-  * `prop_Va_temp~0_sal=0`
-  
-Table 2: summary of sim
-  *`seed` 
-  *`num_causal` number of causal loci in sim
-  *`num_neut` number of neutral loci in sim
-  *`prop_causal_sig_temp_corr` proportion of causal loci that have significant correlations with temperature
-  *`prop_causal_sig_sal_corr` proportion of causal loci that have significant correlations with salinity
-  *`prop_neut_sig_temp_corr` proportion of neutral loci that have significant correlations with temperature
-  *`prop_neut_sig_sal_corr` proportion of neutral loci that have significant correlations with salinity
-  *`median_causal_temp_slope` median slope between allele frequency and temperature for causal loci
-  *`median_causal_sal_slope` median slope between allele frequency and salinity for causal loci
-  *`median_neut_temp_slope` median slope between allele frequency and temperature for neutral loci
-  *`median_neut_sal_slope` median slope between allele frequency and salinity for neutral loci
-  *`prop_causal_sig_LFMM` proportion of causal loci that are significant by LFMM
-  *`prop_causal_sig_RDA` proportion of causal loci that are significant by RDA
-  *`prop_VA_outliers_LFMM`  proportion of Va explained by LFMM outliers
-  *`prop_VA_outliers_RDA` proportion of Va explained by RDA outliers
-  *`prop_VA_outliers_RDA_LFMM` proportion of Va explained by both outliers from methods
-  *`cor_RDAcausal_RDloadings_tempPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-  *`cor_RDAcausal_RDloadings_salPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
-  *`cor_RDAalloutliers_RDloadings_tempPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-  *`cor_RDAalloutliers_RDloadings_salPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
-  *`cor_RDAallSNPs_RDloadings_tempPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-  *`cor_RDAallSNPs_RDloadings_salPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
 
 
 
-## This code estimates the AF and temp of each population
+## This code estimates the AF and salinity of each population
 Used for calculation of the correlation and degree of cline
-```{r af as function of temperature}
-dim(G_subset)
+```{r af as function of salinity}
+dim(G_full_subset)
 str(indPhen_df[indPhen_df$subset,])
 
 pop_sal <- data.frame(subpop=subset_indPhen_df$subpop,sal_opt=subset_indPhen_df$sal_opt)
@@ -434,14 +476,19 @@ pop_sal <- pop_sal[-which(duplicated(pop_sal)),]
 pop_sal
 sal_levels <- unique(subset_indPhen_df$sal_opt)
 
-af_sal <- matrix(NA, nrow=nrow(pop_sal), ncol=nrow(G_subset))
+af_sal <- matrix(NA, nrow=nrow(pop_sal), ncol=nrow(G_full_subset))
+
 n_ind <- table(subset_indPhen_df$subpop)
 
-vcf_muts_df$af_cor_sal = NA
-vcf_muts_df$af_slope_sal=NA
+muts_full$af_cor_sal <- NA
+muts_full$af_slope_sal <- NA
+muts_full$af_cor_sal_P <- NA
+muts_full$af_cor_sal <- NA
+muts_full$af_slope_sal <- NA
+muts_full$af_cor_sal_P <- NA
 
-for (row in 1:nrow(G_subset)){
-    counts <- table(G_subset[row,], indPhen_df$subpop[indPhen_df$subset])
+for (row in 1:nrow(G_full_subset)){
+    counts <- table(G_full_subset[row,], indPhen_df$subpop[indPhen_df$subset])
       # this give a table of the number of alleles for individuals at that salerature
     
     forSum <- counts*as.numeric(rownames(counts))
@@ -452,39 +499,190 @@ for (row in 1:nrow(G_subset)){
       # and homozygote derived are counted twice
       # also accounts for situations when only 2 genotypes found at a locus
   af_sal[,row] <- (colSums(forSum))/(2*n_ind)
+  corrsal <- cor.test(af_sal[,row], pop_sal$sal_opt, method="spearman")
+  muts_full$af_cor_sal[row] <- corrsal$estimate
+  muts_full$af_cor_sal_P[row] <- corrsal$p.value
+  muts_full$af_slope_sal[row] <- lm(af_sal[,row]~pop_sal$sal_opt)$coef[2]
   
-   corrsal <- cor.test(af_sal[,row], pop_sal$sal_opt, method="spearman")
-  vcf_muts_df$af_cor_sal[row] <- corrsal$estimate
-  vcf_muts_df$af_cor_sal_P[row] <- corrsal$p.value
-  
-    vcf_muts_df$af_slope_sal[row] <- lm(af_sal[,row]~pop_sal$sal_opt)$coef[2]
 }
+# this error message is common:
+# 50: In cor.test.default(af_sal[, row], pop_sal$sal_opt,  ... :
+#  Cannot compute exact p-value with ties
 
-colnames(af_sal) <- vcf_muts_subset
+colnames(af_sal) <- muts_full$pos_pyslim
 rownames(af_sal) <- pop_sal$sal_opt
-head(af_sal)
+dim(af_sal)
 
 # Sanity check that what I calculate here (from the subsample)
 # is similar to what I outputted from SliM in muts_df
 par(mfrow=c(1,1))
-plot(vcf_muts_df$af_cor_sal[order(vcf_muts_df$mutID)],
-     muts_df$cor_sal[order(muts_df$mutID)])
+bobx <- muts_full$af_cor_sal[which(muts_full$causal)]
+boby<- muts_df$cor_sal[order(muts_df$position)]
+plot(bobx, boby)
 abline(0,1)
+
+
+
+
+# these graphs do not account for linkage. It might help to have a neutral chromosome in the simulation I can use for comparison
+ggplot(muts_full, aes(af_cor_sal, fill=causal)) + 
+  geom_density(alpha=0.5) + xlab("Cor(p, sal)") + xlim(-1,1)
+
+ggplot(muts_full, aes(af_slope_sal, fill=causal)) + 
+  geom_density(alpha=0.5) + xlab("Slope(p, sal)") + xlim(-1,1)
+
+muts_full$pos_pyslim <- as.integer(muts_full$pos_pyslim)
+
+plot(muts_full$pos_pyslim, abs(muts_full$af_cor_sal))
+points(muts_full$pos_pyslim[muts_full$causal], abs(muts_full$af_cor_sal[muts_full$causal]), col="blue", pch=20)
+
 ```
 
 This code looks at VA across metapopulation.
-Is this the right way? Or should I look at VA explained in each subpop?
-```{r histogram of correlations and slopes}
+ * `prop_Va_metapop` proportion of VA explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment)
+  * `prop_Va_temp=1_sal=1`
+  * `prop_Va_temp=1_sal=-1`
+  * `prop_Va_temp=-1_sal=-1`
+  * `prop_Va_temp=-1_sal=1`
+  * `prop_Va_temp~0_sal=0`
+  
+```{r prop Va}
 
-muts_df$Va_temp <- muts_df$MAF*(1-muts_df$MAF)*muts_df$mutTempEffect^2
-muts_df$Va_temp_prop <- muts_df$Va_temp/sum(muts_df$Va_temp)
-muts_df$Va_sal <- muts_df$MAF*(1-muts_df$MAF)*muts_df$mutSalEffect^2
-muts_df$Va_sal_prop <- muts_df$Va_sal/sum(muts_df$Va_sal)
+muts_full$Va_temp <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutTempEffect^2
 
-muts_all <- merge(muts_df, vcf_muts_df, by="mutID")
-dim(muts_all)
-head(muts_all)
+muts_full$Va_temp_prop <- muts_full$Va_temp/sum(muts_full$Va_temp, na.rm=TRUE)
+hist(muts_full$Va_temp_prop[which(muts_full$causal)])
 
+muts_full$Va_sal <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutSalEffect^2
+
+muts_full$Va_sal_prop <- muts_full$Va_sal/sum(muts_full$Va_sal, na.rm=TRUE)
+hist(muts_full$Va_sal_prop[which(muts_full$causal)])
+
+plot(muts_full$Va_temp_prop[which(muts_full$causal)],
+     muts_full$Va_sal_prop[which(muts_full$causal)])
+```
+
+
+## LFMM
+```{r}
+### LFMM 0.0 Ridge regression model genotype ~ phenotype ####
+# extract scaled genotypes
+scaled.genotype <- scale(as.matrix(t(training$G)))
+#scaled.genotype <- as.matrix(t(sim1$G))
+# extract scaled phenotypes
+phen <- scale(as.matrix(ind$phenotype1[which(ind$infinal)]))
+# ridge regression
+lfmm.ridge <- lfmm::lfmm_ridge(Y = scaled.genotype, X = phen, K = 3, lambda = 1e-4)
+#The lfmm.ridge object contains estimates for the latent variables and for the effect sizes. Here, the estimates are used for computing calibrated significance values and for testing associations between the response matrix Y and the explanatory variable x. It can be done as follows:
+lfmm.test.ridge <- lfmm::lfmm_test(Y = scaled.genotype, X = phen, lfmm = lfmm.ridge, calibrate = "gif")
+p.values.ridge <- lfmm.test.ridge$calibrated.pvalue
+print(c("lfmm.test.ridge$gif", lfmm.test.ridge$gif))
+#hist(p.values.ridge, col = "lightgreen", main="LFMM ridge")
+#qval <- qvalue::qvalue(p.values)
+#plot(qval)
+#The plot suggests that setting fdr.level = 0.025 warrant few false positives.
+#qval <- qvalue::qvalue(p.values, fdr.level = 0.005)
+#candidates <- which(qval$significant)
+#plot(training$position, -log10(p.values.ridge), cex = .5, pch = 19, col = "black", main="LFMM ridge", ylim=c(0, 60))
+#plot_layers(y_head=55, y_arrows=c(10, 0))
+
+final_df$LFMM_ridge_0.0_ALL_log10p <- -log10(as.numeric(p.values.ridge))
+#plot(final_df$pos, final_df$LFMM_ridge_0.0_ALL_log10p) 
+
+### LFMM LASSO model model genotype ~ phenotype ####    
+#LFMM parameters can alternatively be estimated by solving regularized least-squares mimimization, with lasso penalty as follows.
+lfmm.lasso <- lfmm::lfmm_lasso(Y = scaled.genotype, X = phen, K = 3, nozero.prop = 0.02)
+# The lfmm.lasso object contains new estimates for the latent variables and for the effect sizes. 
+# Note that for lasso, we didn't set the value of a regularization parameter. 
+# Instead, we set the proportion of non-null effects (here 2 percent).
+lfmm.test.lasso <- lfmm::lfmm_test(Y = scaled.genotype, X = phen, lfmm = lfmm.lasso, calibrate = "gif")
+p.values.lasso <- lfmm.test.lasso$calibrated.pvalue
+print(c("lfmm.test.lasso$gif", lfmm.test.lasso$gif))
+#hist(p.values.lasso, col = "lightblue")
+#plot(training$position, -log10(p.values.lasso), cex = .5, pch = 19, col = "black", main="LFMM lasso", xaxs="i")
+#plot_layers(y_head=45, y_arrows=c(5,0))
+
+final_df$LFMM_lasso_0.0_ALL_log10p <- -log10(as.numeric(p.values.lasso))
+#plot(final_df$pos, final_df$LFMM_lasso_0.0_ALL_log10p)
+
+
+```
+
+
+
+
+
+
+
+## RDA
+
+```{r vegan}
+library(vegan)
+
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt)
+
+
+subset_indPhen_df$x <- (unique(subset_indPhen_df$sal_opt)+1)*2
+subset_indPhen_df$y <- round((unique(subset_indPhen_df$temp_opt)+1)*9/2,0)
+m <- as.matrix(cbind(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt))
+
+subset_indPhen_df$rand_env <- dmvnorm(m,
+  mean=c(0,0), sigma=matrix(c(1, 0.5, 0.5, 1), ncol=2))
+  # This is a saddle, I think 
+
+subset_indPhen_df$rand_env2 <- dmvnorm(m,
+  mean=c(1,1), sigma=matrix(c(1, 0, 0, 1), ncol=2))
+  # This is like disease - it increases with salinity and temperature
+
+
+
+plot(subset_indPhen_df$sal_opt,  subset_indPhen_df$temp_opt)
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env)
+plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env)
+plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env2)
+plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env2)
+
+rdaout <- rda(t(G_subset)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt + subset_indPhen_df$rand_env + subset_indPhen_df$rand_env2)
+summary(rdaout)
+screeplot(rdaout)
+plot(rdaout)
+scores <- scores(rdaout, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+head(loci.sc)
+head(ind.sc)
+str(loci.sc)
+
+plot(loci.sc[,1], loci.sc[,2])
+
+head(subset_indPhen_df)
+subset_indPhen_df$RDA1 <- ind.sc[,1]
+subset_indPhen_df$RDA2 <- ind.sc[,2]
+subset_indPhen_df$RDA3 <- ind.sc[,3]
+plot(subset_indPhen_df$temp_opt ~ subset_indPhen_df$RDA1)
+plot(scale(subset_indPhen_df$phen_temp) ~ scale(subset_indPhen_df$RDA1))
+abline(0,1, col="red")
+
+plot(subset_indPhen_df$sal_opt ~ subset_indPhen_df$RDA2)
+plot(subset_indPhen_df$phen_sal ~ subset_indPhen_df$RDA2)
+
+p <- subset_indPhen_df$RDA2*0.53*0.41 + subset_indPhen_df$RDA3*0.84*0.29
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+plot(subset_indPhen_df$sal_opt ~ p)
+plot(scale(subset_indPhen_df$phen_sal) ~ scale(p))
+abline(0,1, col="red")
+```
+
+
+
+
+
+
+
+
+
+
+```{r}
 alpha <- 0.05/nrow(muts_all)
 sig_temp <- muts_all$af_cor_temp_P<alpha
 sig_sal <- muts_all$af_cor_sal_P<alpha
@@ -661,65 +859,6 @@ heatmap(t(G_subset[a$colInd,new==1]), Rowv = NA,  Colv = NA,
          xlab="Mutation ID",  cexCol = 0.3, 
         ylab="Southern<---Population--->Northern")
   # The high salinity sites, which are connected by dispersal, evolve a more clinal allele frequency pattern with salinity
-```
-
-## RDA
-
-```{r vegan}
-library(vegan)
-
-plot(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt)
-
-
-subset_indPhen_df$x <- (unique(subset_indPhen_df$sal_opt)+1)*2
-subset_indPhen_df$y <- round((unique(subset_indPhen_df$temp_opt)+1)*9/2,0)
-m <- as.matrix(cbind(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt))
-
-subset_indPhen_df$rand_env <- dmvnorm(m,
-  mean=c(0,0), sigma=matrix(c(1, 0.5, 0.5, 1), ncol=2))
-  # This is a saddle, I think 
-
-subset_indPhen_df$rand_env2 <- dmvnorm(m,
-  mean=c(1,1), sigma=matrix(c(1, 0, 0, 1), ncol=2))
-  # This is like disease - it increases with salinity and temperature
-
-
-
-plot(subset_indPhen_df$sal_opt,  subset_indPhen_df$temp_opt)
-plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env)
-plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env)
-plot(subset_indPhen_df$sal_opt, subset_indPhen_df$rand_env2)
-plot(subset_indPhen_df$temp_opt, subset_indPhen_df$rand_env2)
-
-rdaout <- rda(t(G_subset)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt + subset_indPhen_df$rand_env + subset_indPhen_df$rand_env2)
-summary(rdaout)
-screeplot(rdaout)
-plot(rdaout)
-scores <- scores(rdaout, choices=1:4)
-loci.sc <- scores$species
-ind.sc <- scores$sites
-head(loci.sc)
-head(ind.sc)
-str(loci.sc)
-
-plot(loci.sc[,1], loci.sc[,2])
-
-head(subset_indPhen_df)
-subset_indPhen_df$RDA1 <- ind.sc[,1]
-subset_indPhen_df$RDA2 <- ind.sc[,2]
-subset_indPhen_df$RDA3 <- ind.sc[,3]
-plot(subset_indPhen_df$temp_opt ~ subset_indPhen_df$RDA1)
-plot(scale(subset_indPhen_df$phen_temp) ~ scale(subset_indPhen_df$RDA1))
-abline(0,1, col="red")
-
-plot(subset_indPhen_df$sal_opt ~ subset_indPhen_df$RDA2)
-plot(subset_indPhen_df$phen_sal ~ subset_indPhen_df$RDA2)
-
-p <- subset_indPhen_df$RDA2*0.53*0.41 + subset_indPhen_df$RDA3*0.84*0.29
-  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
-plot(subset_indPhen_df$sal_opt ~ p)
-plot(scale(subset_indPhen_df$phen_sal) ~ scale(p))
-abline(0,1, col="red")
 ```
 
 

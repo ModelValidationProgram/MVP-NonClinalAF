@@ -314,7 +314,7 @@ late() {
 			
 			nmut = sim.countOfMutationsOfType(m2);
 			MAF = sim.mutationFrequencies(sim.subpopulations);
-			whichmuts = which(MAF>0.01);
+			whichmuts = which(MAF>0.01 & MAF < 0.99);
 			MAF_whichmuts = MAF[whichmuts];
 			mutNames_whichmuts = sim.mutations.id[whichmuts];
 			subpops = sim.subpopulations;
@@ -329,13 +329,13 @@ late() {
 			mutTempEffect_whichmuts = sim.mutations.getValue("e1")[whichmuts];
 			//cor_sal_muts = rep(0.0, length(whichmuts));
 			//cor_temp_muts = rep(0.0, length(whichmuts));
-			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_muts.txt"), sep=""), paste(c("seed", "mutID","MAF", "cor_sal","cor_temp", "mutSalEffect","mutTempEffect")));
+			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_muts.txt"), sep=""), paste(c("seed", "mutID","muttype","p", "cor_sal","cor_temp", "mutSalEffect","mutTempEffect")));
 	
 		for (i in seqAlong(whichmuts)){
 			//thismutfreqs = freq[i,];
 			cor_sal_muts = cor(all_opt0, drop(freq[i,]));
 			cor_temp_muts = cor(all_opt1, drop(freq[i,]));
-			out_i = paste(MY_SEED, mutNames_whichmuts[i], MAF_whichmuts[i], cor_sal_muts,  cor_temp_muts, mutSalEffect_whichmuts[i], mutTempEffect_whichmuts[i]);
+			out_i = paste(MY_SEED, mutNames_whichmuts[i],"m2", MAF_whichmuts[i], cor_sal_muts,  cor_temp_muts, mutSalEffect_whichmuts[i], mutTempEffect_whichmuts[i]);
 			writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_muts.txt"), sep=""), out_i, append=T);
 		}
 	

@@ -46,10 +46,10 @@ This file tracks the amount of local adaptation in the simulation through time
 * `sympatric`  average fitness of demes in sympatry
 * `allopatric` average fitness of demes in allopatry
 * `local_adapt` amount of local adaptation (`allopatric` - `sympatric` )
-* `mean_phen0` mean of first phenotype **WHAT IS THIS**
-* `mean_phen1` mean of second phenotype **WHAT IS THIS**
+* `mean_phen0` mean of first phenotype (salinity in this simulation) across the whole metapopulation (should be near 0)
+* `mean_phen1` mean of second phenotype (temperature in this simulation) across the whole metapopulation (should be near 0)
 * `cor_sal_popmean` correlation between salinity and population mean phenotype (often inflated due to central limit theorem)
-* `cor_temp_popeman` correlation between temperature and population mean phenotype (often inflated due to central limit theorem)
+* `cor_temp_popmean` correlation between temperature and population mean phenotype (often inflated due to central limit theorem)
 * `cor_sal_ind` correlation between salinity and individual phenotypes
 * `cor_temp_ind` correlation between temperature and individual phenotypes
 
@@ -57,14 +57,14 @@ This file tracks the amount of local adaptation in the simulation through time
 This is the migration matrix that was used in the sims. It is used in pyslim for recapitation. Without it, pyslim will run forever and never recapitate.
 
 ### 2549986039929_muts.txt
-This is a table of information about each mutation that is simulated SLIM
+This is a table of information about each mutation that is simulated SLIM AND has an allele frequency > 0.01 or < 0.99
 
 * `seed`  simulation seed
 * `mutID` mutation ID - should match mutID in other tables and VCF file
-* `muttype` NEED TO ADD TO OUTPUT **WHAT IS THIS**
-* `MAF` allele frequency of derived mutation - IS THIS ACTUALLY MAF? **WHAT IS THIS**
-* `cor_sal` correlation of mutation allele frequency and salinity at end of simulation (all individuals) - IS THIS CALCULATED BY EACH DEME OR ALL DEMES WITH SAME SAL TOgether? **WHAT IS THIS**
-* `cor_temp` correlation of mutation allele frequency and temperature at end of simulation (all individuals) - IS THIS CALCULATED BY EACH DEME OR ALL DEMES WITH SAME SAL TOgether? *WHAT IS THIS**
+* `muttype` mutation type in SLiM
+* `p` allele frequency of derived mutation - not actually the minor allele frequency
+* `cor_sal` correlation of mutation allele frequency and salinity at end of simulation (all individuals) - each deme is a datapoint
+* `cor_temp` correlation of mutation allele frequency and temperature at end of simulation (all individuals) - each deme is a datapoint
 * `mutSalEffect` Effect of mutation on salinity
 * `mutTempEffect` Effect of mutation on temperature
 
@@ -92,10 +92,10 @@ The trees file output by SliM that is piped into pyslim.
 
 After each mutation is analyzed in R, 
 
-SEE APRIL 2021 NOTEBOOK POSTS
+SEE APRIL 2021 NOTEBOOK POSTS - TO DO
 
 ### 2549986039929_sim_analysis.txt
 
 After each simulation is analyzed in R, 
 
-SEE APRIL 2021 NOTEBOOK POSTS
+SEE APRIL 2021 NOTEBOOK POSTS - TO DO

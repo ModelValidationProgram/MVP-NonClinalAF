@@ -564,19 +564,29 @@ plot(muts_full$Va_temp_prop[which(muts_full$causal)],
 
 
 ## LFMM
-```{r}
-### LFMM 0.0 Ridge regression model genotype ~ phenotype ####
+
+go with ridge regression
+```{r lfmm ridge temp}
+
+pcaG <- princomp(t(scaled.genotype))
+plot(pcaG)
+
+### LFMM 0.0 Ridge regression model genotype ~ environment ####
 # extract scaled genotypes
-scaled.genotype <- scale(as.matrix(t(training$G)))
+scaled.genotype <- scale(as.matrix(t(G_full_subset)))
 #scaled.genotype <- as.matrix(t(sim1$G))
 # extract scaled phenotypes
-phen <- scale(as.matrix(ind$phenotype1[which(ind$infinal)]))
+env_temp <- scale(as.matrix(subset_indPhen_df$temp_opt))
+env_sal <- scale(as.matrix(subset_indPhen_df$sal_opt))
 # ridge regression
-lfmm.ridge <- lfmm::lfmm_ridge(Y = scaled.genotype, X = phen, K = 3, lambda = 1e-4)
+
+lfmm_ridge_temp <- lfmm::lfmm_ridge(Y = scaled.genotype, X = env_temp, K = 4, lambda = 1e-4)
 #The lfmm.ridge object contains estimates for the latent variables and for the effect sizes. Here, the estimates are used for computing calibrated significance values and for testing associations between the response matrix Y and the explanatory variable x. It can be done as follows:
-lfmm.test.ridge <- lfmm::lfmm_test(Y = scaled.genotype, X = phen, lfmm = lfmm.ridge, calibrate = "gif")
-p.values.ridge <- lfmm.test.ridge$calibrated.pvalue
-print(c("lfmm.test.ridge$gif", lfmm.test.ridge$gif))
+lfmm_ridge_temp_test  <- lfmm::lfmm_test(Y = scaled.genotype, X = env_temp, lfmm = lfmm_ridge_temp, calibrate = "gif")
+
+lfmm_ridge_temp_P <- lfmm_ridge_temp_test$calibrated.pvalue
+
+print(c("lfmm.test.ridge$gif", lfmm_ridge_temp_test$gif))
 #hist(p.values.ridge, col = "lightgreen", main="LFMM ridge")
 #qval <- qvalue::qvalue(p.values)
 #plot(qval)
@@ -586,30 +596,42 @@ print(c("lfmm.test.ridge$gif", lfmm.test.ridge$gif))
 #plot(training$position, -log10(p.values.ridge), cex = .5, pch = 19, col = "black", main="LFMM ridge", ylim=c(0, 60))
 #plot_layers(y_head=55, y_arrows=c(10, 0))
 
-final_df$LFMM_ridge_0.0_ALL_log10p <- -log10(as.numeric(p.values.ridge))
+LFMM_ridge_temp_log10p <- -log10(as.numeric(lfmm_ridge_temp_P))
 #plot(final_df$pos, final_df$LFMM_ridge_0.0_ALL_log10p) 
 
-### LFMM LASSO model model genotype ~ phenotype ####    
-#LFMM parameters can alternatively be estimated by solving regularized least-squares mimimization, with lasso penalty as follows.
-lfmm.lasso <- lfmm::lfmm_lasso(Y = scaled.genotype, X = phen, K = 3, nozero.prop = 0.02)
-# The lfmm.lasso object contains new estimates for the latent variables and for the effect sizes. 
-# Note that for lasso, we didn't set the value of a regularization parameter. 
-# Instead, we set the proportion of non-null effects (here 2 percent).
-lfmm.test.lasso <- lfmm::lfmm_test(Y = scaled.genotype, X = phen, lfmm = lfmm.lasso, calibrate = "gif")
-p.values.lasso <- lfmm.test.lasso$calibrated.pvalue
-print(c("lfmm.test.lasso$gif", lfmm.test.lasso$gif))
-#hist(p.values.lasso, col = "lightblue")
-#plot(training$position, -log10(p.values.lasso), cex = .5, pch = 19, col = "black", main="LFMM lasso", xaxs="i")
-#plot_layers(y_head=45, y_arrows=c(5,0))
-
-final_df$LFMM_lasso_0.0_ALL_log10p <- -log10(as.numeric(p.values.lasso))
-#plot(final_df$pos, final_df$LFMM_lasso_0.0_ALL_log10p)
-
+plot(muts_full$pos_pyslim, LFMM_ridge_temp_log10p)
+points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_temp_log10p[muts_full$causal], col="blue", pch=20)
 
 ```
 
 
+```{r lfmm ridge sal}
 
+env_sal <- scale(as.matrix(subset_indPhen_df$sal_opt))
+# ridge regression
+
+lfmm_ridge_sal <- lfmm::lfmm_ridge(Y = scaled.genotype, X = env_sal, K = 4, lambda = 1e-4)
+#The lfmm.ridge object contains estimates for the latent variables and for the effect sizes. Here, the estimates are used for computing calibrated significance values and for testing associations between the response matrix Y and the explanatory variable x. It can be done as follows:
+lfmm_ridge_sal_test  <- lfmm::lfmm_test(Y = scaled.genotype, X = env_sal, lfmm = lfmm_ridge_sal, calibrate = "gif")
+
+lfmm_ridge_sal_P <- lfmm_ridge_sal_test$calibrated.pvalue
+
+print(c("lfmm.test.ridge$gif", lfmm_ridge_sal_test$gif))
+#hist(p.values.ridge, col = "lightgreen", main="LFMM ridge")
+#qval <- qvalue::qvalue(p.values)
+#plot(qval)
+#The plot suggests that setting fdr.level = 0.025 warrant few false positives.
+#qval <- qvalue::qvalue(p.values, fdr.level = 0.005)
+#candidates <- which(qval$significant)
+#plot(training$position, -log10(p.values.ridge), cex = .5, pch = 19, col = "black", main="LFMM ridge", ylim=c(0, 60))
+#plot_layers(y_head=55, y_arrows=c(10, 0))
+
+LFMM_ridge_sal_log10p <- -log10(as.numeric(lfmm_ridge_sal_P))
+#plot(final_df$pos, final_df$LFMM_ridge_0.0_ALL_log10p) 
+
+plot(muts_full$pos_pyslim, LFMM_ridge_sal_log10p)
+points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_sal_log10p[muts_full$causal], col="blue", pch=20)
+```
 
 
 

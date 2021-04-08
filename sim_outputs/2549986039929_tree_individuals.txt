@@ -1,1 +1,0 @@
-vcf_label	tskit_id	slim_id	birth_time_ago	age

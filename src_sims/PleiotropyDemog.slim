@@ -11,6 +11,8 @@ initialize()
 
 	defineConstant("MIG_x", 0.49);	 //0.49						// migration rate between subpops
 	defineConstant("MIG_y", 0.01);	//0.01						// migration rate between subpops
+		// requires isVariableM = 0		
+		// if isVariableM = 1, these are ignored
 	
 	
 	defineConstant("N_traits", 2);   // number of traits (1 or 2)
@@ -358,10 +360,17 @@ function (void)outputMigration(string$ path)
 
 mutation(m2) {
 	// draw mutational effects for the new m2 mutation
-	effects = rmvnorm(1, QTL_mu, QTL_sigma);
+	if (ispleiotropy==1){	
+		effects = rmvnorm(1, QTL_mu, QTL_sigma);
 		mut.setValue("e0", effects[0]);
 		mut.setValue("e1", effects[1]);
+	}
+	
 	if (ispleiotropy==0){
+		effects = rmvnorm(1, QTL_mu*2, QTL_sigma);
+		// this is multiplied by 2, because in the non-pleiotropy case I've hacked it so that the mutations are still pleiotropic (so the rest of the code works), but then I make them non-pleiotropic by randomly setting the mutational effect on one trait to 0. In essence, this halves the mutation rate for the non-pleiotropic case compared to the pleiotropic case for each trait. This hack (QTL_mu*2) make the mutation rates equal between the pleiotropic and non-pleiotropic cases.
+		mut.setValue("e0", effects[0]);
+		mut.setValue("e1", effects[1]);
 		bob = sample(c(0,1), 1);
 		if (bob==0){
 			mut.setValue("e0", 0);

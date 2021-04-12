@@ -24,6 +24,9 @@ I also added a table `<seed>_popInfo.txt` for the information about each populat
 - [x] check that the Ne cline, environment, and x-location makes sense
     * I wrote some R code to plot the demography from each sim. I'm happy with the results! Everything checks out. I also added code to simulate Ne variation in y-axis or x-axis
 
+-  [ ] check that no pleiotropy works - mutations have effects on one trait or the other
+* 
+
 - [ ] Situations to test:
 
 * `N_traits = 1, ispleiotropy=1, iscontrol=0, demog=Estuary` (when N_traits = 1, set ispleieotropy to 1 because the way mutations are simulated. They will still have effects on the other phenotype, but that phenotype is not under selection)

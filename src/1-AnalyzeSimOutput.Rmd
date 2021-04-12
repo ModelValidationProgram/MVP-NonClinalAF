@@ -28,12 +28,17 @@ for (i in 1:length(packages_needed)){
 path <- "../sim_outputs/"
 outpath <- "../results/"
 
-seed <- 2549986039929
+seed <- 2242330863068
+
+#2242330863068_popInfo
 
 # Individual phenotype and fitness data in home pop
 indPhen_df <- read.table(paste0(path,seed,"_ind.txt"), header=TRUE, 
                          colClasses = c("character", rep("numeric",8)))
 head(indPhen_df)
+
+pop_df <- read.table(paste0(path,seed,"_popInfo.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",6))) 
 
 # Local adaptation through time df
 LA_df <- read.table(paste0(path,seed,"_LA.txt"), header=TRUE, 
@@ -74,6 +79,35 @@ dim(vcf_full@fix)
 ```
 
 
+```{r plot subpops and migration}
+mig <- read.table(paste0(path,seed,"_popInfo_m.txt"), header=TRUE)
+head(pop_df)
+head(mig)
+
+plot(pop_df$x, pop_df$y, col=rgb(0,0,0,0))
+mig_thick <- scale(mig$m) + abs(min(scale(mig$m)))+1
+for (i in 1:nrow(mig)){
+  start_x <- pop_df$x[which(pop_df$subpopID==mig$from[i])]
+  start_y <- pop_df$y[which(pop_df$subpopID==mig$from[i])]
+  end_x <- pop_df$x[which(pop_df$subpopID==mig$to[i])]
+  end_y <- pop_df$y[which(pop_df$subpopID==mig$to[i])]
+  adj = 0.01
+  arrows(start_x,start_y,end_x, end_y, col=rgb(0,0,1,0.5), lwd=mig_thick[i], length = 0.1)
+}
+text(pop_df$x, pop_df$y+0.25, pop_df$subpopID, cex=1)
+
+plot(pop_df$x, pop_df$y, col=rgb(0,0,0,0))
+text(pop_df$x, pop_df$y, pop_df$N)
+
+plot(pop_df$x, pop_df$y, col=rgb(0,0,0,0), main="opt0")
+text(pop_df$x, pop_df$y, round(pop_df$opt0, 1))
+
+plot(pop_df$x, pop_df$y, col=rgb(0,0,0,0), main="opt1")
+text(pop_df$x, pop_df$y, round(pop_df$opt1, 1))
+
+plot(pop_df$x, pop_df$y)
+
+```
 
 ```{r, echo=FALSE, eval=FALSE}
 # Sanity check
@@ -565,11 +599,12 @@ plot(muts_full$Va_temp_prop[which(muts_full$causal)],
 
 ## LFMM
 
-go with ridge regression
+
 ```{r lfmm ridge temp}
 
 pcaG <- princomp(t(scaled.genotype))
 plot(pcaG)
+dim(pcaG$loadings)
 
 ### LFMM 0.0 Ridge regression model genotype ~ environment ####
 # extract scaled genotypes
@@ -580,13 +615,19 @@ env_temp <- scale(as.matrix(subset_indPhen_df$temp_opt))
 env_sal <- scale(as.matrix(subset_indPhen_df$sal_opt))
 # ridge regression
 
-lfmm_ridge_temp <- lfmm::lfmm_ridge(Y = scaled.genotype, X = env_temp, K = 4, lambda = 1e-4)
+phen_temp <- scale(as.matrix(subset_indPhen_df$phen_temp))
+phen_sal <- scale(as.matrix(subset_indPhen_df$phen_sal))
+```
+
+ridge regression genotype-environment temp
+```{r}
+lfmm_ridge_ENVtemp <- lfmm::lfmm_ridge(Y = scaled.genotype, X = env_temp, K = 4, lambda = 1e-4)
 #The lfmm.ridge object contains estimates for the latent variables and for the effect sizes. Here, the estimates are used for computing calibrated significance values and for testing associations between the response matrix Y and the explanatory variable x. It can be done as follows:
-lfmm_ridge_temp_test  <- lfmm::lfmm_test(Y = scaled.genotype, X = env_temp, lfmm = lfmm_ridge_temp, calibrate = "gif")
+lfmm_ridge_ENVtemp_test  <- lfmm::lfmm_test(Y = scaled.genotype, X = env_temp, lfmm = lfmm_ridge_ENVtemp, calibrate = "gif")
 
-lfmm_ridge_temp_P <- lfmm_ridge_temp_test$calibrated.pvalue
+lfmm_ridge_ENVtemp_P <- lfmm_ridge_ENVtemp_test$calibrated.pvalue
 
-print(c("lfmm.test.ridge$gif", lfmm_ridge_temp_test$gif))
+print(c("lfmm.test.ridge$gif", lfmm_ridge_ENVtemp_test$gif))
 #hist(p.values.ridge, col = "lightgreen", main="LFMM ridge")
 #qval <- qvalue::qvalue(p.values)
 #plot(qval)
@@ -596,14 +637,69 @@ print(c("lfmm.test.ridge$gif", lfmm_ridge_temp_test$gif))
 #plot(training$position, -log10(p.values.ridge), cex = .5, pch = 19, col = "black", main="LFMM ridge", ylim=c(0, 60))
 #plot_layers(y_head=55, y_arrows=c(10, 0))
 
-LFMM_ridge_temp_log10p <- -log10(as.numeric(lfmm_ridge_temp_P))
+LFMM_ridge_ENVtemp_log10p <- -log10(as.numeric(lfmm_ridge_ENVtemp_P))
 #plot(final_df$pos, final_df$LFMM_ridge_0.0_ALL_log10p) 
 
-plot(muts_full$pos_pyslim, LFMM_ridge_temp_log10p)
-points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_temp_log10p[muts_full$causal], col="blue", pch=20)
-
+plot(muts_full$pos_pyslim, LFMM_ridge_ENVtemp_log10p)
+points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_ENVtemp_log10p[muts_full$causal], col="blue", pch=20)
 ```
 
+
+ridge regression genotype-phenotype temp
+```{r lfmm ridge temp phen}
+
+lfmm_ridge_PHENtemp <- lfmm::lfmm_ridge(Y =  scaled.genotype, X = phen_temp, K = 4, lambda = 1e-4)
+#The lfmm.ridge object contains estimates for the latent variables and for the effect sizes. Here, the estimates are used for computing calibrated significance values and for testing associations between the response matrix Y and the explanatory variable x. It can be done as follows:
+lfmm_ridge_PHENtemp_test  <- lfmm::lfmm_test(Y = scaled.genotype, X = phen_temp, lfmm = lfmm_ridge_PHENtemp, calibrate = "gif")
+
+lfmm_ridge_PHENtemp_P <- lfmm_ridge_PHENtemp_test$calibrated.pvalue
+
+print(c("GIF", lfmm_ridge_PHENtemp_test$gif))
+#hist(p.values.ridge, col = "lightgreen", main="LFMM ridge")
+#qval <- qvalue::qvalue(p.values)
+#plot(qval)
+#The plot suggests that setting fdr.level = 0.025 warrant few false positives.
+#qval <- qvalue::qvalue(p.values, fdr.level = 0.005)
+#candidates <- which(qval$significant)
+#plot(training$position, -log10(p.values.ridge), cex = .5, pch = 19, col = "black", main="LFMM ridge", ylim=c(0, 60))
+#plot_layers(y_head=55, y_arrows=c(10, 0))
+
+LFMM_ridge_PHENtemp_log10p <- -log10(as.numeric(lfmm_ridge_PHENtemp_P))
+#plot(final_df$pos, final_df$LFMM_ridge_0.0_ALL_log10p) 
+
+par(mar=c(4,4,1,1))
+plot(muts_full$pos_pyslim, LFMM_ridge_PHENtemp_log10p)
+points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_PHENtemp_log10p[muts_full$causal], col="blue", pch=20)
+```
+
+```{r GWAS}
+gwas_mut_slope <- NULL
+gwas_mut_p <- NULL
+gwas_mut_corrected_slope <- NULL
+gwas_mut_corrected_p <- NULL
+
+# this loop is slow but correct
+for (i in 1:nrow(G_full_subset)){
+  gwas_mut_i <- lm(G_full_subset[i,]~subset_indPhen_df$phen_temp)
+  gwas_mut_slope[i] <- gwas_mut_i$coefficients[2]
+  gwas_mut_p[i] <- summary(gwas_mut_i)$coefficients[2,4]
+  
+  gwas_mut_corrected_i <- lm(G_full_subset[i,]~subset_indPhen_df$phen_temp + pcaG$loadings[1,] + pcaG$loadings[2,])
+  gwas_mut_corrected_slope[i] <- gwas_mut_corrected_i$coefficients[2]
+  gwas_mut_corrected_p[i] <-  summary(gwas_mut_corrected_i)$coefficients[2,4]
+}
+
+plot(muts_full$pos_pyslim, -log10(gwas_mut_p))
+plot(muts_full$pos_pyslim, -log10(gwas_mut_corrected_p))
+points(muts_full$pos_pyslim[muts_full$causal],
+      -log10(gwas_mut_corrected_p[muts_full$causal]), pch=20, col="magenta")
+
+plot(LFMM_ridge_PHENtemp_log10p, -log10(gwas_mut_corrected_p))
+points(LFMM_ridge_PHENtemp_log10p[muts_full$causal], -log10(gwas_mut_corrected_p)[muts_full$causal], col="magenta", pch=20)
+
+plot(LFMM_ridge_ENVtemp_log10p, LFMM_ridge_PHENtemp_log10p)
+points(LFMM_ridge_ENVtemp_log10p[muts_full$causal], LFMM_ridge_PHENtemp_log10p[muts_full$causal], col="magenta", pch=20)
+```
 
 ```{r lfmm ridge sal}
 
@@ -631,9 +727,10 @@ LFMM_ridge_sal_log10p <- -log10(as.numeric(lfmm_ridge_sal_P))
 
 plot(muts_full$pos_pyslim, LFMM_ridge_sal_log10p)
 points(muts_full$pos_pyslim[muts_full$causal], LFMM_ridge_sal_log10p[muts_full$causal], col="blue", pch=20)
+
+plot(muts_full$Va_sal_prop, LFMM_ridge_sal_log10p)
+plot(muts_full$Va_temp_prop, LFMM_ridge_ENVtemp_log10p)
 ```
-
-
 
 
 ## RDA
@@ -648,6 +745,71 @@ subset_indPhen_df$x <- (unique(subset_indPhen_df$sal_opt)+1)*2
 subset_indPhen_df$y <- round((unique(subset_indPhen_df$temp_opt)+1)*9/2,0)
 m <- as.matrix(cbind(subset_indPhen_df$sal_opt, subset_indPhen_df$temp_opt))
 
+rdaout <- rda(t(G_full_subset)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+
+plot(rdaout)
+str(rdaout)
+scores <- scores(rdaout, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+plot(loci.sc[,1], loci.sc[,2])
+points(loci.sc[,1][muts_full$causal], 
+       loci.sc[,2][muts_full$causal], 
+       pch=20, col="magenta")
+
+a<- screeplot(rdaout)
+str(a)
+a$y # save this it's the eigenvalues
+
+plot(ind.sc[,1], ind.sc[,2])
+eigenvals(rdaout)[1:2]
+summary(rdaout)$biplot # add arrows
+
+
+subset_indPhen_df$RDA1 <- ind.sc[,1]
+subset_indPhen_df$RDA2 <- ind.sc[,2]
+
+plot(scale(subset_indPhen_df$phen_temp) ~ scale(subset_indPhen_df$RDA1))
+
+
+temp_pred_RDA <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(temp_pred_RDA))
+abline(0,1)
+  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+
+sal_pred_RDA <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2]
+plot(scale(subset_indPhen_df$phen_sal), scale(sal_pred_RDA))
+abline(0,1)
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+
+
+# Do locus loadings align with phenotypic effects
+plot(muts_full$mutTempEffect, loci.sc[,1])
+  cor.test(muts_full$mutTempEffect, loci.sc[,1])
+plot(muts_full$mutSalEffect, loci.sc[,2])
+  cor.test(muts_full$mutSalEffect, loci.sc[,2])
+```
+
+```{r}
+rdadapt<-function(rda,K) {
+zscores<-rda$CCA$v[,1:as.numeric(K)]
+resscale <- apply(zscores, 2, scale)
+resmaha <- covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dis 
+lambda <- median(resmaha)/qchisq(0.5,df=K)
+reschi2test <- pchisq(resmaha/lambda,K,lower.tail=FALSE)
+qval <- qvalue(reschi2test)
+q.values_rdadapt<-qval$qvalues
+return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
+}
+ps <- rdadapt(rdaout, 2)
+
+muts_full$rda_q <- ps$q.values
+table(muts_full$causal, muts_full$rda_q<0.1)
+```
+
+```{r}
 subset_indPhen_df$rand_env <- dmvnorm(m,
   mean=c(0,0), sigma=matrix(c(1, 0.5, 0.5, 1), ncol=2))
   # This is a saddle, I think 
@@ -795,6 +957,10 @@ Phenotypic clines for temp (top) and salinity (bottom)
 AF clines for temp (top) and salinity (bottom)
 
 ```{r}
+
+subset_indPhen_df$phen_temp
+
+
   par(mfrow=c(2,2), mar=c(4,6,0.5,0.5))
 
   cond <- indPhen_df$subset
@@ -850,6 +1016,11 @@ dev.off()
 ```{r genotype heatmaps}
 
 NEED TO EDIT THISE SO THE GRAPHING IS 3 colors
+
+order_temp <- order(subset_indPhen_df$phen_temp)
+heatmap(t(G_subset[,order_temp]), Rowv = NA,  main="All genotypes",cexCol = 0.3,
+           #Colv = NA,
+           labRow = round(subset_indPhen_df$phen_temp[order_temp],1))
 
 
 a<-heatmap(t(G_subset), Rowv = NA,  main="All genotypes",cexCol = 0.3,

@@ -1,6 +1,6 @@
 initialize()
 {
-	setSeed(2242330863068);
+	setSeed(22423308670);
 	defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs/");
 	defineConstant("MY_SEED", getSeed());
 	defineConstant("C_num", 10);							// number of chromosomes
@@ -15,14 +15,14 @@ initialize()
 		// if isVariableM = 1, these are ignored
 	
 	
-	defineConstant("N_traits", 2);   // number of traits (1 or 2)
+	defineConstant("N_traits", 1);   // number of traits (1 or 2)
 	defineConstant("ispleiotropy", 1); // a value of 0 for no pleiotropy, 1 for pleitropy
 	defineConstant("iscontrol", 0); // a value of 0 for stabilizing selection
 	defineConstant("demog", "SS");
 		// "Estuary" for estuary demography
 		// "SS" for stepping stone demography
-	defineConstant("Nequal", 3); // 0 for equal N, 1 for N cline on x-axis, 2 for N cline on y-axis, 3 for variable N
-	defineConstant("isVariableM", 1); // 0 for equal m, 1 for variable m
+	defineConstant("Nequal", 0); // 0 for equal N, 1 for N cline on x-axis, 2 for N cline on y-axis, 3 for variable N
+	defineConstant("isVariableM", 0); // 0 for equal m, 1 for variable m
 	
 	if (Nequal == 0){
 		defineConstant("N", 100);								// subpop size
@@ -407,13 +407,21 @@ late() {
 		
 		// calculate the fitness covariance matrix, sigma, normalization factor
 		if (sim.generation >= BURNIN_2)
-			fitness_var = SIGMA_K;
 		
-		fitness_cov = 0.0;
-		fitness_varcov = matrix(c(fitness_var, fitness_cov, fitness_cov, fitness_var), nrow=2);
-		fitness_norm = dmvnorm(c(0.0, 0.0), c(0.0, 0.0), fitness_varcov);
+		fitness_var = SIGMA_K;
+		if (N_traits == 2)
+		{
+			fitness_cov = 0.0;
+			fitness_varcov = matrix(c(fitness_var, fitness_cov, fitness_cov, fitness_var), nrow=2);
+			fitness_norm = dmvnorm(c(0.0, 0.0), c(0.0, 0.0), fitness_varcov);
 		subpop.setValue("fitness_varcov", fitness_varcov);
 		subpop.setValue("fitness_norm", fitness_norm);
+		}
+		if (N_traits == 1)
+		{
+			fitness_norm = dnorm(0.0, 0.0, fitness_var);
+			subpop.setValue("fitness_norm", fitness_norm);
+		}
 		
 		for (ind in subpop.individuals)
 		{
@@ -430,7 +438,7 @@ late() {
 			fits = dmvnorm(cbind(inds.getValue("phenotype0"), inds.getValue("phenotype1")), opts, fitness_varcov) / fitness_norm;
 		}
 		if (N_traits == 1){
-			fits = dnorm(inds.getValue("phenotype1"), opts[1], fitness_var);
+			fits = dnorm(inds.getValue("phenotype1"), opts[1], fitness_var)/fitness_norm;
 		}
 		if (iscontrol == 1){
 			fits = rep(1, length(inds));
@@ -473,9 +481,19 @@ late() {
 				test_subpop = subpops[test_index];
 				opt0 = test_subpop.getValue("scaled_opt0");
 				opt1 = test_subpop.getValue("scaled_opt1");
-				fitness_varcov = test_subpop.getValue("fitness_varcov");
 				fitness_norm = test_subpop.getValue("fitness_norm");
-				fitnesses = dmvnorm(cbind(phenotype0, phenotype1), c(opt0, opt1), fitness_varcov) / fitness_norm;
+				
+				if (N_traits == 2)
+				{
+					fitness_varcov = test_subpop.getValue("fitness_varcov");
+					fitnesses = dmvnorm(cbind(phenotype0, phenotype1), c(opt0, opt1), fitness_varcov) / fitness_norm;
+				}
+				
+				if (N_traits == 1)
+				{
+					fitnesses = dnorm(phenotype1, opt1, SIGMA_K)/fitness_norm;
+				}
+
 				fitness_matrix_pop[test_index,source_index] = mean(fitnesses);
 				
 				if(sim.generation==TOTAL_GEN){

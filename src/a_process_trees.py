@@ -7,7 +7,7 @@ import ast
 import sys
 import os
 
-#seed = '2549986039929'
+#seed = '2242330863068'
 #r = 1e-6
 #N = 100
 #mu = 1e-7

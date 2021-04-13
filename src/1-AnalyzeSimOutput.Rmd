@@ -50,7 +50,7 @@ tail(LA_df)
 
 # Mutation stats for MAF > 0.01
 muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE, 
-                         colClasses = c("character", rep("numeric",6)))
+                         colClasses = c("character","numeric","character", rep("numeric",4)))
 head(muts_df)
 
 info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
@@ -105,7 +105,6 @@ text(pop_df$x, pop_df$y, round(pop_df$opt0, 1))
 plot(pop_df$x, pop_df$y, col=rgb(0,0,0,0), main="opt1")
 text(pop_df$x, pop_df$y, round(pop_df$opt1, 1))
 
-plot(pop_df$x, pop_df$y)
 
 ```
 
@@ -158,7 +157,7 @@ Note that this sampling doesn't really make a huge difference in terms of the co
   
 ### Part 2 ####
   npops <- length(levels(factor(indPhen_df$subpop)))
-  n = 20 # number of individual per pop
+  n = 10 # number of individual per pop
   subset <- c()
   for (i in 1:npops){
     #set.seed(139982)
@@ -179,7 +178,7 @@ Note that this sampling doesn't really make a huge difference in terms of the co
   # looks good to me
   
   all_corr_phen_sal <- cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
-  subsamp_corr_phen_sal <- cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
+  subsamp_corr_phen_temp <- cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
   all_corr_phen_temp <- cor(indPhen_df$phen_temp,indPhen_df$temp_opt)
   subsamp_corr_phen_temp <- cor(indPhen_df$phen_temp[indPhen_df$subset],indPhen_df$temp_opt[indPhen_df$subset])
 ```
@@ -287,40 +286,6 @@ subset_indPhen_df <- indPhen_df[keepinds,]
 ```
 
 
-
-
-
-```{r sanity check individual phenotypes}
-
-## ADD INFO FROM SLIM VCF FILE
-vcf@fix[keepmuts,"INFO"]
-head(muts_df)
-dim(muts_df)
-for (i in 1:nrow(muts_df)){
-  ind = grep(muts_df$mutID[i], vcf@fix[,"INFO"])
-  if (length(ind)==1){
-    muts_df$INFO[i] <-  vcf@fix[ind,"INFO"]
-    muts_df$position[i] <- position[ind]
-    muts_df$af_slimVCF[i] <- a_freq[ind]
-  }
-}
-
-
-## ADD INFO FROM PYSLIM VCF FILE
-for (i in 1:nrow(muts_df)){
-  ind = grep(muts_df$mutID[i], vcf_full@fix[,"ALT"])
-  if (length(ind)==1){
-    muts_df$position_pyslim[i] <- position_full[ind]
-    muts_df$af_pyslim[i] <- a_freq_full[ind]
-  }
-}
-
-head(muts_df)
-
-plot(muts_df$af_slimVCF, muts_df$af_pyslim)
-abline(0,1)
-```
-
 Keep in mind the correlations in the muts_df are based on the entire population
 of 5000 individuals
 
@@ -360,6 +325,40 @@ length(keepinds)
 
 G_full_subset[1:20,1:10]
 ```
+
+
+```{r sanity check individual phenotypes}
+
+## ADD INFO FROM SLIM VCF FILE
+vcf@fix[keepmuts,"INFO"]
+head(muts_df)
+dim(muts_df)
+for (i in 1:nrow(muts_df)){
+  ind = grep(muts_df$mutID[i], vcf@fix[,"INFO"])
+  if (length(ind)==1){
+    muts_df$INFO[i] <-  vcf@fix[ind,"INFO"]
+    muts_df$position[i] <- position[ind]
+    muts_df$af_slimVCF[i] <- a_freq[ind]
+  }
+}
+
+
+## ADD INFO FROM PYSLIM VCF FILE
+for (i in 1:nrow(muts_df)){
+  ind = grep(muts_df$mutID[i], vcf_full@fix[,"ALT"])
+  if (length(ind)==1){
+    muts_df$position_pyslim[i] <- position_full[ind]
+    muts_df$af_pyslim[i] <- a_freq_full[ind]
+  }
+}
+
+head(muts_df)
+
+plot(muts_df$af_slimVCF, muts_df$af_pyslim)
+abline(0,1)
+```
+
+
 
 ```{r set up full mutations table}
 muts_full <- data.frame(seed = as.character(seed),
@@ -601,14 +600,14 @@ plot(muts_full$Va_temp_prop[which(muts_full$causal)],
 
 
 ```{r lfmm ridge temp}
-
+scaled.genotype <- scale(as.matrix(t(G_full_subset)))
 pcaG <- princomp(t(scaled.genotype))
 plot(pcaG)
 dim(pcaG$loadings)
 
 ### LFMM 0.0 Ridge regression model genotype ~ environment ####
 # extract scaled genotypes
-scaled.genotype <- scale(as.matrix(t(G_full_subset)))
+
 #scaled.genotype <- as.matrix(t(sim1$G))
 # extract scaled phenotypes
 env_temp <- scale(as.matrix(subset_indPhen_df$temp_opt))

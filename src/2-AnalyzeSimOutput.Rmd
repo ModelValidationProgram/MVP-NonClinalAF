@@ -1,0 +1,1052 @@
+---
+title: "1-AnalyzeSims"
+author: "KE Lotterhos"
+date: "3/12/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+setwd("~/Documents/GitHub/MVP-NonClinalAF/src")
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis")
+
+for (i in 1:length(packages_needed)){
+  if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
+}
+
+#  require(ggplot2)}
+
+for (i in 1:length(packages_needed)){
+  library( packages_needed[i], character.only = TRUE)
+}
+
+if (!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")}
+   library(BiocManager)
+
+if (!requireNamespace("LEA", quietly = TRUE)){BiocManager::install("LEA")} 
+
+if (!requireNamespace("qvalue", quietly = TRUE)){
+BiocManager::install("qvalue")
+}
+library(qvalue)
+#help(package="LEA") 
+
+.pardefault <- par()
+```
+
+## 
+```{r load data}
+path <- "../sim_outputs/"
+outpath <- "../results/"
+
+seed <- 2242330863068
+
+#2242330863068_popInfo
+
+# Individual phenotype and fitness data in home pop
+indPhen_df <- read.table(paste0(path,seed,"_ind.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",8)))
+head(indPhen_df)
+
+pop_df <- read.table(paste0(path,seed,"_popInfo.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",6))) 
+
+# Local adaptation through time df
+LA_df <- read.table(paste0(path,seed,"_LA.txt"), header=TRUE, 
+                         colClasses = c("character", rep("numeric",10)),
+                    na.strings = "NAN")
+str(LA_df)
+head(LA_df)
+tail(LA_df)
+
+# Mutation stats for MAF > 0.01
+muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE, 
+                         colClasses = c("character","numeric","character", rep("numeric",4)))
+head(muts_df)
+
+info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
+                         colClasses = c("character", 
+                                        rep("numeric",13),
+                                        "character",
+                                        rep("numeric",5)))
+info
+
+# VCF file from SliM
+#vcf <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
+#head(vcf)
+#head(vcf@fix, 50)
+#dim(vcf@fix)
+# example of how to find a specific mutation in the vcf file
+#  muts_df[1,]
+#  vcf@fix[grep(muts_df$mutID[1], vcf@fix[,"INFO"]),]
+  
+
+# VCF with neutral mutations
+vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
+head(vcf_full)
+head(vcf_full@fix, 50)
+dim(vcf_full@fix)
+
+#vcf_full@fix[15:16,]
+#vcf_full@gt[15:16,1:10]
+```
+
+
+```{r plot subpops and migration}
+mig <- read.table(paste0(path,seed,"_popInfo_m.txt"), header=TRUE)
+head(pop_df)
+head(mig)
+
+
+
+par(mfrow=c(1,1), mar=c(4,4,3,1))
+pdf(paste0(path,seed,"_pdf_pop.pdf"), width=5, height=5)
+plot(pop_df$x, pop_df$y, col = rgb(0,0,0,0))
+mig_thick <- scale(mig$m) + abs(min(scale(mig$m)))+1
+for (i in 1:nrow(mig)){
+  start_x <- pop_df$x[which(pop_df$subpopID==mig$from[i])]
+  start_y <- pop_df$y[which(pop_df$subpopID==mig$from[i])]
+  end_x <- pop_df$x[which(pop_df$subpopID==mig$to[i])]
+  end_y <- pop_df$y[which(pop_df$subpopID==mig$to[i])]
+  adj = 0.01
+  arrows(start_x,start_y,end_x, end_y, col=rgb(0,0,1,0.3), lwd=mig_thick[i], length = 0.1)
+}
+text(pop_df$x, pop_df$y+0.25, pop_df$subpopID, cex=0.5)
+```
+
+```{r optimums plot}
+ggplot(pop_df) + geom_point(aes(x=x, y=y,size=opt0)) + geom_point(aes(x=x, y=y, color=opt1)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + geom_text(aes(x=x, y=y+0.3,label=N)) + labs(size="salinity") + ggtitle(paste0("Optimums; N traits = ", info$Ntraits))
+```
+
+First, I want to figure out which individuals are migrants. Sampling in the simulation occurred after migration but before selection, so for analysis I want to make sure to only include individuals that would have survived to reproduce.
+
+My goal is to start with a dataset of 50 pops * 20 individuals = 1000 individuals, with approximately equal number of individuals per population.
+
+
+(Part 1) I tried to subset the data to individuals who have highest fitness in their home population, but this does not give equal numbers.
+
+(Part 2) Decision: sample X individuals from each population with probability equal to their fitness. This will make the sampling less artificial.
+
+Note that this sampling doesn't really make a huge difference in terms of the correlation between salinity and temperature.
+```{r find high fitness individuals}
+
+### Part 1 ####
+  # sum(indPhen_df[,"fitness"]>0.8)
+  # sum(indPhen_df[,"fitness"]>0.9)
+  # sum(indPhen_df[,"fitness"]>0.95)
+  # 
+  # subset <- which(indPhen_df[,"fitness"]>0.95)
+  # length(subset)
+  # table(indPhen_df[subset,"subpop"])
+  
+### Part 2 ####
+  npops <- length(levels(factor(indPhen_df$subpop)))
+  n = 10 # number of individual per pop
+  subset <- c()
+  for (i in 1:npops){
+    #set.seed(139982)
+    bob <- sample(indPhen_df$indID[indPhen_df$subpop==i], size = n,
+                  replace=FALSE, prob = indPhen_df$fitness[indPhen_df$subpop==i])
+    subset <- c(subset, bob)
+  }
+  length(subset)
+  head(subset)
+  indPhen_df$subset <- FALSE
+  indPhen_df$subset[sort((subset+1))] <- rep(TRUE, length(subset))
+    # add one to subset here because indID starts at 0
+  sum(indPhen_df$subset)
+  # visualize all individuals
+```  
+
+```{r}
+  boxplot(indPhen_df$fitness~indPhen_df$subpop, ylab = "fitness", xlab="pop", main="all", ylim=c(0,1))
+  
+  boxplot(indPhen_df$fitness[indPhen_df$subset]~indPhen_df$subpop[indPhen_df$subset], ylab = "fitness", xlab="pop", main="subset", ylim=c(0,1))
+  # looks good to me
+  dev.off()
+  
+  all_corr_phen_sal <- cor(indPhen_df$phen_sal,indPhen_df$sal_opt)
+  
+  subsamp_corr_phen_temp <- cor(indPhen_df$phen_sal[indPhen_df$subset], indPhen_df$sal_opt[indPhen_df$subset])
+  
+  all_corr_phen_temp <- cor(indPhen_df$phen_temp,indPhen_df$temp_opt)
+  
+  subsamp_corr_phen_temp <- cor(indPhen_df$phen_temp[indPhen_df$subset],indPhen_df$temp_opt[indPhen_df$subset])
+```
+
+
+```{r show cool patterns of mutation}
+
+pdf(paste0(path,seed,"_pdf_muts.pdf"), width=5, height=5)
+
+plot(muts_df$mutSalEffect, muts_df$mutTempEffect, ylim=c(-0.7, 0.7), xlim=c(-0.7,0.7), xlab="mutation effect on salinity phenotype", ylab="mutation effect on temperature phenotype")
+abline(h=0, col="grey")
+abline(v=0, col="grey")
+
+```
+
+
+```{r VCF_FULL keepmuts}
+geno_full <- vcf_full@gt[,-1] 
+dim(geno_full)
+position_full <- getPOS(vcf_full)
+rown <- as.numeric(vcf_full@fix[,"ALT"]) # mutation ID
+  # rown = 1 is a neutral mutation
+causal_mut_locs <- which(rown %in% muts_df$mutID) # causal mutations
+position_full[causal_mut_locs] # positions of causal mutations
+```
+
+
+The following code is for the subset VCF file of ALL mutations, subset to sampled individuals
+```{r filter VCF_FULL and reformat}
+
+head(geno_full[,1:5])
+
+
+G_full <- matrix(NA, nrow = nrow(geno_full), ncol = ncol(geno_full))
+G_full[geno_full %in% c("0/0", "0|0")] <- 0
+G_full[geno_full  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
+G_full[geno_full %in% c("1/1", "1|1")] <- 2
+rm(geno_full)
+
+
+head(G_full[,1:5])
+
+a_freq_full <- rowSums(G_full)/(2*ncol(G_full))
+hist(a_freq_full)
+
+if (!identical(sort(unique(unlist(as.numeric(G_full)))), as.numeric(0:2))){
+  print("Error: full genotype matrix not uniquely 012")
+  break
+}
+
+G_full_subset <- G_full[,indPhen_df$subset]
+rm(G_full)
+
+dim(G_full_subset)
+
+a_freq_subset <- as.numeric(rowSums(G_full_subset)/(2*ncol(G_full_subset)))
+  # should have 1000 individuals
+hist(a_freq_subset)
+
+# vcf_full@fix[,"POS"]
+
+rownames(G_full_subset)=vcf_full@fix[,"POS"]
+colnames(G_full_subset)=indPhen_df$indID[indPhen_df$subset]
+
+## This is my subset of individuals
+dim(G_full_subset)
+
+G_full_subset[1:20,1:10]
+```
+
+```{r set up full mutations table}
+muts_full0 <- data.frame(seed = as.character(seed),
+  VCFrow = 1:nrow(vcf_full@gt),
+                        mutID = vcf_full@fix[,"ALT"],
+                        pos_pyslim = as.integer(vcf_full@fix[,"POS"]),
+                        a_freq_full = a_freq_full,
+                        a_freq_subset = a_freq_subset)
+dim(muts_full0)
+
+muts_full <- merge(muts_full0, muts_df, by=c("mutID", "seed"), all.x=TRUE)
+rm(muts_full0)
+rm(muts_df)
+dim(muts_full)
+
+head(muts_full)
+head(muts_full[muts_full$mutID!=1,]) # causal mutations
+
+muts_full$mutTempEffect <- as.numeric(muts_full$mutTempEffect)
+muts_full$mutSalEffect <- as.numeric(muts_full$mutSalEffect)
+
+hist(muts_full$mutTempEffect, xlim=c(-1,1))
+hist(muts_full$mutSalEffect, xlim=c(-1,1))
+
+muts_full <- muts_full[order(muts_full$pos_pyslim),]
+plot(muts_full$VCFrow, muts_full$pos_pyslim)
+
+muts_full$causal <- FALSE
+muts_full$causal[muts_full$mutID!=1] <- TRUE
+
+num_causal_muts <- sum(muts_full$causal)
+
+```
+
+
+## This code estimates the correlation between AF and environment for each mutation
+Used for calculation of the correlation and degree of cline
+```{r af as function of temperature}
+dim(G_full_subset)
+
+subset_indPhen_df <- indPhen_df[indPhen_df$subset,]
+rm(indPhen_df)
+str(subset_indPhen_df)
+
+head(pop_df)
+
+subpop_subset <- unique(subset_indPhen_df$subpop)
+
+af_pop <- matrix(NA, nrow=length(subpop_subset), ncol=nrow(G_full_subset))
+rownames(af_temp) <- subpop_subset
+colnames(af_temp) <- rownames(G_full_subset)
+
+n_ind <- table(subset_indPhen_df$subpop)
+
+subset_temp_opt <- tapply(subset_indPhen_df$temp_opt,
+                          subset_indPhen_df$subpop, mean)
+
+subset_sal_opt <- tapply(subset_indPhen_df$sal_opt,
+                          subset_indPhen_df$subpop, mean)
+
+muts_full$af_cor_temp <- NA
+muts_full$af_slope_temp <- NA
+muts_full$af_cor_temp_P <- NA
+muts_full$af_cor_sal <- NA
+muts_full$af_slope_sal <- NA
+muts_full$af_cor_sal_P <- NA
+
+for (row in 1:nrow(G_full_subset)){
+    counts <- table(G_full_subset[row,], subset_indPhen_df$subpop)
+      # this give a table of the number of alleles for individuals at that temperature
+    
+    forSum <- counts*as.numeric(rownames(counts))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_pop[,row] <- (colSums(forSum))/(2*n_ind)
+  
+  # temp cors
+  corrtemp <- cor.test(af_pop[,row], subset_temp_opt, method="spearman")
+  muts_full$af_cor_temp[row] <- corrtemp$estimate
+  muts_full$af_cor_temp_P[row] <- corrtemp$p.value
+  muts_full$af_slope_temp[row] <- lm(af_pop[,row]~subset_temp_opt)$coef[2]
+  
+  ## do it for salinity
+  corrsal <- cor.test(af_pop[,row], subset_sal_opt, method="spearman")
+  muts_full$af_cor_sal[row] <- corrsal$estimate
+  muts_full$af_cor_sal_P[row] <- corrsal$p.value
+  muts_full$af_slope_sal[row] <- lm(af_pop[,row]~subset_sal_opt)$coef[2]
+  
+}
+# this error message is common:
+# 50: In cor.test.default(af_temp[, row], pop_temp$temp_opt,  ... :
+#  Cannot compute exact p-value with ties
+
+# Sanity check that what I calculate here (from the subsample)
+# is similar to what I outputted from SliM in muts_df
+
+plot( muts_full$cor_temp, muts_full$af_cor_temp, ylim=c(-1,1), xlim=c(-1,1), xlab="SliM cor(p, Temp)", ylab="Subsample cor(p, Temp)")
+abline(0,1)
+
+plot(muts_full$cor_sal, muts_full$af_cor_sal, ylim=c(-1,1), xlim=c(-1,1), xlab="SliM cor(p, Sal)", ylab="Subsample cor(p, Sal)")
+abline(0,1)
+
+
+
+# these graphs do not account for linkage. It might help to have a neutral chromosome in the simulation I can use for comparison
+
+muts_full$causal_temp <- muts_full$causal & muts_full$mutTempEffect != 0
+
+muts_full$causal_sal <- muts_full$causal & muts_full$mutSalEffect != 0 & info$Ntraits == 2
+
+ggplot(muts_full, aes(af_cor_temp, fill=causal_temp)) + 
+  geom_density(alpha=0.5) + xlab("Cor(p, temp)") + xlim(-1,1)
+
+ggplot(muts_full, aes(af_slope_temp, fill=causal_sal)) + 
+  geom_density(alpha=0.5) + xlab("Slope(p, temp)") + xlim(-1,1)
+
+muts_full$pos_pyslim <- as.integer(muts_full$pos_pyslim)
+
+plot(muts_full$pos_pyslim, abs(muts_full$af_cor_temp), xlab="Position", ylab="Subsample Cor(p, temp)", ylim=c(0,1), pch=19, col=adjustcolor("grey", 0.5))
+points(muts_full$pos_pyslim[muts_full$causal_temp], abs(muts_full$af_cor_temp[muts_full$causal_temp]), col="blue", pch=1)
+
+plot(muts_full$pos_pyslim, abs(muts_full$af_cor_sal), xlab="Position", ylab="Subsample Cor(p, sal)", ylim=c(0,1), pch=19, col=adjustcolor("grey", 0.5))
+points(muts_full$pos_pyslim[muts_full$causal_sal], abs(muts_full$af_cor_temp[muts_full$causal_sal]), col="blue", pch=1)
+
+```
+
+
+This code looks at VA across metapopulation.
+
+proportion of VA explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment)
+  
+```{r prop Va}
+
+muts_full$Va_temp <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutTempEffect^2
+
+muts_full$Va_temp_prop <- muts_full$Va_temp/sum(muts_full$Va_temp, na.rm=TRUE)
+
+hist(muts_full$Va_temp_prop, xlab="VA temp prop", main="", xlim=c(0,0.5))
+
+muts_full$Va_sal <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutSalEffect^2
+
+muts_full$Va_sal_prop <- muts_full$Va_sal/sum(muts_full$Va_sal, na.rm=TRUE)
+hist(muts_full$Va_sal_prop, main= "VA sal prop.", xlim=c(0,0.5))
+
+plot(muts_full$Va_temp_prop,
+     muts_full$Va_sal_prop,
+     xlim=c(0,1), ylim=c(0,1),
+     xlab="Subset VA temp prop.",
+     ylab="Subset VA sal prop.")
+
+plot(muts_full$Va_temp_prop,
+     muts_full$af_cor_temp,
+     xlim=c(0,0.5), ylim=c(0,1),
+     xlab="Subset VA temp prop.",
+     ylab="Subset Cor(p, temp)")
+
+plot(muts_full$Va_sal_prop,
+     muts_full$af_cor_sal,
+     xlim=c(0,0.5), ylim=c(0,1),
+     xlab="Subset VA sal prop.",
+     ylab="Subset Cor(p, sal)")
+
+dev.off()
+```
+
+
+## PCA
+```{r pca}
+write.lfmm(t(G_full_subset), "genotypes.lfmm")
+
+pc@projections
+
+pc = pca("genotypes.lfmm", 30, scale = TRUE)
+
+TO DO ADD COLOR SCALE BASED ON ENV COLOR SCHEME
+plot(pc$projections)
+plot(pc$projections[,1], pc$projections[,3])
+
+tw = tracy.widom(pc)
+plot(tw$percentage)
+a <- tw$percentage[1:20]
+b <- tw$percentage[2:21]
+K <- max(which(a > b*1.5))
+K
+```
+
+## LFMM
+```{r lfmm2 temp}
+mod_temp <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$temp_opt, K = K)
+pv_temp <- lfmm2.test(object = mod_temp, input = t(G_full_subset),
+                 env = subset_indPhen_df$temp_opt,
+                 linear = TRUE)
+plot(muts_full$pos_pyslim,-log10(pv_temp$pvalues), col = "grey", cex = .6, pch = 19, main= "LFMM2 temp", xlab="position") 
+
+cond_temp <- muts_full$mutID!=1 & muts_full$mutTempEffect>0 
+
+points(muts_full$pos_pyslim[cond_temp], -log10(pv_temp$pvalues[cond_temp]), col = "red")
+
+is.out<- qvalue(pv_temp$pvalues)$qvalue < 0.05
+
+points(muts_full$pos_pyslim[is.out], -log10(pv_temp$pvalues[is.out]), col = "blue", pch=2, cex=2)
+legend(0, 2, c("causal", "sig"), pch=c(1,2), col=c("red", "blue"))
+
+muts_full$LEA3.2_lfmm2_mlog10P_tempenv <- -log10(pv_temp$pvalues)
+muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig <- is.out
+
+(LEA3.2_lfmm2_Va_temp_prop <- sum(muts_full$Va_temp_prop[is.out], na.rm=TRUE))
+
+plot(muts_full$Va_temp_prop, muts_full$LEA3.2_lfmm2_mlog10P, col="red", main = "blue tri. = LFMM outlier temp", xlab="Prop SNP contributes\nto Va of Temp Trait", ylab="-log10(P) LFMM temp")
+points(muts_full$Va_temp_prop[is.out], muts_full$LEA3.2_lfmm2_mlog10P[is.out], col = "blue", pch=2, cex=2)
+```
+
+```{r lfmm2 sal}
+mod_sal <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$sal_opt, K = K)
+
+pv_sal <- lfmm2.test(object = mod_sal, input = t(G_full_subset),
+                 env = subset_indPhen_df$sal_opt,
+                 linear = TRUE)
+
+plot(muts_full$pos_pyslim,-log10(pv_sal$pvalues), col = "grey", cex = .6, pch = 19, main= "LFMM2 sal", xlab="position") 
+
+cond_sal <- muts_full$mutID!=1 & muts_full$mutSalEffect>0 & info$Ntraits==2
+  # this condition statement identifies causal loci AND ones that have a 
+  # non-zero effect on phenotype AND the phenotype is under selection
+
+if (cond_sal > 0){
+  points(muts_full$pos_pyslim[cond_sal], -log10(pv_temp$pvalues[cond_sal]), col = "orange")
+}
+
+  is.out.sal<- qvalue(pv_sal$pvalues)$qvalue < 0.05
+points(muts_full$pos_pyslim[is.out.sal], -log10(pv_sal$pvalues[is.out.sal]), col = "purple", pch=2, cex=2)
+legend(0, 1, c("causal", "sig"), pch=c(1,2), col=c("orange", "purple"))
+
+muts_full$LEA3.2_lfmm2_mlog10P_salenv <- -log10(pv_sal$pvalues)
+muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig <- is.out.sal
+
+(LEA3.2_lfmm2_Va_sal_prop <- sum(muts_full$Va_sal_prop[is.out.sal], na.rm=TRUE))
+
+plot(muts_full$Va_sal_prop, muts_full$LEA3.2_lfmm2_mlog10P_salenv, col="red", main = "blue tri. = LFMM outlier sal", xlab="Prop SNP contributes\nto Va of Sal Trait", ylab="-log10(P) LFMM sal")
+points(muts_full$Va_sal_prop[is.out.sal], muts_full$LEA3.2_lfmm2_mlog10P_salenv[is.out.sal], col = "blue", pch=2, cex=2)
+```
+
+
+## RDA
+
+```{r vegan}
+
+rdaout <- rda(t(G_full_subset)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+
+plot(rdaout)
+str(rdaout)
+scores <- scores(rdaout, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+plot(loci.sc[,1], loci.sc[,2])
+points(loci.sc[,1][muts_full$causal], 
+       loci.sc[,2][muts_full$causal], 
+       pch=20, col="magenta")
+
+a<- screeplot(rdaout)
+str(a)
+a$y # save this it's the eigenvalues
+
+plot(ind.sc[,1], ind.sc[,2])
+eigenvals(rdaout)[1:2]
+
+TO DO: SAVE THIS TO FILE
+summary(rdaout)$biplot # add arrows
+
+
+subset_indPhen_df$RDA1 <- ind.sc[,1]
+subset_indPhen_df$RDA2 <- ind.sc[,2]
+
+plot(scale(subset_indPhen_df$phen_temp) ~ scale(subset_indPhen_df$RDA1))
+```
+
+```{r rdaadapt function for outliers}
+rdadapt<-function(rda,K) {
+  zscores<-rda$CCA$v[,1:as.numeric(K)]
+  resscale <- apply(zscores, 2, scale)
+  resmaha <- covRob(resscale, distance = TRUE, na.action= na.omit, estim="pairwiseGK")$dis 
+  lambda <- median(resmaha)/qchisq(0.5,df=K)
+  reschi2test <- pchisq(resmaha/lambda,K,lower.tail=FALSE)
+  qval <- qvalue(reschi2test)
+  q.values_rdadapt<-qval$qvalues
+  return(data.frame(p.values=reschi2test, q.values=q.values_rdadapt))
+}
+```
+
+```{r ID RDA outliers}
+
+ps <- rdadapt(rdaout, 2)
+
+muts_full$RDA_mlog10P <- -log10(ps$p.values)
+muts_full$RDA_mlog10P_sig <- ps$q.values<0.001
+
+plot(muts_full$pos_pyslim,muts_full$RDA_mlog10P, col = "grey", cex = .6, pch = 19, main= "RDA P-values", xlab="position") 
+
+if (sum(cond_sal) > 0){
+  points(muts_full$pos_pyslim[cond_sal], muts_full$RDA_mlog10P[cond_sal], col = "orange")
+}
+
+#temperature loci
+  points(muts_full$pos_pyslim[cond_temp],  muts_full$RDA_mlog10P[cond_temp], col = "red")
+
+#RDAN outliers
+  points(muts_full$pos_pyslim[muts_full$RDA_mlog10P_sig],  muts_full$RDA_mlog10P[muts_full$RDA_mlog10P_sig], col = "blue", pch=2, cex=2)
+  
+
+# outliers in PC space  
+  plot(loci.sc[,1], loci.sc[,2], col="grey")
+points(loci.sc[,1][muts_full$causal], 
+       loci.sc[,2][muts_full$causal], 
+       pch=20, col="magenta")
+points(loci.sc[,1][muts_full$RDA_mlog10P_sig], 
+       loci.sc[,2][muts_full$RDA_mlog10P_sig], 
+       pch=2, col="blue")
+
+# Proportion VA
+(RDA_Va_temp_prop <- sum(muts_full$Va_temp_prop[muts_full$RDA_mlog10P_sig], na.rm=TRUE))
+
+(RDA_Va_sal_prop <- sum(muts_full$Va_sal_prop[muts_full$RDA_mlog10P_sig], na.rm=TRUE))
+
+plot(muts_full$Va_temp_prop, muts_full$RDA_mlog10P)
+plot(muts_full$Va_sal_prop, muts_full$RDA_mlog10P)
+
+TO DO OUTPUT FPR
+```
+
+```{r predict phen from RDA all loci}
+subset_indPhen_df$RDA_allloci_temp_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred))
+abline(0,1)
+  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDAallloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_allloci_sal_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred))
+abline(0,1)
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDAallloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred), method = "spearman"))
+```
+
+
+```{r predict phen from RDA LFMM outliers}
+sum(muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig | muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig)
+
+# temperature or salinity significant outliers
+G_lfmm_out <- G_full_subset[muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig | muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig,]
+
+str(G_lfmm_out)
+
+rdaout_lfmm <- rda(t(G_lfmm_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+scores <- scores(rdaout_lfmm, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+summary(rdaout_lfmm)$biplot
+
+subset_indPhen_df$RDA_LFMMloci_temp_pred <- ind.sc[,1]*eigenvals(rdaout_lfmm)[1]*summary(rdaout_lfmm)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_lfmm)[2]*summary(rdaout_lfmm)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_LFMMloci_temp_pred))
+abline(0,1)
+  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDA_LFMMloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_LFMMloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_LFMMloci_sal_pred <- ind.sc[,1]*eigenvals(rdaout_lfmm)[1]*summary(rdaout_lfmm)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_lfmm)[2]*summary(rdaout_lfmm)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred))
+abline(0,1)
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDA_LFMMloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred), method = "spearman"))
+```
+
+```{r predict phen from RDA with RDA outliers}
+
+sum(muts_full$RDA_mlog10P_sig)
+
+# temperature or salinity significant outliers
+G_rda_out <- G_full_subset[which(muts_full$RDA_mlog10P_sig),]
+str(G_rda_out)
+
+rdaout_rda <- rda(t(G_rda_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+scores <- scores(rdaout_rda, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+summary(rdaout_rda)$biplot
+
+subset_indPhen_df$RDA_RDAloci_temp_pred <- ind.sc[,1]*eigenvals(rdaout_rda)[1]*summary(rdaout_rda)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rda)[2]*summary(rdaout_rda)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_RDAloci_temp_pred))
+abline(0,1)
+  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDA_RDAloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_RDAloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_RDAloci_sal_pred <- ind.sc[,1]*eigenvals(rdaout_rda)[1]*summary(rdaout_rda)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rda)[2]*summary(rdaout_rda)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred))
+abline(0,1)
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDA_RDAloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_RDAloci_sal_pred), method = "spearman"))
+```
+
+```{r cor as a function of random loci}
+nloci <- c(5, 10, 50, 100, 500, 1000)
+Random_cor_salpredict_salphen <- rep(NA, length(nloci))
+Random_cor_temppredict_tempphen <- rep(NA, length(nloci))
+
+for (i in 1:length(nloci)){
+  G_random_out <- G_full_subset[sample(1:nrow(muts_full), nloci[i], replace=FALSE),]
+  rdaout_rand <- rda(t(G_random_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+  scores <- scores(rdaout_rand, choices=1:4)
+  loci.sc <- scores$species
+  ind.sc <- scores$sites
+  temp_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]
+  sal_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]
+  
+  Random_cor_temppredict_tempphen[i] <- cor(scale(subset_indPhen_df$phen_temp), scale(temp_pred), method = "spearman")
+  Random_cor_salpredict_salphen[i] <- cor(scale(subset_indPhen_df$phen_sal), scale(sal_pred), method = "spearman")
+}
+
+plot(log10(nloci), Random_cor_temppredict_tempphen, type="l", ylim=c(-0.1,1))
+points(log10(nloci), Random_cor_salpredict_salphen, type="l", col="blue", lwd=2)
+
+# TO DO: Add points for lfmm outliers and RDA outliers
+points(log10())
+```
+
+For multivariate trait prediction, we may want to predict how far the predicted trait value is from the true trait value. I'm not sure how interesting this is, given random loci are as good as using outliers in some cases.
+```{r}
+
+str(subset_indPhen_df)
+
+for (i in 1:nrow(subset_indPhen_df)){
+  # Distance between true phenotype and predicted from all loci
+subset_indPhen_df$dist_phen_pred_allloci[i] <- 
+  dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_allloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_allloci_sal_pred)[i]
+  )
+  )
+)
+
+# Distance between true phenotype and predicted from LFMM loci
+subset_indPhen_df$dist_phen_pred_LFMMloci[i] <- dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_LFMMloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_LFMMloci_sal_pred)[i]
+  )
+  )
+)
+
+# Distance between true phenotype and predicted from RDA loci
+subset_indPhen_df$dist_phen_pred_RDAloci[i] <-dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_RDAloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_RDAloci_sal_pred)[i]
+  )
+  )
+)
+}
+
+par(mfrow=c(3,1))
+hist(subset_indPhen_df$dist_phen_pred_allloci, xlim=c(0, 10))
+hist(subset_indPhen_df$dist_phen_pred_LFMMloci, col=rgb(0,0,1,0.3), xlim=c(0,10))
+hist(subset_indPhen_df$dist_phen_pred_RDAloci, col=rgb(1,0,1,0.3), xlim=c(0,10))
+```
+
+
+
+
+
+
+
+## This code estimates the AF of all populations at the same temp/sal
+Used for plotting
+```{r af as function of salinity}
+
+sal_levels <- unique(subset_indPhen_df$sal_opt)
+sal_levels
+temp_levels <- unique(subset_indPhen_df$temp_opt)
+temp_levels
+
+af_sal <- matrix(NA, nrow=length(sal_levels), ncol=nrow(G_full_subset))
+af_temp <- matrix(NA, nrow=length(temp_levels), ncol=nrow(G_full_subset))
+n_ind_sal <- table(subset_indPhen_df$sal_opt)
+n_ind_temp <- table(subset_indPhen_df$temp_opt)
+
+muts_full$af_cor_sal_pop = NA
+
+colnames(af_sal) <- muts_full$mutID
+rownames(af_sal) <- sal_levels
+colnames(af_temp) <- muts_full$mutID
+rownames(af_temp) <- temp_levels
+
+for (row in 1:nrow(G_full_subset)){
+    counts_sal <- table(G_full_subset[row,], subset_indPhen_df$sal_opt)
+    counts_temp <- table(G_full_subset[row,], subset_indPhen_df$temp_opt)
+      # this give a table of the number of alleles for individuals at that salinity
+    forSum_sal <- counts_sal*as.numeric(rownames(counts_sal))
+    forSum_temp <- counts_temp*as.numeric(rownames(counts_temp))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_sal[,row] <- (colSums(forSum_sal))/(2*n_ind_sal)
+  af_temp[,row] <- (colSums(forSum_temp))/(2*n_ind_temp)
+  muts_full$af_cor_sal_pop[row] <- cor(af_sal[,row], sal_levels)
+  muts_full$af_cor_temp_pop[row] <- cor(af_temp[,row], temp_levels)
+  }
+
+
+head(af_sal)
+
+# Sanity check that what I calculate here (from the subsample)
+# is similar to what I outputted from SliM in muts_df
+plot(muts_full$af_cor_temp,
+     muts_full$af_cor_temp_pop)
+abline(0,1, col="orange")
+plot(muts_full$af_cor_sal,
+     muts_full$af_cor_sal_pop)
+abline(0,1, col="orange")
+
+plot(abs(muts_full$af_cor_temp),
+     muts_full$Va_temp_prop)
+plot(abs(muts_full$af_cor_temp_pop),
+     muts_full$Va_temp_prop)
+plot(abs(muts_full$af_cor_sal),
+     muts_full$Va_temp_prop)
+plot(abs(muts_full$af_cor_sal_pop),
+     muts_full$Va_temp_prop)
+```
+
+
+# Plot phenotype vs. AF clines
+
+1st column:
+Phenotypic clines for temp (top) and salinity (bottom)
+
+2nd column:
+AF clines for temp (top) and salinity (bottom)
+
+```{r}
+
+subset_indPhen_df$phen_temp
+
+
+  par(mfrow=c(2,1), mar=c(4,6,0.5,0.5))
+
+  cond <- indPhen_df$subset
+
+  plot(jitter(indPhen_df$temp_opt[cond]), indPhen_df$phen_temp[cond], xlab="Deme Temperature", ylab="Individual optimum\ntemperature",pch=18, , las=1, bty="n", col=adjustcolor("purple",0.1))
+  abline(lm(indPhen_df$phen_temp[cond]~indPhen_df$temp_opt[cond]))
+    
+  plot(jitter(indPhen_df$sal_opt[cond]), indPhen_df$phen_sal[cond],
+       xlab="Deme Salinity", ylab="Individual optimum\nsalinity", pch=20, col=adjustcolor("blue",0.1), las=1, bty="n"
+       )
+  abline(lm(indPhen_df$phen_sal[cond]~indPhen_df$sal_opt[cond]))
+  
+```
+
+
+
+```{r make af vs. temp plot}
+#pdf("tempAF.pdf", width=4, height=2)
+par(mar=c(4,4,1,4), mfrow=c(1,1))
+  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 2))
+
+str(af_temp)
+
+#viridis(10)
+col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
+col <- (viridis(10))
+causal_muts_temp <- which(muts_full$mutID != 1 & muts_full$mutTempEffect != 0)
+for (i in causal_muts_temp){
+  cor_mut <- cor(temp_levels, af_temp[,i])
+  if(muts_full$Va_temp_prop[i]>0.05){
+    lwd=3
+    alpha = 1
+  }else{
+      lwd=0.5
+      alpha = 0.5
+      }
+    lines(temp_levels, af_temp[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+}
+legend(1.03,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor(p, temp)")
+#legend(x = "right",  col = legend.col(col, lev=seq(0,1,by=0.1)))
+#dev.off()
+```
+
+
+
+```{r make af vs. sal plot}
+#pdf("SalAF.pdf", width=4, height=2)
+par(mar=c(4,4,1,4), mfrow=c(1,1))
+  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Salinity", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 2))
+
+str(af_sal)
+
+#viridis(10)
+col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
+col <- (viridis(10))
+causal_muts_sal <- which(muts_full$mutID != 1 & muts_full$mutSalEffect != 0)
+for (i in causal_muts_sal){
+  cor_mut <- cor(sal_levels, af_sal[,i])
+  if(muts_full$Va_sal_prop[i]>0.05){
+    lwd=3
+    alpha = 1
+  }else{
+      lwd=0.5
+      alpha = 0.5
+      }
+    lines(sal_levels, af_sal[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+}
+legend(1.03,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor(p, sal)")
+#legend(x = "right",  col = legend.col(col, lev=seq(0,1,by=0.1)))
+#dev.off()
+```
+
+```{r genotype heatmaps}
+
+# Temps
+order_temp <- order(subset_indPhen_df$phen_temp)
+
+heatmap(t(G_full[causal_muts_temp,order_temp]), Rowv = NA,  main="All genotypes",cexCol = 0.3,  useRaster=TRUE,
+        scale="none",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df$phen_temp[order_temp],1))
+
+
+# Salinity
+par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(2,4,6,2), xpd=FALSE)
+
+### Visualize genotypes at different salinities ###
+subset_indPhen_df2 <- subset_indPhen_df[order(subset_indPhen_df$temp_opt),]
+
+bob <- which(subset_indPhen_df2$sal_opt==-1)
+THERE IS AN ISSUE HERE I NEED TO FIX  
+WANT TO PLOT INDIVIDUALS ACCORDING TO THEIR TEMP POPULATION
+heatmap(t(G_full[muts_full$mutID!=1,subset_indPhen_df$sal_opt==-1]), Rowv = NA, 
+        main="Low salinity genotypes", useRaster=TRUE,
+        scale="none",
+        labRow = round( subset_indPhen_df$temp_opt[subset_indPhen_df$sal_opt==-1], 1),
+        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
+        ylab="Southern<---Population--->Northern")
+  # this is cool. The low salinity sites, which are not connected by dispersal, evolve unique and different adaptations to salinity
+
+heatmap(t(G_subset[a$colInd,new==0]), Rowv = NA, Colv = NA, 
+        main="Intermediate salinity\ngenotypes", 
+        labRow = subset_indPhen_df$subpop[new==0],
+        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
+        ylab="Southern<---Population--->Northern")
+  # 
+
+heatmap(t(G_subset[a$colInd,new==1]), Rowv = NA,  Colv = NA,
+        main="High salinity genotypes",
+        labRow = subset_indPhen_df$subpop[new==1],
+         xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Southern<---Population--->Northern")
+  # The high salinity sites, which are connected by dispersal, evolve a more clinal allele frequency pattern with salinity
+```
+
+
+
+```{r NOT USING}
+### Visualize genotypes at different temps ####
+new_temp=subset_indPhen_df$temp_opt
+
+#northern pops
+heatmap(t(G_subset[a$colInd,new_temp==1]), Rowv = NA,  Colv = NA,
+        main="High temp (north) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-0.111111]), Rowv = NA,  Colv = NA,
+        main="Mid-latitude genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-0.111111],
+        xlab="Mutation ID",  cexCol = 0.3,  
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-1]), Rowv = NA,  Colv = NA,
+        main="Low temp (south) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+```
+
+
+```{r}
+
+X <- t(G_subset)
+Y <- cbind(indPhen_df$sal_opt[which(indPhen_df$subset)], indPhen_df$temp_opt[which(indPhen_df$subset)])
+str(X)
+str(Y)
+
+
+set.seed(12380923)
+rm <- sort(sample(indPhen_df$indID[-keepinds], 200, replace=FALSE)) # 200 random individuals
+head(cbind(indPhen_df$indID[rm+1], rm))
+rm <- rm+1 # because individuals start at 0, this can be an index now
+indPhen_df$test <- FALSE
+indPhen_df$test[rm] <- TRUE
+
+indPhen_df[which(indPhen_df$subset & indPhen_df$test),]
+  # shows no overlap
+
+# unit test - make sure test and train individuals do not overlap
+if (sum((indPhen_df$subset & indPhen_df$test))){
+  print("Error: overlap in subset and test set")}
+
+test_indPhen_df <- indPhen_df[rm,]
+
+trainX <- X
+trainY <- Y
+testX <- t(G[keepmuts, rm])
+testY_true <- cbind(indPhen_df$sal_opt[rm], indPhen_df$temp_opt[rm])
+dim(testY_true)
+testXsampName <- test_indPhen_df$indID
+
+```
+
+
+NEED TO EDIT THIS
+```{r show cool patterns of fitness, fig.height=6, fig.width=4}
+head(indPhen_df)
+env_df <- unique(indPhen_df[,c("subpop","sal_opt","temp_opt")])
+head(env_df)
+(npops <- nrow(indCG_df)-1)
+
+# choose an individual who has high fitness at cold end of range
+# and in low salinity sites
+head(indCG_df[,1:20], 10)
+tail(indCG_df[,1:20], 10)
+
+env_df$ind1_fit <- indCG_df[2:nrow(indCG_df), 1]
+env_df$ind1_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in low salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind2_fit <- indCG_df$V2000[2:nrow(indCG_df)]
+env_df$ind2_pch <- c(1,21)
+
+# choose an individual who has high fitness at cold end of range
+# and in HIGH salinity sites
+head(indCG_df[,101:120], 10)
+env_df$ind3_fit <- indCG_df$V107[2:nrow(indCG_df)]
+env_df$ind3_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in HIGH salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind4_fit <- indCG_df$V1994[2:nrow(indCG_df)]
+env_df$ind4_pch <- c(1,21)
+
+### Start plot ####
+par(mar=c(2,4,3,0.1), mfrow=c(2,1), oma=c(4,0,0,0))
+### Plot low salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind1_fit, pch=env_df$ind1_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="Low salinity adapted")
+    points(ind1_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. A", col="blue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. B", col="red", adj=0)
+  
+### Plot high salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind3_fit, pch=env_df$ind3_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="High salinity adapted")
+    points(ind3_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. C", col="darkblue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. D", col="darkred", adj=0)
+
+### Plot legend
+par(xpd=NA)  
+legend(-1,-0.4,  legend=c("high sal.", "low sal."), bty="n", adj=0, fill=c("grey", NA), horiz=TRUE)
+mtext("temperature", side=1, outer=TRUE, adj=0.6)
+```
+

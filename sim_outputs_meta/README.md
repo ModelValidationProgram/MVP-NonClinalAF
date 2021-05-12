@@ -90,12 +90,81 @@ The trees file output by SliM that is piped into pyslim.
 
 ### 2549986039929_muts_analysis.txt
 
-After each mutation is analyzed in R, 
+*`mut_ID` mutation ID, if not equal to 1, a causal mutation
+* `seed` simulation seed
+* `VCFrow` row in VCF file
+*`pos_pyslim` position as output from pyslim, which is 1 less than SliM output
+*`a_freq_full` allele frequency of derived allele based on all samples
+*`a_freq_subset` allele frequency of derived allele based on subset of individuals sampled according to their fitness
+*`mutSalEffect` for causal mutations, effect of mutation on the salinity phenotype
+*`mutTempEffect`  for causal mutations, effect of mutation on the temperature phenotype
+*`INFO`  for causal mutations, information output from slim
+*`af_cor_temp` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
+*`af_cor_sal` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
+*`af_slope_temp` slope between allele frequency and temperature based on subset of individuals sampled according to their fitness
+*`af_slope_sal` slope between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `Va_temp` VA to temperature explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
+* `Va_temp_prop` Proportion of total VA to temperature explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
+* `Va_sal` VA to salinity explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
+* `Va_sal_prop` Proportion of total VA to salinity explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
 
-SEE APRIL 2021 NOTEBOOK POSTS - TO DO
+* `LEA3.2_lfmm2_mlog10P_tempenv`
+* `LEA3.2_lfmm2_mlog10P_tempenv_sig`
+* `LEA3.2_lfmm2_Va_temp_prop`
+
+* `LEA3.2_lfmm2_mlog10P_salenv`
+* `LEA3.2_lfmm2_mlog10P_salenv_sig`
+* `LEA3.2_lfmm2_Va_sal_prop`
+
+### 2549986039929_ind_subset_analysis.txt
+
+* `RDA_allloci_temp_pred`
+* `RDA_allloci_sal_pred`
 
 ### 2549986039929_sim_analysis.txt
 
 After each simulation is analyzed in R, 
 
-SEE APRIL 2021 NOTEBOOK POSTS - TO DO
+*`seed` 
+* `all_corr_phen_temp` for all individuals, correlation between individual temp phenotype and environment temperature
+* `subsamp_corr_phen_temp` after sampling 20 individuals from each patch with a probability based on their fitness, correlation individual temp phenotype and environment temperature
+* `all_corr_phen_sal` for all individuals, correlation between individual sal phenotype and environment salinity
+* `subsamp_corr_phen_sal` after sampling 20 individuals from each patch with a probability based on their fitness, correlation between individual sal phenotype and environment salinity
+*`num_causal` number of causal loci in sim
+*`num_neut` number of neutral loci in sim
+*`prop_causal_sig_temp_corr` proportion of causal loci that have significant correlations with temperature
+*`prop_causal_sig_sal_corr` proportion of causal loci that have significant correlations with salinity
+*`prop_neut_sig_temp_corr` proportion of neutral loci that have significant correlations with temperature
+*`prop_neut_sig_sal_corr` proportion of neutral loci that have significant correlations with salinity
+*`median_causal_temp_slope` median slope between allele frequency and temperature for causal loci
+*`median_causal_sal_slope` median slope between allele frequency and salinity for causal loci
+*`median_neut_temp_slope` median slope between allele frequency and temperature for neutral loci
+*`median_neut_sal_slope` median slope between allele frequency and salinity for neutral loci
+
+* `LEA3.2_lfmm2_Va_sal_prop`  proportion of Va in salinity trait explained by LFMM outliers
+* `LEA3.2_lfmm2_Va_temp_prop` proportion of Va in temperature trait explained by LFMM outliers
+* `RDA_Va_temp_prop` proportion of Va in temperature trait explained by RDA outliers
+* `RDA_Va_sal_prop` proportion of Va in salinity trait explained by RDA outliers
+
+* `RDAallloci_cor_temppredict_tempphen`
+* `RDAallloci_cor_salpredict_salphen`
+* `RDA_LFMMloci_cor_temppredict_tempphen`
+* `RDA_LFMMloci_cor_salpredict_salphen`
+
+
+
+*`prop_causal_sig_LFMM` proportion of causal loci that are significant by LFMM
+*`prop_causal_sig_RDA` proportion of causal loci that are significant by RDA
+
+
+
+
+
+
+*`cor_RDAcausal_RDloadings_tempPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+*`cor_RDAcausal_RDloadings_salPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+*`cor_RDAalloutliers_RDloadings_tempPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+*`cor_RDAalloutliers_RDloadings_salPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+*`cor_RDAallSNPs_RDloadings_tempPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+*`cor_RDAallSNPs_RDloadings_salPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
+

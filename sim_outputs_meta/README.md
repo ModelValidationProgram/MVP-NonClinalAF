@@ -121,15 +121,22 @@ The trees file output by SliM that is piped into pyslim.
 * `RDA_allloci_temp_pred`
 * `RDA_allloci_sal_pred`
 
+### 2549986039929_af_deme.txt
+a matrix in which each row is a locus and each column is a deme, and the entry is the allele frequency
+
 ### 2549986039929_sim_analysis.txt
 
 After each simulation is analyzed in R, 
 
 *`seed` 
+* `nind_samp` number of individuals in sample
+* `K` number of populations used in analyses
+
 * `all_corr_phen_temp` for all individuals, correlation between individual temp phenotype and environment temperature
 * `subsamp_corr_phen_temp` after sampling 20 individuals from each patch with a probability based on their fitness, correlation individual temp phenotype and environment temperature
 * `all_corr_phen_sal` for all individuals, correlation between individual sal phenotype and environment salinity
 * `subsamp_corr_phen_sal` after sampling 20 individuals from each patch with a probability based on their fitness, correlation between individual sal phenotype and environment salinity
+
 *`num_causal` number of causal loci in sim
 *`num_neut` number of neutral loci in sim
 *`prop_causal_sig_temp_corr` proportion of causal loci that have significant correlations with temperature

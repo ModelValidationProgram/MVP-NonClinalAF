@@ -372,3 +372,240 @@ hist(abs(vcf_muts_df$af_cor_sal))
 hist(abs(vcf_muts_df$af_slope_temp))
 hist(abs(vcf_muts_df$af_slope_sal))
 ```
+
+
+
+```{r predict phen from RDA LFMM outliers}
+sum(muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig | muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig)
+
+# temperature or salinity significant outliers
+G_lfmm_out <- G_full_subset[muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig | muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig,]
+
+str(G_lfmm_out)
+
+rdaout_lfmm <- rda(t(G_lfmm_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+scores <- scores(rdaout_lfmm, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+summary(rdaout_lfmm)$biplot
+
+subset_indPhen_df$RDA_LFMMloci_temp_pred <- ind.sc[,1]*eigenvals(rdaout_lfmm)[1]*summary(rdaout_lfmm)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_lfmm)[2]*summary(rdaout_lfmm)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_LFMMloci_temp_pred))
+abline(0,1)
+# predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDA_LFMMloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_LFMMloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_LFMMloci_sal_pred <- ind.sc[,1]*eigenvals(rdaout_lfmm)[1]*summary(rdaout_lfmm)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_lfmm)[2]*summary(rdaout_lfmm)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred))
+abline(0,1)
+# predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDA_LFMMloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred), method = "spearman"))
+```
+
+```{r predict phen from RDA with RDA outliers}
+
+sum(muts_full$RDA_mlog10P_sig)
+
+# temperature or salinity significant outliers
+G_rda_out <- G_full_subset[which(muts_full$RDA_mlog10P_sig),]
+str(G_rda_out)
+
+rdaout_rda <- rda(t(G_rda_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
+scores <- scores(rdaout_rda, choices=1:4)
+loci.sc <- scores$species
+ind.sc <- scores$sites
+summary(rdaout_rda)$biplot
+
+subset_indPhen_df$RDA_RDAloci_temp_pred <- ind.sc[,1]*eigenvals(rdaout_rda)[1]*summary(rdaout_rda)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rda)[2]*summary(rdaout_rda)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_RDAloci_temp_pred))
+abline(0,1)
+# predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDA_RDAloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_RDAloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_RDAloci_sal_pred <- ind.sc[,1]*eigenvals(rdaout_rda)[1]*summary(rdaout_rda)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rda)[2]*summary(rdaout_rda)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_LFMMloci_sal_pred))
+abline(0,1)
+# predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDA_RDAloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_RDAloci_sal_pred), method = "spearman"))
+```
+
+
+For multivariate trait prediction, we may want to predict how far the predicted trait value is from the true trait value. I'm not sure how interesting this is, given random loci are as good as using outliers in some cases.
+```{r}
+
+str(subset_indPhen_df)
+
+for (i in 1:nrow(subset_indPhen_df)){
+  # Distance between true phenotype and predicted from all loci
+subset_indPhen_df$dist_phen_pred_allloci[i] <- 
+  dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_allloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_allloci_sal_pred)[i]
+  )
+  )
+)
+
+# Distance between true phenotype and predicted from LFMM loci
+subset_indPhen_df$dist_phen_pred_LFMMloci[i] <- dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_LFMMloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_LFMMloci_sal_pred)[i]
+  )
+  )
+)
+
+# Distance between true phenotype and predicted from RDA loci
+subset_indPhen_df$dist_phen_pred_RDAloci[i] <-dist(rbind(
+  cbind(scale(subset_indPhen_df$phen_sal)[i],   
+        scale(subset_indPhen_df$phen_temp)[i]
+        ), 
+  cbind(scale(subset_indPhen_df$RDA_RDAloci_temp_pred)[i], 
+        scale(subset_indPhen_df$RDA_RDAloci_sal_pred)[i]
+  )
+  )
+)
+}
+
+par(mfrow=c(3,1))
+hist(subset_indPhen_df$dist_phen_pred_allloci, xlim=c(0, 10))
+hist(subset_indPhen_df$dist_phen_pred_LFMMloci, col=rgb(0,0,1,0.3), xlim=c(0,10))
+hist(subset_indPhen_df$dist_phen_pred_RDAloci, col=rgb(1,0,1,0.3), xlim=c(0,10))
+```
+
+
+
+```{r NOT USING}
+### Visualize genotypes at different temps ####
+new_temp=subset_indPhen_df$temp_opt
+
+#northern pops
+heatmap(t(G_subset[a$colInd,new_temp==1]), Rowv = NA,  Colv = NA,
+        main="High temp (north) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-0.111111]), Rowv = NA,  Colv = NA,
+        main="Mid-latitude genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-0.111111],
+        xlab="Mutation ID",  cexCol = 0.3,  
+        ylab="Low Sal<---Population--->High Sal")
+
+heatmap(t(G_subset[a$colInd,new_temp==-1]), Rowv = NA,  Colv = NA,
+        main="Low temp (south) genotypes",
+        labRow = subset_indPhen_df$subpop[new_temp==-1],
+        xlab="Mutation ID",  cexCol = 0.3, 
+        ylab="Low Sal<---Population--->High Sal")
+
+```
+
+
+```{r}
+
+X <- t(G_subset)
+Y <- cbind(indPhen_df$sal_opt[which(indPhen_df$subset)], indPhen_df$temp_opt[which(indPhen_df$subset)])
+str(X)
+str(Y)
+
+
+set.seed(12380923)
+rm <- sort(sample(indPhen_df$indID[-keepinds], 200, replace=FALSE)) # 200 random individuals
+head(cbind(indPhen_df$indID[rm+1], rm))
+rm <- rm+1 # because individuals start at 0, this can be an index now
+indPhen_df$test <- FALSE
+indPhen_df$test[rm] <- TRUE
+
+indPhen_df[which(indPhen_df$subset & indPhen_df$test),]
+  # shows no overlap
+
+# unit test - make sure test and train individuals do not overlap
+if (sum((indPhen_df$subset & indPhen_df$test))){
+  print("Error: overlap in subset and test set")}
+
+test_indPhen_df <- indPhen_df[rm,]
+
+trainX <- X
+trainY <- Y
+testX <- t(G[keepmuts, rm])
+testY_true <- cbind(indPhen_df$sal_opt[rm], indPhen_df$temp_opt[rm])
+dim(testY_true)
+testXsampName <- test_indPhen_df$indID
+
+```
+
+
+NEED TO EDIT THIS
+```{r show cool patterns of fitness, fig.height=6, fig.width=4}
+head(indPhen_df)
+env_df <- unique(indPhen_df[,c("subpop","sal_opt","temp_opt")])
+head(env_df)
+(npops <- nrow(indCG_df)-1)
+
+# choose an individual who has high fitness at cold end of range
+# and in low salinity sites
+head(indCG_df[,1:20], 10)
+tail(indCG_df[,1:20], 10)
+
+env_df$ind1_fit <- indCG_df[2:nrow(indCG_df), 1]
+env_df$ind1_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in low salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind2_fit <- indCG_df$V2000[2:nrow(indCG_df)]
+env_df$ind2_pch <- c(1,21)
+
+# choose an individual who has high fitness at cold end of range
+# and in HIGH salinity sites
+head(indCG_df[,101:120], 10)
+env_df$ind3_fit <- indCG_df$V107[2:nrow(indCG_df)]
+env_df$ind3_pch <- c(0,22)
+
+# choose an individual who has high fitness at warm end of range
+# and in HIGH salinity sites
+tail(indCG_df[,(ncol(indCG_df)-10):ncol(indCG_df)], 10)
+env_df$ind4_fit <- indCG_df$V1994[2:nrow(indCG_df)]
+env_df$ind4_pch <- c(1,21)
+
+### Start plot ####
+par(mar=c(2,4,3,0.1), mfrow=c(2,1), oma=c(4,0,0,0))
+### Plot low salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind1_fit, pch=env_df$ind1_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="Low salinity adapted")
+    points(ind1_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. A", col="blue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind2_fit, pch=env_df$ind2_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. B", col="red", adj=0)
+  
+### Plot high salinity adapted ####
+  plot(env_df$temp_opt,env_df$ind3_fit, pch=env_df$ind3_pch, 
+       col="blue", bg="grey", bty="l", las=1, ylim=c(0,1),
+       xlab="", ylab="fitness", main="High salinity adapted")
+    points(ind3_fit~temp_opt, type="l", data=env_df, col=adjustcolor("blue",0.4))
+    text(-1,1.08,"Ind. C", col="darkblue", adj=0)
+  
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col="red", bg="grey") 
+  points(env_df$temp_opt,env_df$ind4_fit, pch=env_df$ind4_pch, col=adjustcolor("red", 0.2), type="l")
+  text(0.6,1.08,"Ind. D", col="darkred", adj=0)
+
+### Plot legend
+par(xpd=NA)  
+legend(-1,-0.4,  legend=c("high sal.", "low sal."), bty="n", adj=0, fill=c("grey", NA), horiz=TRUE)
+mtext("temperature", side=1, outer=TRUE, adj=0.6)
+```

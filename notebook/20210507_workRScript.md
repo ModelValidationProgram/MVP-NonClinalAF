@@ -1,22 +1,34 @@
 # 20210507
 
-### Plan
+### Plan for R code
 - [x] finishing outputing outliers for LFMM and for RDA
-- [x] test an obvious case that should produce clines
-    - [ ] try reducing mutation rate and increasing effect size - see if can get bigger clines
+- [x] formalize all outputs
+- [x] add color to RDA plots to show the temp and salinity optimums of individuals - maybe use green to blue for salinity and light to dark for temperature
 
+- [ ] fix heat maps so the colors are constrained
+- [ ] finish all output for R code and summary stats for a sim
+
+
+pdf(paste0(path,seed,"_pdf_muts.pdf"), width=5, height=5)
+
+ggplot(pop_df) + geom_point(aes(x=x, y=y,size=opt0)) + geom_point(aes(x=x, y=y, color=opt1)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + geom_text(aes(x=x, y=y+0.3,label=N)) + labs(size="salinity") + ggtitle(paste0("Optimums; N traits = ", info$Ntraits))
+
+
+ggplot(subset_indPhen_df) + geom_point(aes(x=PC1, y=PC2,size=sal_opt)) + geom_point(aes(x=PC1, y=PC2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; N traits = ", info$Ntraits))
+
+
+### Plan to change Sims
 - [ ] add a neutral chromosome to the simulation
 - [ ] add some non-linear environments to the sims
 - [ ] make sims more flexible for the two traits
+- [ ] make sure can simulate confounding demography
 
+### Plan to change R code
+
+### Plan to test Sims
 - [ ] test some of the sims outlined below
-
-- [ ] formalize all outputs
-- [ ] add color to RDA plots to show the temp and salinity optimums of individuals - maybe use green to blue for salinity and light to dark for temperature
-- [ ] fix heat maps so the colors are constrained
-
-- [ ] set up a data frame of scenarios
-- [ ] Tweak unix pipeline to run a scenario quickly
+- [x] test an obvious case that should produce clines
+    - [ ] try reducing mutation rate and increasing effect size - see if can get bigger clines
 
 
 ### sims to test
@@ -50,6 +62,25 @@ Decrease mutation rate and increase effect size for one cline and see if we get 
 
 * Then, test all the above with `demog=SS` and equal migration on x and y
 
+
+### Plan to set up parameter space
+- [ ] set up a data frame of scenarios
+- [ ] Tweak unix pipeline to run a scenario quickly
+
+
+Paul Rawson
+Damian Brady local bouys
+New Meadows River
+seeing if we can get approx at other locations
+Most low Salinity 24-26 ppt
+Not much freshwater
+UM reports of oyster plants and experiments - begins to show complexity
+Cascoe Bay - lots of oyster culture
+Great Bay - Nature Conservancy Site
+Wells might be a good place, wild
+Sheepscott - monitoring site, DMR - we need to work with them - Marcy Nelson - 
+Dana shellfish officer for the state - she might know if anyone collects from Cascoe 
+Paul can see if people can help us in other places, but not Great Bay
 
 ### current thoughts
 

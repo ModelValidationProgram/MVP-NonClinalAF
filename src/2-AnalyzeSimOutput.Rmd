@@ -12,7 +12,7 @@ setwd("~/Documents/GitHub/MVP-NonClinalAF/src")
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis")
+packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra")
 
 for (i in 1:length(packages_needed)){
   if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
@@ -39,7 +39,6 @@ library(qvalue)
 .pardefault <- par()
 ```
 
-## 
 ```{r load data}
 path <- "../sim_outputs/"
 outpath <- "../results/"
@@ -105,7 +104,7 @@ head(mig)
 
 
 par(mfrow=c(1,1), mar=c(4,4,3,1))
-pdf(paste0(path,seed,"_pdf_pop.pdf"), width=5, height=5)
+pdf(paste0(path,seed,"_pdf_1pop.pdf"), width=5, height=5)
 plot(pop_df$x, pop_df$y, col = rgb(0,0,0,0), bty="l", xlab="x", ylab="y")
 mig_thick <- scale(mig$m) + abs(min(scale(mig$m)))+1
 for (i in 1:nrow(mig)){
@@ -183,7 +182,7 @@ Note that this sampling doesn't really make a huge difference in terms of the co
 
 ```{r show cool patterns of mutation}
 
-pdf(paste0(path,seed,"_pdf_muts.pdf"), width=5, height=5)
+pdf(paste0(path,seed,"_pdf_2muts.pdf"), width=5, height=5)
 
 plot(muts_df$mutSalEffect, muts_df$mutTempEffect, ylim=c(-0.7, 0.7), xlim=c(-0.7,0.7), xlab="mutation effect on salinity phenotype", ylab="mutation effect on temperature phenotype", bty="l", main=seed)
 abline(h=0, col="grey")
@@ -425,9 +424,6 @@ pc = pca(lfmmfile, 30, scale = TRUE)
 subset_indPhen_df$PC1 <- pc$projections[,1]
 subset_indPhen_df$PC2 <- pc$projections[,2]
 subset_indPhen_df$PC3 <- pc$projections[,3]
-
-plot(pc$sdev[1:10]/sum(pc$sdev), bty="l", ylab="Prop Var of PC axis", main=seed)
-
 tw = tracy.widom(pc)
 plot(tw$percentage)
 a <- tw$percentage[1:20]
@@ -437,7 +433,9 @@ K
 ```
 
 ```{r}
-pdf(paste0(path,seed,"_pdf_pca.pdf"), width=5, height=5)
+pdf(paste0(path,seed,"_pdf_3pca.pdf"), width=5, height=5)
+
+plot(pc$sdev[1:10]/sum(pc$sdev), bty="l", ylab="Prop Var of PC axis", main=paste0(seed,"; N traits = ", info$Ntraits, "; K=", K))
 
 ggplot(subset_indPhen_df) + geom_point(aes(x=PC1, y=PC2,size=sal_opt)) + geom_point(aes(x=PC1, y=PC2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; N traits = ", info$Ntraits, "; K=", K))
 
@@ -449,8 +447,6 @@ dev.off()
 
 ## LFMM
 ```{r lfmm2 temp}
-
-
 mod_temp <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$temp_opt, K = K)
 pv_temp <- lfmm2.test(object = mod_temp, input = t(G_full_subset),
                  env = subset_indPhen_df$temp_opt,
@@ -475,21 +471,23 @@ muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig <- qvalue(pv_sal$pvalues)$qvalue < 0.0
 
 ```{r plot LFMM outliers}
 
-png(paste0(path,seed,"_pdf_manhattan_LFMM.png"), width=10, height=5, units=in, res=300)
+png(paste0(path,seed,"_pdf_4manhattan_LFMM.png"), width=10, height=5, units="in", res=300)
 
-ggplot() + 
+a <- ggplot() + 
   geom_point(data=muts_full, aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_tempenv), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_tempenv, color=Va_temp_prop)) + 
+  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_tempenv, color=Va_temp_prop, size=Va_temp_prop)) + 
   scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) + 
   theme_classic() +
-  geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig,], aes(x=pos_pyslim, y =LEA3.2_lfmm2_mlog10P_tempenv),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) LFMM temp") + ggtitle(paste0(seed," temp")) + xlab("position")
+  geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig,], aes(x=pos_pyslim, y =LEA3.2_lfmm2_mlog10P_tempenv),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) LFMM temp") + ggtitle(paste0(seed," temp")) + xlab("position") + labs(color="temp VA prop.", size="temp VA prop.")
 
-ggplot() + 
+b <- ggplot() + 
   geom_point(data=muts_full, aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_salenv), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_salenv, color=Va_sal_prop)) + 
+  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=pos_pyslim, y = LEA3.2_lfmm2_mlog10P_salenv, color=Va_sal_prop, size=Va_sal_prop)) + 
   scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) + 
   theme_classic() +
-  geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig,], aes(x=pos_pyslim, y =LEA3.2_lfmm2_mlog10P_salenv),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) LFMM salinity") + ggtitle(paste0(seed," salinity")) + xlab("position")
+  geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig,], aes(x=pos_pyslim, y =LEA3.2_lfmm2_mlog10P_salenv),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) LFMM salinity") + ggtitle(paste0(seed," salinity")) + xlab("position") + labs(color="sal VA prop.", size="sal VA prop.")
+
+grid.arrange(a, b, nrow=2)
 
 dev.off()
 ```
@@ -559,7 +557,7 @@ arrows <- data.frame(x=rep(0,2), y = rep(0, 2),
                      dx = c(sal_arrow_muts[1], temp_arrow_muts[1]),
                     dy = c(sal_arrow_muts[2], temp_arrow_muts[2]), name = c("Sal", "Temp"))
 
-png(paste0(path,seed,"_pdf_RDA.pdf"), width=5, height=5)
+pdf(paste0(path,seed,"_pdf_5RDA.pdf"), width=5, height=5)
 
 a<- screeplot(rdaout)
 str(a)
@@ -567,11 +565,11 @@ a$y # save this it's the eigenvalues
 
 ggplot() + 
   geom_point(data=muts_full, aes(x=RDA1_score, y = RDA2_score), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=RDA1_score, y = RDA2_score, color=Va_temp_prop)) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),pch=23, col="blue", size=3) +  xlab("RDA 1") + ylab("RDA 2") + ggtitle(paste0(seed, " temp")) + geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=RDA1_score, y = RDA2_score, color=Va_temp_prop, size=Va_temp_prop)) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),pch=23, col="blue", size=3) +  xlab("RDA 1") + ylab("RDA 2") + ggtitle(paste0(seed, " mutations - temp")) + geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="temp VA prop.", size="temp VA prop.")
                                    
 ggplot() + 
   geom_point(data=muts_full, aes(x=RDA1_score, y = RDA2_score), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=RDA1_score, y = RDA2_score, color=Va_sal_prop)) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),pch=23, col="blue", size=3) +  xlab("RDA 1") + ylab("RDA 2") + ggtitle(paste0(seed, " sal")) + geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.5,"cm"))) + geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="left") + geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=RDA1_score, y = RDA2_score, color=Va_sal_prop, size=Va_sal_prop)) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),pch=23, col="blue", size=3) +  xlab("RDA 1") + ylab("RDA 2") + ggtitle(paste0(seed, " mutations - sal")) +  geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom") + labs(color="sal VA prop.", size="sal VA prop.")
 
 
 
@@ -585,60 +583,40 @@ arrows_ind <- data.frame(x=rep(0,2), y = rep(0, 2),
                     dy = c(sal_arrow_muts[2], temp_arrow_muts[2]), name = c("Sal", "Temp"))
 
 ggplot(subset_indPhen_df) + 
-  geom_point(aes(x=RDA1, y = RDA2, size=sal_opt)) + geom_point(aes(x=RDA1, y=RDA2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; N traits = ", info$Ntraits)) + geom_segment(data=arrows_ind, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows_ind, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  geom_point(aes(x=RDA1, y = RDA2, size=sal_opt)) + geom_point(aes(x=RDA1, y=RDA2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; Individs.; N traits = ", info$Ntraits)) + geom_segment(data=arrows_ind, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + geom_text(data=arrows_ind, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
 
 dev.off()
 ```
 
 ```{r RDA manhattan}
 
-png(paste0(path,seed,"_pdf_manhattan_RDA.png"), width=10, height=5, units=in, res=300)
+png(paste0(path,seed,"_pdf_6manhattan_RDA.png"), width=10, height=5, units="in", res=300)
 
-ggplot() + 
+a<- ggplot() + 
   geom_point(data=muts_full, aes(x=pos_pyslim, y = RDA_mlog10P), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=pos_pyslim, y = RDA_mlog10P, color=Va_temp_prop)) + 
+  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=pos_pyslim, y = RDA_mlog10P, color=Va_temp_prop, size=Va_temp_prop)) + 
   scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) + 
   theme_classic() +
-  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) RDA") + ggtitle(paste0(seed," temp")) + xlab("position")
+  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) RDA") + ggtitle(paste0(seed," temp")) + xlab("position") + labs(color="temp VA prop.", size="temp VA prop.")
 
-ggplot() + 
+b<- ggplot() + 
   geom_point(data=muts_full, aes(x=pos_pyslim, y = RDA_mlog10P), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=pos_pyslim, y = RDA_mlog10P, color=Va_sal_prop)) + 
+  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=pos_pyslim, y = RDA_mlog10P, color=Va_sal_prop, size=Va_sal_prop)) + 
   scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) + 
   theme_classic() +
-  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) RDA") + ggtitle(paste0(seed," sal")) + xlab("position")
+  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="blue", size=3) + ylim(0, 10)  + ylab("-log10(P) RDA") + ggtitle(paste0(seed," sal")) + xlab("position") + labs(color="sal VA prop.", size="sal VA prop.")
+
+grid.arrange(a, b, nrow=2)
 dev.off()
 ```
 
 
 ```{r}
-TO DO: SAVE THIS TO FILE
-summary(rdaout)$biplot # add arrows
+write.table(data.frame(seed=as.character(seed), summary(rdaout)$biplot),paste0(path,seed,"_RDAloadings.txt")) 
 ```
 
 
-
-```{r predict phen from RDA all loci}
-subset_indPhen_df$RDA_allloci_temp_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2]
-
-plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred))
-abline(0,1)
-  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
-
-(RDAallloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred), method = "spearman"))
-
-## Salinity ###
-subset_indPhen_df$RDA_allloci_sal_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2]
-
-plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred))
-abline(0,1)
-  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
-(RDAallloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred), method = "spearman"))
-```
-
-LEFT OFF HERE
-
-```{r cor as a function of random loci}
+```{r predict phen as a function of random loci}
 nloci <- c(5, 10, 50, 100, 500, 1000)
 Random_cor_salpredict_salphen <- rep(NA, length(nloci))
 Random_cor_temppredict_tempphen <- rep(NA, length(nloci))
@@ -656,17 +634,23 @@ for (i in 1:length(nloci)){
   Random_cor_salpredict_salphen[i] <- cor(scale(subset_indPhen_df$phen_sal), scale(sal_pred), method = "spearman")
 }
 
-plot(log10(nloci), Random_cor_temppredict_tempphen, type="l", ylim=c(-0.1,1))
-points(log10(nloci), Random_cor_salpredict_salphen, type="l", col="blue", lwd=2)
+plot(nloci, Random_cor_temppredict_tempphen, type="l", ylim=c(-0.1,1), ylab="Cor(RDA prediction, true phenotype)", bty="l" , xlab="Number random loci in RDA", col="darkred", lwd=2, xlim=c(0, 1500), main = paste0(seed, "; N traits = ", info$Ntraits), cex.main=0.5, las=2)
+  points(nloci, Random_cor_salpredict_salphen, type="l", col="cornflowerblue", lwd=2, lty=2)
+  legend(1000, 0.5, c("temp", "sal"), col=c("darkred", "cornflowerblue"), lty = c(1,2), bty="n")
 
-# TO DO: Add points for lfmm outliers and RDA outliers
-points(log10())
+out_RDA_pred <- data.frame(nloci, Random_cor_temppredict_tempphen, Random_cor_salpredict_salphen)
+  
+write.table(out_RDA_pred,paste0(path,seed,"_RDA_predictions.txt"))
 ```
 
 
 ## This code estimates the AF of all populations at the same temp/sal
 Used for plotting
 ```{r af as function of salinity}
+
+str(af_pop)
+subset_temp_opt
+subset_sal_opt
 
 sal_levels <- unique(subset_indPhen_df$sal_opt)
 sal_levels
@@ -675,54 +659,30 @@ temp_levels
 
 af_sal <- matrix(NA, nrow=length(sal_levels), ncol=nrow(G_full_subset))
 af_temp <- matrix(NA, nrow=length(temp_levels), ncol=nrow(G_full_subset))
-n_ind_sal <- table(subset_indPhen_df$sal_opt)
-n_ind_temp <- table(subset_indPhen_df$temp_opt)
 
-muts_full$af_cor_sal_pop = NA
+# WARNING: this code only works with equal sample sizes for each population
+for (i in 1:ncol(af_pop)){
+  af_temp[,i] <- tapply(af_pop[,i], subset_temp_opt, mean)
+  af_sal[,i] <- tapply(af_pop[,i], subset_sal_opt, mean)
+}
 
-colnames(af_sal) <- muts_full$mutID
-rownames(af_sal) <- sal_levels
-colnames(af_temp) <- muts_full$mutID
-rownames(af_temp) <- temp_levels
-
-for (row in 1:nrow(G_full_subset)){
-    counts_sal <- table(G_full_subset[row,], subset_indPhen_df$sal_opt)
-    counts_temp <- table(G_full_subset[row,], subset_indPhen_df$temp_opt)
-      # this give a table of the number of alleles for individuals at that salinity
-    forSum_sal <- counts_sal*as.numeric(rownames(counts_sal))
-    forSum_temp <- counts_temp*as.numeric(rownames(counts_temp))
-      # 0 for homozygote reference
-      # 1 for heterozygote
-      # 2 for homozygote derived
-      # by multipling counts by number, heterozygotes are counted once
-      # and homozygote derived are counted twice
-      # also accounts for situations when only 2 genotypes found at a locus
-  af_sal[,row] <- (colSums(forSum_sal))/(2*n_ind_sal)
-  af_temp[,row] <- (colSums(forSum_temp))/(2*n_ind_temp)
-  muts_full$af_cor_sal_pop[row] <- cor(af_sal[,row], sal_levels)
-  muts_full$af_cor_temp_pop[row] <- cor(af_temp[,row], temp_levels)
-  }
-
-
-head(af_sal)
+muts_full$af_cor_temp_pooled <- cor(af_temp, temp_levels)
+muts_full$af_cor_sal_pooled <- cor(af_sal, sal_levels)
 
 # Sanity check that what I calculate here (from the subsample)
 # is similar to what I outputted from SliM in muts_df
 plot(muts_full$af_cor_temp,
-     muts_full$af_cor_temp_pop)
-abline(0,1, col="orange")
-plot(muts_full$af_cor_sal,
-     muts_full$af_cor_sal_pop)
+     muts_full$af_cor_temp_pooled)
 abline(0,1, col="orange")
 
-plot(abs(muts_full$af_cor_temp),
-     muts_full$Va_temp_prop)
-plot(abs(muts_full$af_cor_temp_pop),
-     muts_full$Va_temp_prop)
-plot(abs(muts_full$af_cor_sal),
-     muts_full$Va_temp_prop)
-plot(abs(muts_full$af_cor_sal_pop),
-     muts_full$Va_temp_prop)
+ggplot() + 
+  geom_point(data=muts_full, aes(x=af_cor_temp, y = af_cor_temp_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
+  geom_point(data = muts_full[muts_full$causal_temp,], aes(x=af_cor_temp, y = af_cor_temp_pooled, color=Va_temp_prop, size=Va_temp_prop), alpha=0.8) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  xlab("Cor(af, temp)") + ylab("Cor(af, temp) pooled by temp.") + ggtitle(paste0(seed, " mutations - temp")) + ylim(-1,1) + xlim(-1, 1) + geom_abline(data=NULL, intercept=0, slope=1) + labs(color="temp VA prop.", size="temp VA prop.")
+
+ggplot() + 
+  geom_point(data=muts_full, aes(x=af_cor_sal, y = af_cor_sal_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
+  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=af_cor_temp, y = af_cor_sal_pooled, color=Va_sal_prop, size=Va_sal_prop), alpha=0.8) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  xlab("Cor(af, sal.)") + ylab("Cor(af, sal) pooled by sal.") + ggtitle(paste0(seed, " mutations - sal")) + ylim(-1,1) + xlim(-1, 1) + geom_abline(data=NULL, intercept=0, slope=1) + labs(color="sal VA prop.", size="temp VA prop.")
+
 ```
 
 

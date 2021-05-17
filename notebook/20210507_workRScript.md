@@ -16,6 +16,10 @@ ggplot(pop_df) + geom_point(aes(x=x, y=y,size=opt0)) + geom_point(aes(x=x, y=y, 
 
 ggplot(subset_indPhen_df) + geom_point(aes(x=PC1, y=PC2,size=sal_opt)) + geom_point(aes(x=PC1, y=PC2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; N traits = ", info$Ntraits))
 
+ggplot() + 
+  geom_point(data=muts_full, aes(x=af_cor_sal, y = af_cor_sal_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
+  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=af_cor_temp, y = af_cor_sal_pooled, color=Va_sal_prop, size=Va_sal_prop), alpha=0.8) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  xlab("Cor(af, sal.)") + ylab("Cor(af, sal) pooled by sal.") + ggtitle(paste0(seed, " mutations - sal")) + ylim(-1,1) + xlim(-1, 1) + geom_abline(data=NULL, intercept=0, slope=1) + labs(color="sal VA prop.", size="temp VA prop.")
+
 
 ### Plan to change Sims
 - [ ] add a neutral chromosome to the simulation
@@ -67,20 +71,6 @@ Decrease mutation rate and increase effect size for one cline and see if we get 
 - [ ] set up a data frame of scenarios
 - [ ] Tweak unix pipeline to run a scenario quickly
 
-
-Paul Rawson
-Damian Brady local bouys
-New Meadows River
-seeing if we can get approx at other locations
-Most low Salinity 24-26 ppt
-Not much freshwater
-UM reports of oyster plants and experiments - begins to show complexity
-Cascoe Bay - lots of oyster culture
-Great Bay - Nature Conservancy Site
-Wells might be a good place, wild
-Sheepscott - monitoring site, DMR - we need to work with them - Marcy Nelson - 
-Dana shellfish officer for the state - she might know if anyone collects from Cascoe 
-Paul can see if people can help us in other places, but not Great Bay
 
 ### current thoughts
 

@@ -609,3 +609,49 @@ par(xpd=NA)
 legend(-1,-0.4,  legend=c("high sal.", "low sal."), bty="n", adj=0, fill=c("grey", NA), horiz=TRUE)
 mtext("temperature", side=1, outer=TRUE, adj=0.6)
 ```
+
+```{r predict phen from RDA all loci}
+subset_indPhen_df$RDA_allloci_temp_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2]
+
+plot(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred))
+abline(0,1)
+  # predicted temperature phenotype is the RDA loading * eigenvalue of axis * loading of temperature on that axis
+
+(RDAallloci_cor_temppredict_tempphen <- cor(scale(subset_indPhen_df$phen_temp), scale(subset_indPhen_df$RDA_allloci_temp_pred), method = "spearman"))
+
+## Salinity ###
+subset_indPhen_df$RDA_allloci_sal_pred <- subset_indPhen_df$RDA1*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] + subset_indPhen_df$RDA2*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2]
+
+plot(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred))
+abline(0,1)
+  # predicted salinity phenotype is the RDA loading * eigenvalue of axis * loading of salinity on that axis
+(RDAallloci_cor_salpredict_salphen <-cor(scale(subset_indPhen_df$phen_sal), scale(subset_indPhen_df$RDA_allloci_sal_pred), method = "spearman"))
+```
+
+muts_full$af_cor_sal_pop = NA
+
+colnames(af_sal) <- muts_full$mutID
+rownames(af_sal) <- sal_levels
+colnames(af_temp) <- muts_full$mutID
+rownames(af_temp) <- temp_levels
+
+for (row in 1:nrow(G_full_subset)){
+    counts_sal <- table(G_full_subset[row,], subset_indPhen_df$sal_opt)
+    counts_temp <- table(G_full_subset[row,], subset_indPhen_df$temp_opt)
+      # this give a table of the number of alleles for individuals at that salinity
+    forSum_sal <- counts_sal*as.numeric(rownames(counts_sal))
+    forSum_temp <- counts_temp*as.numeric(rownames(counts_temp))
+      # 0 for homozygote reference
+      # 1 for heterozygote
+      # 2 for homozygote derived
+      # by multipling counts by number, heterozygotes are counted once
+      # and homozygote derived are counted twice
+      # also accounts for situations when only 2 genotypes found at a locus
+  af_sal[,row] <- (colSums(forSum_sal))/(2*n_ind_sal)
+  af_temp[,row] <- (colSums(forSum_temp))/(2*n_ind_temp)
+  muts_full$af_cor_sal_pop[row] <- cor(af_sal[,row], sal_levels)
+  muts_full$af_cor_temp_pop[row] <- cor(af_temp[,row], temp_levels)
+  }
+
+
+head(af_sal)

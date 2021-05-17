@@ -101,6 +101,8 @@ The trees file output by SliM that is piped into pyslim.
 *`INFO`  for causal mutations, information output from slim
 *`af_cor_temp` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
 *`af_cor_sal` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
+*`af_cor_temp_pooled` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness, for individuals pooled by temperature instead of by population
+*`af_cor_sal_pooled` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness, for individuals pooled by salinity instead of by population
 *`af_slope_temp` slope between allele frequency and temperature based on subset of individuals sampled according to their fitness
 *`af_slope_sal` slope between allele frequency and salinity based on subset of individuals sampled according to their fitness
 * `Va_temp` VA to temperature explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
@@ -123,6 +125,9 @@ The trees file output by SliM that is piped into pyslim.
 
 ### 2549986039929_af_deme.txt
 a matrix in which each row is a locus and each column is a deme, and the entry is the allele frequency
+
+### 2549986039929_RDA_loadings.txt
+
 
 ### 2549986039929_sim_analysis.txt
 
@@ -165,13 +170,7 @@ After each simulation is analyzed in R,
 
 
 
+*`cor_RDA500_RDloadings_tempPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+*`cor_RDA500_RDloadings_salPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's salinity phenotype)
 
-
-
-*`cor_RDAcausal_RDloadings_tempPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-*`cor_RDAcausal_RDloadings_salPhen` For an RDA based on causal loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
-*`cor_RDAalloutliers_RDloadings_tempPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-*`cor_RDAalloutliers_RDloadings_salPhen` For an RDA based on all outlier loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
-*`cor_RDAallSNPs_RDloadings_tempPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-*`cor_RDAallSNPs_RDloadings_salPhen` For an RDA based on all SNP (neutral and causal) loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's sal phenotype)
 

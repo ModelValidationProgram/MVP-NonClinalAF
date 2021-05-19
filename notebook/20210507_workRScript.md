@@ -1,35 +1,22 @@
-# 20210507
+# 20210507 through 05/20
 
 ### Plan for R code
 - [x] finishing outputing outliers for LFMM and for RDA
 - [x] formalize all outputs
 - [x] add color to RDA plots to show the temp and salinity optimums of individuals - maybe use green to blue for salinity and light to dark for temperature
+- [x] fix heat maps so the colors are constrained
+- [x ] finish all output for R code and summary stats for a sim (TUESDAY)
 
-- [ ] fix heat maps so the colors are constrained
-- [ ] finish all output for R code and summary stats for a sim
-
-
-pdf(paste0(path,seed,"_pdf_muts.pdf"), width=5, height=5)
-
-ggplot(pop_df) + geom_point(aes(x=x, y=y,size=opt0)) + geom_point(aes(x=x, y=y, color=opt1)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + geom_text(aes(x=x, y=y+0.3,label=N)) + labs(size="salinity") + ggtitle(paste0("Optimums; N traits = ", info$Ntraits))
-
-
-ggplot(subset_indPhen_df) + geom_point(aes(x=PC1, y=PC2,size=sal_opt)) + geom_point(aes(x=PC1, y=PC2, color=temp_opt)) + theme_classic() + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="salinity") + ggtitle(paste0(seed,"; N traits = ", info$Ntraits))
-
-ggplot() + 
-  geom_point(data=muts_full, aes(x=af_cor_sal, y = af_cor_sal_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
-  geom_point(data = muts_full[muts_full$causal_sal,], aes(x=af_cor_temp, y = af_cor_sal_pooled, color=Va_sal_prop, size=Va_sal_prop), alpha=0.8) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  xlab("Cor(af, sal.)") + ylab("Cor(af, sal) pooled by sal.") + ggtitle(paste0(seed, " mutations - sal")) + ylim(-1,1) + xlim(-1, 1) + geom_abline(data=NULL, intercept=0, slope=1) + labs(color="sal VA prop.", size="temp VA prop.")
-
-
-### Plan to change Sims
+### Plan to change Sims (WEDNESDAY)
 - [ ] add a neutral chromosome to the simulation
 - [ ] add some non-linear environments to the sims
 - [ ] make sims more flexible for the two traits
 - [ ] make sure can simulate confounding demography
 
-### Plan to change R code
+### Plan to change R code (THURSDAY)
+- Add info about the sim to the top of each plot
 
-### Plan to test Sims
+### Plan to test Sims  (FRIDAY)
 - [ ] test some of the sims outlined below
 - [x] test an obvious case that should produce clines
     - [ ] try reducing mutation rate and increasing effect size - see if can get bigger clines

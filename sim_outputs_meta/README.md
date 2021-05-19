@@ -123,11 +123,15 @@ The trees file output by SliM that is piped into pyslim.
 * `RDA_allloci_temp_pred`
 * `RDA_allloci_sal_pred`
 
+TO DO
+
 ### 2549986039929_af_deme.txt
 a matrix in which each row is a locus and each column is a deme, and the entry is the allele frequency
 
-### 2549986039929_RDA_loadings.txt
+DO I OUTPUT THIS?
 
+### 2549986039929_RDA_loadings.txt
+RDA loadings for each environment
 
 ### 2549986039929_sim_analysis.txt
 
@@ -136,41 +140,39 @@ After each simulation is analyzed in R,
 *`seed` 
 * `nind_samp` number of individuals in sample
 * `K` number of populations used in analyses
-
 * `all_corr_phen_temp` for all individuals, correlation between individual temp phenotype and environment temperature
 * `subsamp_corr_phen_temp` after sampling 20 individuals from each patch with a probability based on their fitness, correlation individual temp phenotype and environment temperature
 * `all_corr_phen_sal` for all individuals, correlation between individual sal phenotype and environment salinity
 * `subsamp_corr_phen_sal` after sampling 20 individuals from each patch with a probability based on their fitness, correlation between individual sal phenotype and environment salinity
-
 *`num_causal` number of causal loci in sim
 *`num_neut` number of neutral loci in sim
-*`prop_causal_sig_temp_corr` proportion of causal loci that have significant correlations with temperature
-*`prop_causal_sig_sal_corr` proportion of causal loci that have significant correlations with salinity
-*`prop_neut_sig_temp_corr` proportion of neutral loci that have significant correlations with temperature
-*`prop_neut_sig_sal_corr` proportion of neutral loci that have significant correlations with salinity
-*`median_causal_temp_slope` median slope between allele frequency and temperature for causal loci
-*`median_causal_sal_slope` median slope between allele frequency and salinity for causal loci
-*`median_neut_temp_slope` median slope between allele frequency and temperature for neutral loci
-*`median_neut_sal_slope` median slope between allele frequency and salinity for neutral loci
+
+
 
 * `LEA3.2_lfmm2_Va_sal_prop`  proportion of Va in salinity trait explained by LFMM outliers
 * `LEA3.2_lfmm2_Va_temp_prop` proportion of Va in temperature trait explained by LFMM outliers
+*`LEA3.2_lfmm2_TPR_temp` true positive rate - proportion of causal loci that are significant by LFMM
+*`LEA3.2_lfmm2_TPR_sal` true positive rate - proportion of causal loci that are significant by LFMM
+*`LEA3.2_lfmm2_FDR_temp` false discovery rate - proportion of outliers that are true positives
+*`LEA3.2_lfmm2_FDR_sal` false discovery rate - proportion of outliers that are true positives
+
+
 * `RDA_Va_temp_prop` proportion of Va in temperature trait explained by RDA outliers
 * `RDA_Va_sal_prop` proportion of Va in salinity trait explained by RDA outliers
-
-* `RDAallloci_cor_temppredict_tempphen`
-* `RDAallloci_cor_salpredict_salphen`
-* `RDA_LFMMloci_cor_temppredict_tempphen`
-* `RDA_LFMMloci_cor_salpredict_salphen`
-
-
-
-*`prop_causal_sig_LFMM` proportion of causal loci that are significant by LFMM
-*`prop_causal_sig_RDA` proportion of causal loci that are significant by RDA
+*`RDA_TPR`  true positive rate - proportion of causal loci that are significant by RDA
+* `RDA_FDR` false discovery rate - proportion of outliers that are true positives
 
 
 
 *`cor_RDA500_RDloadings_tempPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
 *`cor_RDA500_RDloadings_salPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's salinity phenotype)
 
+*`num_causal_sig_temp_corr` number of causal loci that have significant Spearman's correlations with temperature after Bonferroni correction
+*`num_causal_sig_sal_corr` number of causal loci that have significant Spearman's correlations with salinity after Bonferroni correction
+*`num_neut_sig_temp_corr` number of neutral loci that have significant  Spearman's correlations with temperature after Bonferroni correction
+*`num_neut_sig_sal_corr` number of neutral loci that have significant Spearman's correlations with salinity after Bonferroni correction
 
+*`median_causal_temp_cor` median abs(Spearman's correlation) between allele frequency and temperature for causal loci
+*`median_causal_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for causal loci
+*`median_neut_temp_cor` median abs(Spearman's correlation)  between allele frequency and temperature for neutral loci
+*`median_neut_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for neutral loci

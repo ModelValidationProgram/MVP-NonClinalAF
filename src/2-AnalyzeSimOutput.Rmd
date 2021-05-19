@@ -145,7 +145,7 @@ Note that this sampling doesn't really make a huge difference in terms of the co
   
 ### Part 2 ####
   npops <- length(levels(factor(indPhen_df$subpop)))
-  n = 10 # number of individual per pop
+  n = 20 # number of individual per pop
   subset <- c()
   for (i in 1:npops){
     #set.seed(139982)
@@ -452,8 +452,8 @@ pv_temp <- lfmm2.test(object = mod_temp, input = t(G_full_subset),
                  env = subset_indPhen_df$temp_opt,
                  linear = TRUE)
 
-muts_full$LEA3.2_lfmm2_mlog10P_tempenv <- -log10(pv_temp$pvalues)
-muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig <- qvalue(pv_temp$pvalues)$qvalue < 0.05
+muts_full$LEA3.2_lfmm2_mlog10P_tempenv <- -log10(as.numeric(pv_temp$pvalues))
+muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig <- qvalue(as.numeric(pv_temp$pvalues))$qvalue < 0.05
 ```
 
 
@@ -465,8 +465,24 @@ pv_sal <- lfmm2.test(object = mod_sal, input = t(G_full_subset),
                  linear = TRUE)
 
 
-muts_full$LEA3.2_lfmm2_mlog10P_salenv <- -log10(pv_sal$pvalues)
-muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig <- qvalue(pv_sal$pvalues)$qvalue < 0.05
+muts_full$LEA3.2_lfmm2_mlog10P_salenv <- -log10(as.numeric(pv_sal$pvalues))
+muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig <- qvalue(as.numeric(pv_sal$pvalues))$qvalue < 0.05
+```
+
+```{r}
+
+LEA3.2_lfmm2_Va_temp_prop <- sum(muts_full$Va_temp[which(muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig)], na.rm=TRUE)/sum(muts_full$Va_temp, na.rm=TRUE) 
+LEA3.2_lfmm2_Va_sal_prop <- sum(muts_full$Va_sal[which(muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig)], na.rm=TRUE)/sum(muts_full$Va_sal, na.rm=TRUE) 
+
+# True positive rate -proportion of causal loci that are outliers
+LEA3.2_lfmm2_TPR_temp <- sum(muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig & muts_full$causal_temp)/sum(muts_full$causal_temp)
+
+LEA3.2_lfmm2_TPR_sal <- sum(muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig & muts_full$causal_sal)/sum(muts_full$causal_sal)
+
+# False discovery rate- proportion of outliers that are neutral
+LEA3.2_lfmm2_FDR_temp <-(sum(!muts_full$causal_temp & muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig, na.rm=TRUE)/sum(muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig, na.rm=TRUE))
+
+LEA3.2_lfmm2_FDR_sal <- (sum(!muts_full$causal_sal & muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig, na.rm=TRUE)/sum(muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig, na.rm=TRUE))
 ```
 
 ```{r plot LFMM outliers}
@@ -540,6 +556,8 @@ muts_full$RDA_mlog10P_sig <- ps$q.values<0.001
 (RDA_Va_temp_prop <- sum(muts_full$Va_temp_prop[muts_full$RDA_mlog10P_sig], na.rm=TRUE))
 
 (RDA_Va_sal_prop <- sum(muts_full$Va_sal_prop[muts_full$RDA_mlog10P_sig], na.rm=TRUE))
+
+(RDA_TPR <- sum(muts_full$RDA_mlog10P_sig & muts_full$causal)/sum(muts_full$causal))
 
 (RDA_FDR <- sum(muts_full$RDA_mlog10P_sig & !muts_full$causal)/sum(muts_full$RDA_mlog10P_sig))
 ```
@@ -639,7 +657,10 @@ plot(nloci, Random_cor_temppredict_tempphen, type="l", ylim=c(-0.1,1), ylab="Cor
   legend(1000, 0.5, c("temp", "sal"), col=c("darkred", "cornflowerblue"), lty = c(1,2), bty="n")
 
 out_RDA_pred <- data.frame(nloci, Random_cor_temppredict_tempphen, Random_cor_salpredict_salphen)
-  
+
+cor_RDA500_RDloadings_tempPhen <- Random_cor_temppredict_tempphen[nloci==500]
+cor_RDA500_RDloadings_salPhen <- Random_cor_salpredict_salphen[nloci==500]
+
 write.table(out_RDA_pred,paste0(path,seed,"_RDA_predictions.txt"))
 ```
 
@@ -665,15 +686,17 @@ for (i in 1:ncol(af_pop)){
   af_temp[,i] <- tapply(af_pop[,i], subset_temp_opt, mean)
   af_sal[,i] <- tapply(af_pop[,i], subset_sal_opt, mean)
 }
+colnames(af_temp) <- muts_full$mutID
+rownames(af_temp) <- temp_levels
 
-muts_full$af_cor_temp_pooled <- cor(af_temp, temp_levels)
-muts_full$af_cor_sal_pooled <- cor(af_sal, sal_levels)
+colnames(af_sal) <- muts_full$mutID
+rownames(af_sal) <- sal_levels
 
-# Sanity check that what I calculate here (from the subsample)
-# is similar to what I outputted from SliM in muts_df
-plot(muts_full$af_cor_temp,
-     muts_full$af_cor_temp_pooled)
-abline(0,1, col="orange")
+
+muts_full$af_cor_temp_pooled <- as.numeric(cor(af_temp, temp_levels))
+muts_full$af_cor_sal_pooled <- as.numeric(cor(af_sal, sal_levels))
+
+pdf(paste0(path,seed,"_pdf_7_afcors.pdf"), width=5, height=5)
 
 ggplot() + 
   geom_point(data=muts_full, aes(x=af_cor_temp, y = af_cor_temp_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
@@ -683,6 +706,7 @@ ggplot() +
   geom_point(data=muts_full, aes(x=af_cor_sal, y = af_cor_sal_pooled), color=rgb(0.4,0.4,0.6,0.1)) +
   geom_point(data = muts_full[muts_full$causal_sal,], aes(x=af_cor_temp, y = af_cor_sal_pooled, color=Va_sal_prop, size=Va_sal_prop), alpha=0.8) +scale_colour_viridis(option="plasma", begin = 0.8, end=0, limits=c(0,0.5)) +  theme_classic() +  xlab("Cor(af, sal.)") + ylab("Cor(af, sal) pooled by sal.") + ggtitle(paste0(seed, " mutations - sal")) + ylim(-1,1) + xlim(-1, 1) + geom_abline(data=NULL, intercept=0, slope=1) + labs(color="sal VA prop.", size="temp VA prop.")
 
+dev.off()
 ```
 
 
@@ -696,124 +720,195 @@ AF clines for temp (top) and salinity (bottom)
 
 ```{r}
 
-subset_indPhen_df$phen_temp
+pdf(paste0(path,seed,"_pdf_8phen-env_af-env.pdf"), width=9, height=9)
+
+  par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,0,2,1))
 
 
-  par(mfrow=c(2,1), mar=c(4,6,0.5,0.5))
-
-  cond <- indPhen_df$subset
-
-  plot(jitter(indPhen_df$temp_opt[cond]), indPhen_df$phen_temp[cond], xlab="Deme Temperature", ylab="Individual optimum\ntemperature",pch=18, , las=1, bty="n", col=adjustcolor("purple",0.1))
-  abline(lm(indPhen_df$phen_temp[cond]~indPhen_df$temp_opt[cond]))
+  plot(jitter(subset_indPhen_df$temp_opt), subset_indPhen_df$phen_temp, xlab="Deme Temperature", ylab="Ind. optimum temp.",pch=18, , las=1, bty="n", col=adjustcolor("purple",0.1))
+  abline(lm(subset_indPhen_df$phen_temp~subset_indPhen_df$temp_opt))
     
-  plot(jitter(indPhen_df$sal_opt[cond]), indPhen_df$phen_sal[cond],
-       xlab="Deme Salinity", ylab="Individual optimum\nsalinity", pch=20, col=adjustcolor("blue",0.1), las=1, bty="n"
+  plot(jitter(subset_indPhen_df$sal_opt), subset_indPhen_df$phen_sal,
+       xlab="Deme Salinity", ylab="Ind. optimum sal.", pch=20, col=adjustcolor("blue",0.1), las=1, bty="n"
        )
-  abline(lm(indPhen_df$phen_sal[cond]~indPhen_df$sal_opt[cond]))
+  abline(lm(subset_indPhen_df$phen_sal~subset_indPhen_df$sal_opt))
   
-```
+mtext(paste0(seed, "; N traits = ", info$Ntraits), side=3, outer=TRUE, cex=0.5, line=1)
 
 
-
-```{r make af vs. temp plot}
-#pdf("tempAF.pdf", width=4, height=2)
-par(mar=c(4,4,1,4), mfrow=c(1,1))
-  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 2))
-
-str(af_temp)
 
 #viridis(10)
-col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
-col <- (viridis(10))
-causal_muts_temp <- which(muts_full$mutID != 1 & muts_full$mutTempEffect != 0)
-for (i in causal_muts_temp){
+#col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
+col <- rev(mako(10))
+
+### TEMP PLOT ####
+##################### ###
+plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Deme Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)
+
+str(af_temp)
+for (i in which(muts_full$causal_temp)){
   cor_mut <- cor(temp_levels, af_temp[,i])
   if(muts_full$Va_temp_prop[i]>0.05){
     lwd=3
-    alpha = 1
+    alpha1 = 0.8
   }else{
       lwd=0.5
-      alpha = 0.5
+      alpha1 = 0.5
       }
-    lines(temp_levels, af_temp[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+    lines(temp_levels, af_temp[,i], col=adjustcolor(col[ceiling(abs(cor_mut*10))], alpha1), lwd=lwd)
 }
-legend(1.03,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor(p, temp)")
-#legend(x = "right",  col = legend.col(col, lev=seq(0,1,by=0.1)))
-#dev.off()
-```
 
 
+### SAL PLOT ####
+##################### ###
+  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Deme Salinity", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)
 
-```{r make af vs. sal plot}
-#pdf("SalAF.pdf", width=4, height=2)
-par(mar=c(4,4,1,4), mfrow=c(1,1))
-  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Salinity", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 2))
-
-str(af_sal)
-
-#viridis(10)
-col <- two.colors(10, "#3B528BFF", "#FDE725FF", middle = "#6DCD59FF")
-col <- (viridis(10))
-causal_muts_sal <- which(muts_full$mutID != 1 & muts_full$mutSalEffect != 0)
-for (i in causal_muts_sal){
+for (i in which(muts_full$causal)){
   cor_mut <- cor(sal_levels, af_sal[,i])
   if(muts_full$Va_sal_prop[i]>0.05){
     lwd=3
-    alpha = 1
+    alpha1 = 0.8
   }else{
       lwd=0.5
-      alpha = 0.5
+      alpha1 = 0.5
       }
-    lines(sal_levels, af_sal[,i], col=col[round(abs(cor_mut),1)*10], lwd=lwd)
+    lines(sal_levels, af_sal[,i], col=adjustcolor(col[ceiling(abs(cor_mut*10))], alpha1), lwd=lwd)
 }
-legend(1.03,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor(p, sal)")
-#legend(x = "right",  col = legend.col(col, lev=seq(0,1,by=0.1)))
-#dev.off()
+
+
+
+### LEGEND PLOT ####
+##################### ###
+par(mfrow=c(1,1))
+plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1))
+
+legend(0,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor (p, env)")
+
+dev.off()
+
 ```
 
 ```{r genotype heatmaps}
 
-# Temps
-order_temp <- order(subset_indPhen_df$phen_temp)
+pdf(paste0(path,seed,"_pdf_heatmaps.pdf"), width=5, height=5)
 
-heatmap(t(G_full[causal_muts_temp,order_temp]), Rowv = NA,  main="All genotypes",cexCol = 0.3,  useRaster=TRUE,
+# Temps
+order_temp <- order(subset_indPhen_df$temp_opt)
+order_sal <- order(subset_indPhen_df$sal_opt)
+
+par(mfrow=c(1,1), mar=c(4,0,6,4))
+heatmap(t(G_full_subset[muts_full$causal_temp,order_temp]), Rowv = NA,  main="Causal alleles Temp",cexCol = 0.3,  useRaster=FALSE,
         scale="none",
            #Colv = NA,
-           labRow = round(subset_indPhen_df$phen_temp[order_temp],1))
+           labRow = round(subset_indPhen_df$temp_opt[order_temp],1), xlab="Mutation ID", ylab="South <---------> North")
+
+if(sum(muts_full$causal_sal)>0){
+  heatmap(t(G_full_subset[muts_full$causal_sal,order_sal]), Rowv = NA,  main="Causal alleles Sal",cexCol = 0.3,  useRaster=FALSE,
+        scale="none", xlab="Mutation ID", ylab="East <---------> West",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df$temp_opt[order_temp],1))
+}
 
 
-# Salinity
-par(mfrow=c(1,1), oma=c(0,0,0,0), mar=c(2,4,6,2), xpd=FALSE)
-
-### Visualize genotypes at different salinities ###
-subset_indPhen_df2 <- subset_indPhen_df[order(subset_indPhen_df$temp_opt),]
-
-bob <- which(subset_indPhen_df2$sal_opt==-1)
-THERE IS AN ISSUE HERE I NEED TO FIX  
-WANT TO PLOT INDIVIDUALS ACCORDING TO THEIR TEMP POPULATION
-heatmap(t(G_full[muts_full$mutID!=1,subset_indPhen_df$sal_opt==-1]), Rowv = NA, 
-        main="Low salinity genotypes", useRaster=TRUE,
+  heatmap(t(G_full_subset[sample(which(!muts_full$causal), 100), order_temp]), Rowv = NA,  main="Non-causal alleles",cexCol = 0.3,  useRaster=FALSE,
         scale="none",
-        labRow = round( subset_indPhen_df$temp_opt[subset_indPhen_df$sal_opt==-1], 1),
-        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
-        ylab="Southern<---Population--->Northern")
-  # this is cool. The low salinity sites, which are not connected by dispersal, evolve unique and different adaptations to salinity
+           #Colv = NA,
+           labRow = round(subset_indPhen_df$temp_opt[order_temp],1), xlab="Mutation ID", ylab="South <---------> North")
 
-heatmap(t(G_subset[a$colInd,new==0]), Rowv = NA, Colv = NA, 
-        main="Intermediate salinity\ngenotypes", 
-        labRow = subset_indPhen_df$subpop[new==0],
-        xlab="Mutation ID",  cexCol = 0.3, #labCol = a$colInd,
-        ylab="Southern<---Population--->Northern")
-  # 
 
-heatmap(t(G_subset[a$colInd,new==1]), Rowv = NA,  Colv = NA,
-        main="High salinity genotypes",
-        labRow = subset_indPhen_df$subpop[new==1],
-         xlab="Mutation ID",  cexCol = 0.3, 
-        ylab="Southern<---Population--->Northern")
-  # The high salinity sites, which are connected by dispersal, evolve a more clinal allele frequency pattern with salinity
+### Visualize genotypes at low salinities ###
+subset_indPhen_df2 <- subset_indPhen_df[subset_indPhen_df$sal_opt==-1,]
+order_temp2 <- order(subset_indPhen_df2$temp_opt)
+
+G_full_subset2 <- G_full_subset[,subset_indPhen_df$sal_opt==-1]
+
+heatmap(t(G_full_subset2[muts_full$causal,order_temp2]), Rowv = NA,  main="Low Sal. Demes; Causal alleles",cexCol = 0.3,  useRaster=FALSE, 
+        scale="none",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df2$temp_opt[order_temp2],1), xlab="Mutation ID", ylab="South <---------> North")
+
+## Non-causal
+heatmap(t(G_full_subset2[sample(which(!muts_full$causal), 100),order_temp2]), Rowv = NA,  main="Low Sal. Demes; Non-causal alleles",cexCol = 0.3,  useRaster=FALSE, 
+        scale="none",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df2$temp_opt[order_temp2],1), xlab="Mutation ID", ylab="South <---------> North")
+
+
+### Visualize genotypes at high salinities ###
+subset_indPhen_df3 <- subset_indPhen_df[subset_indPhen_df$sal_opt==1,]
+order_temp3 <- order(subset_indPhen_df3$temp_opt)
+
+G_full_subset3 <- G_full_subset[,subset_indPhen_df$sal_opt==1]
+
+heatmap(t(G_full_subset3[muts_full$causal,order_temp3]), Rowv = NA,  main="High Sal. Demes; Causal alleles",cexCol = 0.3,  useRaster=FALSE,
+        scale="none",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df2$temp_opt[order_temp3],1), xlab="Mutation ID", ylab="South <---------> North")
+
+
+heatmap(t(G_full_subset3[sample(which(!muts_full$causal), 100),order_temp3]), Rowv = NA,  main="High Sal. Demes; Non-causal alleles",cexCol = 0.3,  useRaster=FALSE,
+        scale="none",
+           #Colv = NA,
+           labRow = round(subset_indPhen_df2$temp_opt[order_temp3],1), xlab="Mutation ID", ylab="South <---------> North")
+
+dev.off()
+
+rm(subset_indPhen_df2)
+rm(subset_indPhen_df3)
+rm(G_full_subset2)
+rm(G_full_subset3)
 ```
 
+```{r write outputs}
+Bonf_alpha <- (0.05/(num_causal + num_neut))
 
+num_causal_sig_temp_corr <- sum(muts_full$af_cor_temp_P[muts_full$causal_temp]<Bonf_alpha)# number of causal loci that have significant Spearman's correlations with temperature after Bonferroni correction
+
+num_causal_sig_sal_corr<- sum(muts_full$af_cor_sal_P[muts_full$causal_sal]<Bonf_alpha)# number of causal loci that have significant Spearman's correlations with salinity after Bonferroni correction
+
+num_neut_sig_temp_corr <- sum(muts_full$af_cor_temp_P[!muts_full$causal_temp]<Bonf_alpha)# number of neutral loci that have significant  Spearman's correlations with temperature after Bonferroni correction
+
+num_neut_sig_sal_corr <- sum(muts_full$af_cor_sal_P[!muts_full$causal_sal]<Bonf_alpha)# proportion of neutral loci that have significant Spearman's correlations with salinity after Bonferroni correction
+  
+median_causal_temp_cor <- median(abs(muts_full$af_cor_temp[muts_full$causal_temp]))#median abs(Spearman's correlation) between allele frequency and temperature for causal loci
+median_causal_sal_cor <- median(abs(muts_full$af_cor_sal[muts_full$causal_sal])) #median Spearman's correlation  between allele frequency and salinity for causal loci
+
+median_neut_temp_cor <- median(abs(muts_full$af_cor_temp[!muts_full$causal_temp])) # median Spearman's correlation  between allele frequency and temperature for neutral loci
+
+median_neut_sal_cor <-  median(abs(muts_full$af_cor_sal[!muts_full$causal_sal]))# median Spearman's correlation  between allele frequency and salinity for neutral loci 
+
+write.table(muts_full, paste0(path,seed,"_muts_full.txt"))
+write.table(subset_indPhen_df, paste0(path,seed,"_ind_subset.txt"))
+
+out_full <- data.frame(seed, n_samp=n, K,
+                       all_corr_phen_temp,
+                       subsamp_corr_phen_temp,
+                       all_corr_phen_sal,
+                       subsamp_corr_phen_sal,
+                       num_causal,
+                       num_neut,
+                       prop_causal_sig_temp_corr,
+                       LEA3.2_lfmm2_Va_temp_prop, 
+                       LEA3.2_lfmm2_Va_sal_prop, 
+                       LEA3.2_lfmm2_TPR_temp,
+                       LEA3.2_lfmm2_TPR_sal,
+                       LEA3.2_lfmm2_FDR_temp, 
+                       LEA3.2_lfmm2_FDR_sal, 
+                       RDA_Va_temp_prop,
+                       RDA_Va_sal_prop,
+                       RDA_TPR, 
+                       RDA_FDR, 
+                       cor_RDA500_RDloadings_tempPhen, 
+                       cor_RDA500_RDloadings_salPhen,
+                       num_causal_sig_temp_corr,
+                       num_causal_sig_sal_corr,
+                       num_neut_sig_temp_corr,
+                       num_neut_sig_sal_corr,
+                       median_causal_temp_cor,
+                       median_causal_sal_cor,
+                       median_neut_temp_cor,
+                       median_neut_sal_cor
+                       )
+```
 
 

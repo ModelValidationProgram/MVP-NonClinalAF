@@ -1,21 +1,41 @@
-# 20210507 through 05/20
+# 20210604
 
-### Plan for R code
-- [x] finishing outputing outliers for LFMM and for RDA
-- [x] formalize all outputs
-- [x] add color to RDA plots to show the temp and salinity optimums of individuals - maybe use green to blue for salinity and light to dark for temperature
-- [x] fix heat maps so the colors are constrained
-- [x ] finish all output for R code and summary stats for a sim (TUESDAY)
-
-
-Wednesday and Thurdsay I spent time writing the methods and thinking about the results. 
 
 ### Plan to change Sims (FRIDAY)
-- [ ] add a neutral chromosome to the simulation
-- [ ] add some non-linear environments to the sims
-- [ ] make sims more flexible for the two traits
+- [x] I changed the QTN mutation rate relative to the neutral mutation rate
+    - it was 0.25*(neutral mu)
+    - I changed it to something we can manipulate
+    - e.g. 0.25 for polygenic, but maybe 0.01 for oligogenic
+    - [ ] check if this still gives adaptation in the high migration scenario
+- [x] add a neutral chromosome to the simulation
+    - [x] I increasted the number of chromosomes from 10 to 20, but kept the QTNs on the first 10(?) chromosomes
+    - [ ] check the number of chromosomes that are neutral
+- [x] add some non-linear environments to the sims
+    -  added `xcline` and `ycline` with options `linear` (-1 to 1) and `V` (-1 to 1 to -1)
+    - [ ] check this gives good output
+- [x] make sims more flexible for the two traits
+    - if only one trait, SIGMA_K_1 is used
+```
+defineConstant("SIGMA_K_1", 0.5);                        // smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 1
+defineConstant("SIGMA_K_2", 0.5);                        // smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 2
+defineConstant("SIGMA_K_Cov", 0);                        // covariance in stabilizing selection
+defineConstant("SIGMA_QTN_1", 0.1);            // standard deviation of mutational effect size - for trait 1
+defineConstant("SIGMA_QTN_2", 0.1);            // standard deviation of mutational effect size - for trait 2
+defineConstant("SIGMA_QTN_Cov", 0);            // covariance in mutation effect size (e.g. if negative, mutations that tend to have a positive effect on one trait, have a negative effect on the other)
+```
+
 - [ ] make sure can simulate confounding demography
-- [ ] see manuscript for other nuances
+- [x] add range center largest N
+    - I added this scenario; it was hard to get the total metapopulation size to be exactly 10000, but I got it to be 10020
+
+- [x] add biogeographic breaks
+    - between populations 31-40 and 41- 50 
+    - between populations 61-70 and 71-80
+    - [ ] test if this works
+```
+defineConstant("MIG_breaks", 0) // 0 means no biogeographic breaks
+    // a value of 1 introduces 2 biogeographic breaks
+```
 
 ### Plan to change R code (NEXT WEEK)
 - [ ] Add info about the sim to the top of each plot
@@ -62,13 +82,3 @@ Decrease mutation rate and increase effect size for one cline and see if we get 
 ### Plan to set up parameter space
 - [ ] set up a data frame of scenarios
 - [ ] Tweak unix pipeline to run a scenario quickly
-
-
-### current thoughts
-
-Based on what I've looked at so far, it looks like LFMM has a high false negative rate but few false positives.
-RDA has a high false positive rate.
-
-However, we can put their outliers into an RDA and still make a pretty accurate prediction about the optimal environment for an individual.
-So even though we can't identify the genetic basis of adaptation, in some cases we can still make an accurate prediction about the optimal environment for that genotype, 
-and that prediction is robust to different sets of loci used.

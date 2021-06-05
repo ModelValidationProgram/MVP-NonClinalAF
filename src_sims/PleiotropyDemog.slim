@@ -3,17 +3,24 @@ initialize()
 	setSeed(22423308670);
 	defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs/");
 	defineConstant("MY_SEED", getSeed());
-	defineConstant("C_num", 10);							// number of chromosomes
+	defineConstant("C_num", 20);							// number of chromosomes
 	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome
 	defineConstant("MU_base", 1e-7);						// base mutation rate overall
-	defineConstant("MU", MU_base * 0.25);				// mut rate for QTNs specifically
+	defineConstant("MU_QTL_proportion", 0.02);		
+	defineConstant("MU", MU_base * MU_QTL_proportion);	// mut rate for QTNs specifically
 	defineConstant("R", 1e-6);								// recombination rate
 
 	defineConstant("MIG_x", 0.49);	 //0.49						// migration rate between subpops
 	defineConstant("MIG_y", 0.01);	//0.01						// migration rate between subpops
 		// requires isVariableM = 0		
 		// if isVariableM = 1, these are ignored
+		
+	defineConstant("MIG_breaks", 0); // 0 means no biogeographic breaks
+		// a value of 1 introduces 2 biogeographic breaks
+
 	
+	defineConstant("xcline", "linear"); // cline in x trait. Other option is "V"
+	defineConstant("ycline", "linear");// cline in y trait. Other option is "V"
 	
 	defineConstant("N_traits", 1);   // number of traits (1 or 2)
 	defineConstant("ispleiotropy", 1); // a value of 0 for no pleiotropy, 1 for pleitropy
@@ -21,7 +28,8 @@ initialize()
 	defineConstant("demog", "SS");
 		// "Estuary" for estuary demography
 		// "SS" for stepping stone demography
-	defineConstant("Nequal", 0); // 0 for equal N, 1 for N cline on x-axis, 2 for N cline on y-axis, 3 for variable N
+	defineConstant("Nequal", 0); // 0 for equal N, 1 for N cline on x-axis, 2 for N cline on y-axis, 3 for variable N, 4 for N largest in range center
+	// NOTE: the variable N only works for grids of length 10
 	defineConstant("isVariableM", 0); // 0 for equal m, 1 for variable m
 	
 	if (Nequal == 0){
@@ -29,6 +37,10 @@ initialize()
 	}
 	if (Nequal == 1 | Nequal == 2 | Nequal == 3){
 		defineConstant("N", c(10,10,50,50,95,95,145,145,200,200));	
+	}
+	if (Nequal == 4){
+		//defineConstant("N", c(10,50,95,145,200, 200, 145, 95, 50, 10));	
+		// see below
 	}
 	
 
@@ -38,17 +50,37 @@ initialize()
 	defineConstant("METAPOP_SIDE_x", 10);			// number of subpops
 		// this should stay equal to metapop_side_y for now
 	defineConstant("METAPOP_SIDE_y", 10);			// number of subpops
-	defineConstant("S", 0.1);								// selection coefficient for local fitness gradient
-	defineConstant("SIGMA_K", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection
-	defineConstant("SIGMA_QTN", 0.1);			// standard deviation of mutational effect size - equal for each trait
+	//defineConstant("S", 0.1);								// selection coefficient for local fitness gradient (not used in this sim)
+	defineConstant("SIGMA_K_1", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 1
+	defineConstant("SIGMA_K_2", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 2
+	defineConstant("SIGMA_K_Cov", 0);						// covariance in stabilizing selection
+	defineConstant("SIGMA_QTN_1", 0.1);			// standard deviation of mutational effect size - for trait 1
+	defineConstant("SIGMA_QTN_2", 0.1);			// standard deviation of mutational effect size - for trait 2
+	defineConstant("SIGMA_QTN_Cov", 0);			// covariance in mutation effect size (e.g. if negative, mutations that tend to have a positive effect on one trait, have a negative effect on the other)
+
 	defineConstant("SIGMA_STAT", 4.0);					// burn-in stabilizing selection function variance
 	defineConstant("METAPOP_NPOPS", METAPOP_SIDE_x * METAPOP_SIDE_y);
 	
 	// set up spatially autocorrelated environmental variables
-	defineConstant("xv", rep(seq(-1.0, 1.0, length=METAPOP_SIDE_x), METAPOP_SIDE_y)); // salinity
-	defineConstant("yv", repEach(seq(-1.0, 1.0, length=METAPOP_SIDE_y), METAPOP_SIDE_x)); // temperature
+	defineConstant("xl", rep(seq(-1.0, 1.0, length=METAPOP_SIDE_x), METAPOP_SIDE_y)); // salinity
+	defineConstant("yl", repEach(seq(-1.0, 1.0, length=METAPOP_SIDE_y), METAPOP_SIDE_x)); // temperature
+	defineConstant("v", seq(-1.0, 1.0, length=integerDiv(METAPOP_SIDE_x,2)));
+	defineConstant("v2", c(v,v[(length(v)-1):0]));
+	defineConstant("xv", rep(v2, METAPOP_SIDE_y)); // salinity
+	defineConstant("yv", repEach(v2, METAPOP_SIDE_x)); // temperature
+
+	if (xcline=="linear"){
+	defineConstant("OPTS_0", xl); 
+	}
+	if (ycline=="linear"){
+	defineConstant("OPTS_1", yl);
+	}
+	if (xcline=="V"){
 	defineConstant("OPTS_0", xv); 
+	}
+	if (ycline=="V"){
 	defineConstant("OPTS_1", yv);
+	}
 	
 	
 	
@@ -62,7 +94,7 @@ initialize()
 	m2.convertToSubstitution = F;
 	
 	initializeGenomicElementType("g1", m2, 1.0);
-	initializeGenomicElement(g1, 0, sum(C_lengths[0:(C_num - 2)]));
+	initializeGenomicElement(g1, 0, sum(C_lengths[0:(C_num - 10)]));
 	
 	rates = c(rep(c(R, 0.5), C_num-1), R);
 	ends = repEach(cumSum(C_lengths), 2);
@@ -72,9 +104,7 @@ initialize()
 	
 	// QTL-related constants used below
 	defineConstant("QTL_mu", c(0, 0));
-	defineConstant("QTL_cov", 0);
-	defineConstant("QTL_var", SIGMA_QTN);
-	defineConstant("QTL_sigma", matrix(c(QTL_var, QTL_cov, QTL_cov, QTL_var), nrow=2));
+	defineConstant("QTL_sigma", matrix(c(SIGMA_QTN_1, SIGMA_QTN_Cov, SIGMA_QTN_Cov, SIGMA_QTN_2), nrow=2));
 	
 	catn();
 	catn("QTL DFE means: ");
@@ -131,6 +161,15 @@ function (void)setUpMigration(void)
 					{
 						destSubpop.setMigrationRates(destID - METAPOP_SIDE_x, sample(c(0.001,0.01,0.1,0.25), 1));
 					}
+					if (MIG_breaks ==1){
+						if (destID <= 50 & destID >= 41){
+						destSubpop.setMigrationRates(destID - METAPOP_SIDE_x, 0.0001);
+						}
+						if (destID <= 80 & destID >= 71){
+						destSubpop.setMigrationRates(destID - METAPOP_SIDE_x, 0.0001);
+						}
+					}
+					
 				}
 				if (y < (METAPOP_SIDE_y-1)) // Bottom to top 
 					//print(destSubpop);
@@ -142,6 +181,15 @@ function (void)setUpMigration(void)
 					if (isVariableM == 1)
 					{
 					destSubpop.setMigrationRates(destID + METAPOP_SIDE_x, sample(c(0.001,0.01,0.1,0.25), 1));
+					}
+					
+					if (MIG_breaks ==1){
+						if (destID <= 40 & destID >= 31){
+						destSubpop.setMigrationRates(destID - METAPOP_SIDE_x, 0.0001);
+						}
+						if (destID <= 70 & destID >= 61){
+						destSubpop.setMigrationRates(destID - METAPOP_SIDE_x, 0.0001);
+						}
 					}
 				}
 			} // end if (x == METAPOP_SIDE_x)
@@ -289,17 +337,23 @@ function (void)outputMigration(string$ path)
 1 {
 	for (i in 1:METAPOP_NPOPS){
 	
+		x = (i-1)%10;
+		y = floor((i-1)/10);
 		if (Nequal == 0){
 			sim.addSubpop(i, N); // equal population size
 		}
 		if (Nequal == 1){
-			sim.addSubpop(i, N[(i-1)%10]); // population cline x axis
+			sim.addSubpop(i, N[x]); // N cline x axis
 		}
 		if (Nequal == 2){
-			sim.addSubpop(i, N[floor((i-1)/10)]); // population cline y axis
+			sim.addSubpop(i, N[y]); // N cline y axis if Nequal=2
 		}
 		if (Nequal == 3){
 			sim.addSubpop(i, sample(N,1)); // variable N
+		}
+		if (Nequal ==4){
+			N2 = round(dmvnorm(c(x,y), mu=c(4.5,4.5), sigma=matrix(c(4.95,0,0,4.95), nrow=2))*10000 + 5);
+			sim.addSubpop(i, N); // range center largest N
 		}
 		
 	}
@@ -347,10 +401,10 @@ function (void)outputMigration(string$ path)
 	
 	
 	// write information to file
-	info_head = "seed MIG_x MIG_y N mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y S SIGMA_K SIGMA_QTN demog Ntraits ispleiotropy iscontrol Nequal isVariableM";
+	info_head = "seed MIG_x MIG_y N mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y SIGMA_K_1 SIGMA_K_2 SIGMA_K_Cov SIGMA_QTN_1 SIGMA_QTN_2 SIGMA_QTN_Cov demog Ntraits ispleiotropy iscontrol Nequal isVariableM";
 
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info_head, append=F);
-	info=paste(getSeed() ,MIG_x, MIG_y, N, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, S, SIGMA_K, SIGMA_QTN, demog, N_traits, ispleiotropy, iscontrol, Nequal, isVariableM);
+	info=paste(getSeed() ,MIG_x, MIG_y, N, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, SIGMA_K_1, SIGMA_K_2, SIGMA_K_Cov, SIGMA_QTN_1, SIGMA_QTN_2, SIGMA_QTN_Cov, demog, N_traits, ispleiotropy, iscontrol, Nequal, isVariableM);
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info, append=T);
 	
 	// write local adaptation file
@@ -399,7 +453,8 @@ late() {
 		{
 			opt0 = opt0 * ((sim.generation - BURNIN_1) / (BURNIN_2 - BURNIN_1));
 			opt1 = opt1 * ((sim.generation - BURNIN_1) / (BURNIN_2 - BURNIN_1));
-			fitness_var = SIGMA_K * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
+			fitness_var_1 = SIGMA_K_1 * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
+			fitness_var_2 = SIGMA_K_2 * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
 		}
 		opts = c(opt0, opt1);
 		subpop.setValue("scaled_opt0", opt0);
@@ -408,11 +463,12 @@ late() {
 		// calculate the fitness covariance matrix, sigma, normalization factor
 		if (sim.generation >= BURNIN_2)
 		
-		fitness_var = SIGMA_K;
+		fitness_var_1 = SIGMA_K_1;
+		fitness_var_2 = SIGMA_K_2;
 		if (N_traits == 2)
 		{
-			fitness_cov = 0.0;
-			fitness_varcov = matrix(c(fitness_var, fitness_cov, fitness_cov, fitness_var), nrow=2);
+			fitness_cov = SIGMA_K_Cov;
+			fitness_varcov = matrix(c(fitness_var_1, fitness_cov, fitness_cov, fitness_var_2), nrow=2);
 			fitness_norm = dmvnorm(c(0.0, 0.0), c(0.0, 0.0), fitness_varcov);
 		subpop.setValue("fitness_varcov", fitness_varcov);
 		subpop.setValue("fitness_norm", fitness_norm);
@@ -491,7 +547,7 @@ late() {
 				
 				if (N_traits == 1)
 				{
-					fitnesses = dnorm(phenotype1, opt1, SIGMA_K)/fitness_norm;
+					fitnesses = dnorm(phenotype1, opt1, SIGMA_K_1)/fitness_norm;
 				}
 
 				fitness_matrix_pop[test_index,source_index] = mean(fitnesses);

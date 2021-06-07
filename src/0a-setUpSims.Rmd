@@ -1,0 +1,131 @@
+---
+title: "set up non-clinal sims"
+author: "KE Lotterhos"
+date: "6/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 15 demographies
+The three categories of demographies were designed to give insights into different evolutionary processes: “Estuary Clines” (Est-Clines), “Stepping-Stone Clines” (SS-Clines), and  “Stepping-Stone Mountain Range” (SS-Mtn,  with a latitudinal cline in temperature and non-monotonic longitudinal pattern in elevation).
+
+```{r demogs}
+(demog_level = factor(c("SS-Clines", "SS-Mtn", "Est-Clines"), levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered=TRUE))
+MIG_x = c(0.49, 0.01, 0.01)
+MIG_y = c(0.01, 0.01, 0.01)
+xcline = c("linear", "linear", "V")
+ycline = c("linear", "linear", "linear")
+demog = c("Estuary", "SS", "SS")
+METAPOP_SIDE_x = 10
+METAPOP_SIDE_y = 10
+(demog_base_df <- data.frame(demog_level, MIG_x, MIG_y, xcline, ycline, demog, METAPOP_SIDE_x, METAPOP_SIDE_y))
+```
+
+Within these three broad categories, there were 5 sub-categories with different patterns of population size for each deme (N_deme) or migration. Three of these had base levels of m_x and m_y as described above and N_deme was manipulated: (i) equal N, (ii) N latitudinal cline (which confounded the amount of drift with the selective environment), and (iii) N largest in range center. The total metapopulation size (N_metapopulation = 10,000) was controlled for and constant across these three scenarios. The fourth sub-category kept N constant for each deme, but introduced two biogeographic breaks along the latitudinal cline, to introduce a higher degree of confounding between population structure and adaptation in the temperature trait. The fifth sub-category, which was designed to investigate a complex case, simulated variable migration (sampled from c(0.001,0.01,0.1,0.25)) between adjacent demes and variable N (sampled from c(10,10,50,50,95,95,145,145,200,200)) for each deme. 
+
+```{r sub-demogs}
+(demog_level_sub <- factor(c("N-equal_m-constant", "N-cline-N-to-S_m-constant", "N-cline-center-to-edge_m-constant", "N-equal_m_breaks", "N-variable_m-variable"), levels=c("N-equal_m-constant", "N-cline-N-to-S_m-constant", "N-cline-center-to-edge_m-constant", "N-equal_m_breaks", "N-variable_m-variable"), ordered=TRUE))
+Nequal = c(0, 2, 4, 0, 3)
+isVariableM = c(0,0,0,0, 1)
+MIG_breaks = c(0, 0,0,1, 0)
+# 0 for equal N, 1 for N cline on x-axis, 2 for N cline on y-axis, 3 for variable N, 4 for N largest in range center
+# NOTE: the variable N only works for grids of length 10
+
+(demog_sub_df <- data.frame(demog_level_sub, Nequal, isVariableM, MIG_breaks))
+```
+
+Get the 15 demography parameters
+```{r}
+a <- expand.grid(demog_level=demog_level, demog_level_sub=demog_level_sub)
+a
+
+a2 <- merge(a, demog_base_df, sort=FALSE)
+demog_df <- merge(a2, demog_sub_df, sort=FALSE)
+
+demog_df <- demog_df[order(demog_df$demog_level_sub, demog_df$demog_level),]
+demog_df
+```
+
+# 14 architectures
+
+The 10 genetic architectures were broadly divided into 2 categories: polygenic (many loci of small effect that affect the trait) and oligogenic (few loci of large effect that affect the trait). 
+
+```{r arch base}
+arch_level <- factor(c("oliogenic", "polygenic"), ordered=TRUE)
+MU_base <- 1e-07
+MU_QTL_proportion <- c(0.01, 0.25) # proportion of mutations that are QTNs
+SIGMA_QTN_1 <- c(0.4, 0.002)
+SIGMA_QTN_2 <- c(0.4, 0.002) #standard deviation of mutational effect size - for trait 2
+
+arch_base_df <- data.frame(arch_level, MU_base, MU_QTL_proportion, SIGMA_QTN_1, SIGMA_QTN_2)
+```
+
+Within each category were 5 sub-categories: 1 trait (which adapted to the latitudinal cline, the most commonly simulated scenario), 2 traits with pleiotropy (QTNs could evolve effects on one or both traits) and equal strengths of selection on both traits, 2 traits with pleiotropy and with weaker selection on the latitudinal trait, 2 traits without pleiotropy (QTNs effect were restricted to one trait) and equal strengths of selection on both traits, and 2 traits without pleiotropy and with weaker selection on the latitudinal trait.
+
+
+```{r arch sub}
+arch_level_sub <- factor(c("1-trait", "2-trait-no-pleiotropy-equal-S", "2-trait-no-pleiotropy-unequal-S", "2-trait-pleiotropy-equal-S", "2-trait-pleiotropy-unequal-S"), levels=c("1-trait", "2-trait-no-pleiotropy-equal-S", "2-trait-no-pleiotropy-unequal-S", "2-trait-pleiotropy-equal-S", "2-trait-pleiotropy-unequal-S"), ordered=TRUE)
+arch_sub
+
+SIGMA_K_1 <- c(0.5, 0.5, 0.5, 0.5, 0.5) # trait 1 is x-axis cline/env
+SIGMA_K_2 <- c(0.5, 0.5, 2.0, 0.5, 2.0) # trait 2 is y-axis cline/env
+
+N_traits <- c(1, 2, 2, 2, 2)
+
+ispleiotropy <- c(0, 0, 0, 1, 1)
+
+arch_sub_df <- data.frame(arch_level_sub, SIGMA_K_1, SIGMA_K_2, N_traits, ispleiotropy)
+
+arch_sub_df
+```
+
+
+Combine to get all 10 levels of architecture
+```{r}
+b <- expand.grid(arch_level = arch_level, arch_level_sub=arch_level_sub)
+b
+
+b2 <- merge(b, arch_base_df, sort=FALSE)
+arch_df <- merge(b2, arch_sub_df, sort=FALSE)
+
+arch_df <- arch_df[order(arch_df$arch_level, arch_df$arch_level_sub),]
+arch_df
+```
+
+Combine demographies and architectures
+```{r}
+arch_df$arch <- paste(arch_df$arch_level, arch_df$arch_level_sub, sep="_")
+demog_df$demog <- paste(demog_df$demog_level, demog_df$demog_level_sub, sep="_")
+all <- expand.grid(demog = demog_df$demog, arch = arch_df$arch)
+
+dim(all)
+
+all1 <- merge(all, demog_df)
+dim(all1)
+all2 <- merge(all1, arch_df)
+dim(all2)
+
+str(all2)
+```
+
+Add seed 
+```{r}
+all2$level <- paste(all2$arch, all2$demog, sep="__")
+reps <- 1:10
+
+final0 <- expand.grid(reps=reps, level=all2$level)
+final <- merge(final0, all2)
+final <- final[order(final$reps),]
+final$seed <- 1231094:(1231094 + nrow(final) - 1)
+
+str(final)
+```
+
+Write a script to output the command line argument for a single SliM run
+```{r}
+
+```
+

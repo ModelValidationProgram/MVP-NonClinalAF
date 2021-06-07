@@ -24,7 +24,6 @@ defineConstant("SIGMA_QTN_2", 0.1);            // standard deviation of mutation
 defineConstant("SIGMA_QTN_Cov", 0);            // covariance in mutation effect size (e.g. if negative, mutations that tend to have a positive effect on one trait, have a negative effect on the other)
 ```
 
-- [ ] make sure can simulate confounding demography
 - [x] add range center largest N
     - I added this scenario; it was hard to get the total metapopulation size to be exactly 10000, but I got it to be 10020
 
@@ -37,11 +36,15 @@ defineConstant("MIG_breaks", 0) // 0 means no biogeographic breaks
     // a value of 1 introduces 2 biogeographic breaks
 ```
 
-### Plan to change R code (NEXT WEEK)
+### Plan to change R code 
 - [ ] Add info about the sim to the top of each plot
 - [ ] Add mutation effect size to RDA plot
 
-### Plan to test Sims  (NEXT WEEK)
+### Plan to set up parameter space
+- [ ] set up a data frame of scenarios
+- [ ] Tweak unix pipeline to run a scenario quickly
+
+### Plan to test Sims 
 - [ ] test some of the sims outlined below
 - [x] test an obvious case that should produce clines
     - [ ] try reducing mutation rate and increasing effect size - see if can get bigger clines
@@ -79,6 +82,7 @@ Decrease mutation rate and increase effect size for one cline and see if we get 
 * Then, test all the above with `demog=SS` and equal migration on x and y
 
 
-### Plan to set up parameter space
-- [ ] set up a data frame of scenarios
-- [ ] Tweak unix pipeline to run a scenario quickly
+
+defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs/");
+    defineConstant("MY_SEED", getSeed());
+

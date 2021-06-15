@@ -1,6 +1,0 @@
-new("pcaProject", projDir = "/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/", 
-    pcaDir = "genotypes.pca/", n = 100L, L = 1000L, K = 100L, 
-    center = TRUE, scale = TRUE, pcaProject.file = "genotypes.pcaProject", 
-    input.file = "genotypes.lfmm", eigenvalue.file = "genotypes.eigenvalues", 
-    eigenvector.file = "genotypes.eigenvectors", sdev.file = "genotypes.sdev", 
-    projection.file = "genotypes.projections")

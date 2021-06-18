@@ -21,6 +21,8 @@ git commit -a -m "add branch"
 - [ ] don't "F" up using github - review the "git" chapter in Buffalo's book and code below
 - [ ] review the command line script in `run_nonAF_sims_alan.sh`. 
 - [ ] Create a conda environment for running the shell script
+    - [ ] check slim is verson 3.6
+    - [ ] the python line takes 24 hours on my laptop
     - [ ] update the notebook and push to github
 - [ ] test the bash script gives proper output, in particular the VCF editing line
     - [ ] update the notebook and push to github

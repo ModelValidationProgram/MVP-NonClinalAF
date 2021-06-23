@@ -1,0 +1,4 @@
+seed gen sympatric allopatric local_adapt mean_phen0 mean_phen1 cor_sal_popmean cor_temp_popeman cor_sal_ind cor_temp_ind
+1231094 100 14.2761 14.2761 -8.52651e-13 0 -0.00184988 NAN -0.0897006 NAN NAN
+1231094 200 13.5878 13.5878 -8.75744e-13 0 0.000806763 NAN 0.266289 NAN NAN
+1231094 300 12.8757 12.8757 6.98108e-13 0 0.00105219 NAN 0.0586202 NAN NAN

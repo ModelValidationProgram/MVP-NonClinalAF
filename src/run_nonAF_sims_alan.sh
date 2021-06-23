@@ -1,8 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=SlimTest
-#SBATCH --mem=50G
-#SBATCH --time=0-10:00:00
+#SBATCH --mem=100G
 #SBATCH --mail-user=downey-wall.a@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
@@ -58,7 +57,7 @@ gzip -f ${outpath}${i}"_VCF_causal.vcf"
 #### run python script to process tree sequence results
 #### Takes overnight on my laptop ~24 hours
 #############
-cd results
+#cd results
 echo "Processing tree sequences in python..."
 time_stampTreeSeq=`date`
 echo ${time_stampTreeSeq}

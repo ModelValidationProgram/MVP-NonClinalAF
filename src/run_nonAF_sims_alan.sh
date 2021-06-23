@@ -1,4 +1,15 @@
 #!/bin/bash
+
+#SBATCH --job-name=SlimTest
+#SBATCH --mem=50G
+#SBATCH --time=0-10:00:00
+#SBATCH --mail-user=downey-wall.a@northeastern.edu
+#SBATCH --mail-type=FAIL
+#SBATCH --partition=lotterhos
+#SBATCH --nodes=1
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.err
+
 set -e
 set -u
 set -o pipefail

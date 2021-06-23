@@ -41,3 +41,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Slurm error and output files
+/slurm_log/

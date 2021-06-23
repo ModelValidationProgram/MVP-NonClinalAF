@@ -16,14 +16,14 @@ git commit -a -m "add branch"
 ```
 
 ## To do for Alan:
-- [ ] make sure can access work/lotterhos/MVP-NonClinalAF
-- [ ] make sure can link github account to discovery and make changes on `alan` branch
-- [ ] don't "F" up using github - review the "git" chapter in Buffalo's book and code below
-- [ ] review the command line script in `run_nonAF_sims_alan.sh`. 
-- [ ] Create a conda environment for running the shell script
-    - [ ] check slim is verson 3.6
-    - [ ] the python line takes 24 hours on my laptop
-    - [ ] update the notebook and push to github
+- [x] make sure can access work/lotterhos/MVP-NonClinalAF
+- [x] make sure can link github account to discovery and make changes on `alan` branch
+- [x] don't "F" up using github - review the "git" chapter in Buffalo's book and code below
+- [x] review the command line script in `run_nonAF_sims_alan.sh`. 
+- [x] Create a conda environment for running the shell script
+    - [x] check slim is verson 3.6
+    - [x] the python line takes 24 hours on my laptop
+    - [x] update the notebook and push to github
 - [ ] test the bash script gives proper output, in particular the VCF editing line
     - [ ] update the notebook and push to github
 - [ ] Create a bash script for running 1 replicate of the simulation as shown in the bash script

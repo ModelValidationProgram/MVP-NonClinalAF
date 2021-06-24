@@ -73,10 +73,23 @@ ModuleNotFoundError: No module named 'pyslim'
 ```
 
 ```
-seed=1231094
+import pyslim
+seed="1231094"
 r= 1e-6
 N=10
 mu=1e-07
 seednum=seed # changed this line
+T2=pyslim.load(output+seed+".trees")
 ```
+
+## Meeting ADW and KEL
+
+Katie is running pyslim 0.600 on her laptop, which works
+
+Alan used the pyslim version from bioconda, which is out of date (version 0.401) - probably why we got the error
+
+We tried at the command line:
+`conda update pyslim`
+
+It worked!
 

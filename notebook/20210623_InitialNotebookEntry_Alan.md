@@ -64,13 +64,14 @@ I'm not sure of the difference between `source` and `conda activate`)
 
 In python:
 
-````
+```
 import pyslim, msprime, argparse
 
 Traceback (most recent call last):
   File "<stdin>", line 1, in <module>
 ModuleNotFoundError: No module named 'pyslim'
 ```
+then
 
 ```
 import pyslim

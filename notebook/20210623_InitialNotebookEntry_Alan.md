@@ -45,3 +45,36 @@ and run
 conda env create -f MVP_env.yml
 ```
 to create a copy of the environment.
+
+# 20210624_KEL debug
+
+To reproduce Alan's code, I first created the conda environment:
+`conda env create -f src/env/MVP_env.yml`
+
+I then activated it:
+
+`conda activate ~/miniconda3/bin/activate MVP_env`
+
+(note here that Alan uses the code: `source ~/miniconda3/bin/activate MVP_env`
+I'm not sure of the difference between `source` and `conda activate`)
+
+`python3`
+
+In python:
+
+````
+import pyslim, msprime, argparse
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ModuleNotFoundError: No module named 'pyslim'
+```
+
+```
+seed=1231094
+r= 1e-6
+N=10
+mu=1e-07
+seednum=seed # changed this line
+```
+

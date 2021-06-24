@@ -48,6 +48,8 @@ to create a copy of the environment.
 
 # 20210624_KEL debug
 
+`srun -p lotterhos -N 1 --pty /bin/bash`
+
 To reproduce Alan's code, I first created the conda environment:
 `conda env create -f src/env/MVP_env.yml`
 

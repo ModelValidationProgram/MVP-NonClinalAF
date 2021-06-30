@@ -4,7 +4,7 @@
 #SBATCH --mem=100G
 #SBATCH --mail-user=downey-wall.a@northeastern.edu
 #SBATCH --mail-type=FAIL
-#SBATCH --partition=lotterhos
+#SBATCH --partition=short
 #SBATCH --nodes=1
 #SBATCH --array=2-3%2
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
@@ -20,6 +20,7 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 
+params="src/0b-final_params.txt"
 outpath="sim_outputs_testAlan/"
 
 # Extracting individual variables

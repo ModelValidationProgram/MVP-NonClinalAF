@@ -24,8 +24,8 @@ git commit -a -m "add branch"
     - [x] check slim is verson 3.6
     - [x] the python line takes 24 hours on my laptop
     - [x] update the notebook and push to github
-- [ ] test the bash script gives proper output, in particular the VCF editing line
-    - [ ] update the notebook and push to github
+- [x] test the bash script gives proper output, in particular the VCF editing line
+    - [x] update the notebook and push to github
 - [ ] Create a bash script for running 1 replicate of the simulation as shown in the bash script
     - [ ] update the notebook and push to github
 - [ ] review the code in `0c-writeSimScript.R` that creates some of the scripts

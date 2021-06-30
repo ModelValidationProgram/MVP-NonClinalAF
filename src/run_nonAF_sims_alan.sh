@@ -64,7 +64,7 @@ echo ${time_stampTreeSeq}
 #SECONDS=0 # used to time analyses
     
 # mu is MU_base
-python3 src/b-process_trees.py -s 1231094 -r 1e-06 -mu 1e-06 -N 1000 -o ${outpath} > ${outpath}${i}_pytree.out.txt 2> ${outpath}${i}_pytree.error.txt
+python3 src/b-process_trees.py -s 1231094 -r 1e-06 -mu 1e-06 -N 10 -o ${outpath} > ${outpath}${i}_pytree.out.txt 2> ${outpath}${i}_pytree.error.txt
 #python3 src/b-process_trees.py -s ${i} -r 1e-06 -mu 1e-06 -N 1000 > ${outpath}${i}"_pytree.out.txt" 2> ${outpath}${i}"_pytree.error.txt" ##& echo $!
 # If I understand recaptitaion correctly, it applies to the point in time prior to
 # when the SLiM simulation started, and the "N" is the N for the whole metapopulation

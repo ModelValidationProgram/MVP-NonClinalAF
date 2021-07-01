@@ -26,9 +26,9 @@ git commit -a -m "add branch"
     - [x] update the notebook and push to github
 - [x] test the bash script gives proper output, in particular the VCF editing line
     - [x] update the notebook and push to github
-- [ ] Create a bash script for running 1 replicate of the simulation as shown in the bash script
-    - [ ] update the notebook and push to github
-- [ ] review the code in `0c-writeSimScript.R` that creates some of the scripts
+- [x] Create a bash script for running 1 replicate of the simulation as shown in the bash script
+    - [x] update the notebook and push to github
+- [x] review the code in `0c-writeSimScript.R` that creates some of the scripts
 - [ ] Write an array to run the first 150 lines (parameter combos) of the `0b-final_params.txt`
     - [ ] update the notebook and push script to github. Note here there are some simulation outputs that are not pushed to github because they are so big. So we should review those before you try to push the outputs too.
 

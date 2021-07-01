@@ -5,7 +5,7 @@
 Shell script has been updated to leverage slurm `--arrays` and read parameters from a [parameter file](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/src/0b-final_params.txt). It does this by temporary storing variables from the parameter file in unix variables, which are used by SLiM and other programs in the script. Below I provide a basic walk through of the different parts of the script.
 
 
-[Final Shell Script](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/src/run_nonAF_sims_alan_final.sh)
+**Final Shell Script** : [src/run_nonAF_sims_alan_final.sh](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/src/run_nonAF_sims_alan_final.sh)
 
 ### Test outputs
 

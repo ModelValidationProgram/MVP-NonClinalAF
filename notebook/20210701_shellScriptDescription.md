@@ -1,5 +1,21 @@
 # Description of final shell script file - 2021-Jul-01
 
+## Overview 
+
+Shell script has been updated to leverage slurm `--arrays` and read parameters from a [parameter file](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/src/0b-final_params.txt). It does this by temporary storing variables from the parameter file in unix variables, which are used by SLiM and other programs in the script. Below I provide a basic walk through of the different parts of the script.
+
+
+[Final Shell Script](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/src/run_nonAF_sims_alan_final.sh)
+
+### Test outputs
+
+Test outputs can be found on the discovery cluster at:
+
+```
+/work/lotterhos/MVP-NonClinalAF/finalTest
+```
+
+For the test I ran the first 10 samples simultaneuosly on the short partition. To make the script run faster I limited the population size in pyslim to `10`. I checked that the vcf looked "OK" by reading them into R with `vcfR`.
 
 
 ### Slurm Code
@@ -85,3 +101,57 @@ N_traits=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $25}'`
 ispleiotropy=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $26}'`
 seed=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $27}'`
 ```
+
+**NOTE** - If you change the parameters in your parameters (and SLiM model) you can easily update this block of code by walking through the steps from [this notebook entry](https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/notebook/20210630_creatingSLiMBatchScriptVariables.md).
+
+### SLiM code
+
+This didn't really change, but I did switch the hardcoded values with the temporary unix variables that represent values from the parameter list.
+
+```
+slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=\"${outpath}\" -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog.slim > sim_outputs_testAlan/${seed}_outfile.txt 2> sim_outputs_testAlan/${seed}_outfile.error.txt    
+```
+
+### pyslim
+
+Similar to SLiM code, I didn't change much here but replaced hardcode with temporary variables. I also moved the population size variable, `N`, up to the top of the script. It is now controlled by a user variable called `POP`.
+
+```
+python3 src/b-process_trees.py -s ${seed} -r 1e-06 -mu ${MU_base} -N ${POP} -o ${outpath} > ${outpath}${seed}_pytree.out.txt 2> ${outpath}${seed}_pytree.error.txt
+```
+
+### VCF files and filtering
+
+Only minor updates here. I moved the minimum allele frequency value up to the top of the script. It is not controlled by a user variable called `MAF`.
+
+```
+vcftools --vcf ${outpath}${seed}"_PlusNeuts".vcf --maf ${MAF} --out ${outpath}${seed}"_plusneut_MAF01" --recode --recode-INFO-all
+```
+
+### Timestamps
+
+I slightly revised the timestamp system. These shouldn't need to be changed, but leverage the built in `date` function in unix to create a timestamp and print how long the code had been running. This code generally follows the format:
+
+**Start timestamp**
+```
+echo "Running SLiM..."
+timestamp_initial=`date`
+echo ${timestamp_initial}
+```
+
+**End timestampe and print**
+```
+## Final timestamp
+echo "Done with SLiM sims"
+time_stampFinishSlim=`date`
+echo ${time_stampFinishSlim}
+HOURS=$(echo $(date -d "$time_stampFinishSlim" +%H) - $(date -d "$timestamp_initial" +%H) | bc)
+MINS=$(echo $(date -d "$time_stampFinishSlim" +%M) - $(date -d "$timestamp_initial" +%M) | bc)
+SECS=$(echo $(date -d "$time_stampFinishSlim" +%S) - $(date -d "$timestamp_initial" +%S) | bc)
+echo "Slim run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
+```
+
+It updates the user after SLiM, pyslim, and the script completes.
+
+
+

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #SBATCH --job-name=SlimTest
-#SBATCH --mem=100G
+#SBATCH --mem=50G
 #SBATCH --mail-user=downey-wall.a@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=short
 #SBATCH --nodes=1
-#SBATCH --array=2-3%2
+#SBATCH --array=2-5%4
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.err
 
@@ -23,7 +23,8 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_outputs_testAlan/"
+outpath="sim_outputs_testAlanV2/"
+mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
 params="src/0b-final_params.txt"
@@ -76,7 +77,7 @@ timestamp_initial=`date`
 echo ${timestamp_initial}
 
 #run slim in background
-slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=${outpath} -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog.slim > sim_outputs_testAlan/${seed}_outfile.txt 2> sim_outputs_testAlan/${seed}_outfile.error.txt    
+slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=\"${outpath}\" -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog.slim > sim_outputs_testAlan/${seed}_outfile.txt 2> sim_outputs_testAlan/${seed}_outfile.error.txt    
 
 ## Final timestamp
 echo "Done with SLiM sims"
@@ -87,7 +88,7 @@ MINS=$(echo $(date -d "$time_stampFinishSlim" +%M) - $(date -d "$timestamp_initi
 SECS=$(echo $(date -d "$time_stampFinishSlim" +%S) - $(date -d "$timestamp_initial" +%S) | bc)
 echo "Slim run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
 
-gzip -f ${outpath}${i}"_VCF_causal.vcf"
+gzip -f ${outpath}${seed}"_VCF_causal.vcf"
 
 ##############
 #### run python script to process tree sequence results
@@ -99,7 +100,7 @@ echo "Processing tree sequences in python..."
 time_stampTreeSeq=`date`
 echo ${time_stampTreeSeq}
     
-python3 src/b-process_trees.py -s ${seed} -r 1e-06 -mu ${MU_base} -N ${POP} -o ${outpath} > ${outpath}${i}_pytree.out.txt 2> ${outpath}${i}_pytree.error.txt
+python3 src/b-process_trees.py -s ${seed} -r 1e-06 -mu ${MU_base} -N ${POP} -o ${outpath} > ${outpath}${seed}_pytree.out.txt 2> ${outpath}${seed}_pytree.error.txt
 # when the SLiM simulation started, and the "N" is the N for the whole metapopulation
 # I'll use N=10000 for all sims, since that is close to the total metapop size for all sims
 # NOTE: the "&" runs in the background on my laptop, but may not be needed on cluster
@@ -119,16 +120,16 @@ echo "Tree sequence run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} secon
 
 echo "Generating VCF file..."
 
-vcftools --vcf ${outpath}${i}"_PlusNeuts".vcf --maf ${MAF} --out ${outpath}${i}"_plusneut_MAF01" --recode --recode-INFO-all
+vcftools --vcf ${outpath}${seed}"_PlusNeuts".vcf --maf ${MAF} --out ${outpath}${seed}"_plusneut_MAF01" --recode --recode-INFO-all
 
 # Fix initial formating bug in vcf code
 # the sed lines fixes a bug with pyslim output. See 20210324_pyslim.md for info     
-sed 's/\.		/\.	0	/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" > ${outpath}${i}"_plusneut_MAF01.recode2.vcf" 
+sed 's/\.		/\.	0	/g' ${outpath}${seed}"_plusneut_MAF01.recode.vcf" > ${outpath}${seed}"_plusneut_MAF01.recode2.vcf" 
     
-gzip -f ${outpath}${i}"_plusneut_MAF01.recode2.vcf"
+gzip -f ${outpath}${seed}"_plusneut_MAF01.recode2.vcf"
     
-rm ${outpath}${i}"_plusneut_MAF01.recode.vcf"
-rm ${outpath}${i}"_PlusNeuts".vcf
+rm ${outpath}${seed}"_plusneut_MAF01.recode.vcf"
+rm ${outpath}${seed}"_PlusNeuts".vcf
 
 ## Script completes
 echo "Script Complete."

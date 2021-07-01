@@ -17,13 +17,27 @@ set -e
 set -u
 set -o pipefail
 
+#### User modified values ####
+
+# Local working path (this should navigate to the MVP repo)
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
-
-params="src/0b-final_params.txt"
+# Folder within MVP where you want are your output files
 outpath="sim_outputs_testAlan/"
 
+# Parameter file
+params="src/0b-final_params.txt"
+
+#### User variables ####
+# N for pyslim
+POP=10
+# Minimum allele freq. for vcftools
+MAF=0.01
+
 # Extracting individual variables
+# If you update or change your parameters see
+# https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/notebook/20210630_creatingSLiMBatchScriptVariables.md
+# for guide on replacing this block of code.
 level=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $1}'`
 reps=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $2}'`
 arch=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $3}'`
@@ -51,100 +65,85 @@ SIGMA_K_2=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $24}'`
 N_traits=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $25}'`
 ispleiotropy=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $26}'`
 seed=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $27}'`
-
-
-#i=1231094 #this is MY_SEED
-
-#cat > ${outpath}1231094__oliogenic_1-trait__Est-Clines_N-cline-center-to-edge_m-constant.txt
     
 ##############
 #### run slim sims (takes 10 min)
 #############
+
+# Initial timestamp
 echo "Running SLiM..."
 timestamp_initial=`date`
 echo ${timestamp_initial}
 
-SECONDS=0 # used to time analyses, no spaces around "=" sign
 #run slim in background
-slim -d MY_SEED1=${seed} -d "MY_RESULTS_PATH1='sim_outputs_testAlan/'" -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog.slim > sim_outputs_testAlan/${seed}_outfile.txt 2> sim_outputs_testAlan/${seed}_outfile.error.txt    
-# NOTE: the "&" runs in the background on my laptop, but may not be needed on cluster
-		
-# wait
+slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=${outpath} -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog.slim > sim_outputs_testAlan/${seed}_outfile.txt 2> sim_outputs_testAlan/${seed}_outfile.error.txt    
+
+## Final timestamp
 echo "Done with SLiM sims"
-# . Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min
 time_stampFinishSlim=`date`
 echo ${time_stampFinishSlim}
-
 HOURS=$(echo $(date -d "$time_stampFinishSlim" +%H) - $(date -d "$timestamp_initial" +%H) | bc)
 MINS=$(echo $(date -d "$time_stampFinishSlim" +%M) - $(date -d "$timestamp_initial" +%M) | bc)
 SECS=$(echo $(date -d "$time_stampFinishSlim" +%S) - $(date -d "$timestamp_initial" +%S) | bc)
-
 echo "Slim run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
 
-# gzip -f ${outpath}${i}"_VCF_causal.vcf"
+gzip -f ${outpath}${i}"_VCF_causal.vcf"
 
-# ##############
-# #### run python script to process tree sequence results
-# #### Takes overnight on my laptop ~24 hours
-# #############
-# #cd results
-# echo "Processing tree sequences in python..."
-# time_stampTreeSeq=`date`
-# echo ${time_stampTreeSeq}
-# #SECONDS=0 # used to time analyses
+##############
+#### run python script to process tree sequence results
+#### Takes overnight on my laptop ~24 hours
+#############
+
+# Initial timestamp
+echo "Processing tree sequences in python..."
+time_stampTreeSeq=`date`
+echo ${time_stampTreeSeq}
     
-# # mu is MU_base
-# python3 src/b-process_trees.py -s 1231094 -r 1e-06 -mu 1e-06 -N 10 -o ${outpath} > ${outpath}${i}_pytree.out.txt 2> ${outpath}${i}_pytree.error.txt
-# #python3 src/b-process_trees.py -s ${i} -r 1e-06 -mu 1e-06 -N 1000 > ${outpath}${i}"_pytree.out.txt" 2> ${outpath}${i}"_pytree.error.txt" ##& echo $!
-# # If I understand recaptitaion correctly, it applies to the point in time prior to
-# # when the SLiM simulation started, and the "N" is the N for the whole metapopulation
-# # I'll use N=10000 for all sims, since that is close to the total metapop size for all sims
-# # NOTE: the "&" runs in the background on my laptop, but may not be needed on cluster
+python3 src/b-process_trees.py -s ${seed} -r 1e-06 -mu ${MU_base} -N ${POP} -o ${outpath} > ${outpath}${i}_pytree.out.txt 2> ${outpath}${i}_pytree.error.txt
+# when the SLiM simulation started, and the "N" is the N for the whole metapopulation
+# I'll use N=10000 for all sims, since that is close to the total metapop size for all sims
+# NOTE: the "&" runs in the background on my laptop, but may not be needed on cluster
 
-# #Wait until the last background process is finished
-# echo "Done with processing tree sequences."
-# #Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"
-# time_stampFinishTreeSeq=`date`
-# echo ${time_stampFinishTreeSeq}
+#Final timestamp
+echo "Done with processing tree sequences."
+time_stampFinishTreeSeq=`date`
+echo ${time_stampFinishTreeSeq}
+HOURS=$(echo $(date -d "$time_stampFinishTreeSeq" +%H) - $(date -d "$time_stampTreeSeq" +%H) | bc)
+MINS=$(echo $(date -d "$time_stampFinishTreeSeq" +%M) - $(date -d "$time_stampTreeSeq" +%M) | bc)
+SECS=$(echo $(date -d "$time_stampFinishTreeSeq" +%S) - $(date -d "$time_stampTreeSeq" +%S) | bc)
+echo "Tree sequence run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
 
-# HOURS=$(echo $(date -d "$time_stampFinishTreeSeq" +%H) - $(date -d "$time_stampTreeSeq" +%H) | bc)
-# MINS=$(echo $(date -d "$time_stampFinishTreeSeq" +%M) - $(date -d "$time_stampTreeSeq" +%M) | bc)
-# SECS=$(echo $(date -d "$time_stampFinishTreeSeq" +%S) - $(date -d "$time_stampTreeSeq" +%S) | bc)
+##############
+#### Compress vcf files and filter for MAFs
+#############
 
-# echo "Tree sequence run took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
+echo "Generating VCF file..."
 
-# ##############
-# #### Compress vcf files and filter for MAFs
-# #############
+vcftools --vcf ${outpath}${i}"_PlusNeuts".vcf --maf ${MAF} --out ${outpath}${i}"_plusneut_MAF01" --recode --recode-INFO-all
 
-# echo "Generating VCF file..."
-
-# vcftools --vcf ${outpath}${i}"_PlusNeuts".vcf --maf 0.01 --out ${outpath}${i}"_plusneut_MAF01" --recode --recode-INFO-all
+# Fix initial formating bug in vcf code
+# the sed lines fixes a bug with pyslim output. See 20210324_pyslim.md for info     
+sed 's/\.		/\.	0	/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" > ${outpath}${i}"_plusneut_MAF01.recode2.vcf" 
     
-# # the sed lines fixes a bug with pyslim output. See 20210324_pyslim.md for info
-# #sed -i 's/[.]\t\t/[.]\t0\t/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" #maybe will work in Linux
+gzip -f ${outpath}${i}"_plusneut_MAF01.recode2.vcf"
     
-# sed 's/\.		/\.	0	/g' ${outpath}${i}"_plusneut_MAF01.recode.vcf" > ${outpath}${i}"_plusneut_MAF01.recode2.vcf" #this works on my mac
-# # not sure if it will work on linux
-    
-# gzip -f ${outpath}${i}"_plusneut_MAF01.recode2.vcf"
-    
-# rm ${outpath}${i}"_plusneut_MAF01.recode.vcf"
-# rm ${outpath}${i}"_PlusNeuts".vcf
-    
-# echo "Script Complete."
-# timestamp_end=`date`
-# echo ${timestamp_end}
+rm ${outpath}${i}"_plusneut_MAF01.recode.vcf"
+rm ${outpath}${i}"_PlusNeuts".vcf
 
-# HOURS=$(echo $(date -d "$timestamp_end" +%H) - $(date -d "$timestamp_initial" +%H) | bc)
-# MINS=$(echo $(date -d "$timestamp_end" +%M) - $(date -d "$timestamp_initial" +%M) | bc)
-# SECS=$(echo $(date -d "$timestamp_end" +%S) - $(date -d "$timestamp_initial" +%S) | bc)
+## Script completes
+echo "Script Complete."
+timestamp_end=`date`
+echo ${timestamp_end}
+HOURS=$(echo $(date -d "$timestamp_end" +%H) - $(date -d "$timestamp_initial" +%H) | bc)
+MINS=$(echo $(date -d "$timestamp_end" +%M) - $(date -d "$timestamp_initial" +%M) | bc)
+SECS=$(echo $(date -d "$timestamp_end" +%S) - $(date -d "$timestamp_initial" +%S) | bc)
+echo "Script took: ${HOURS} hours, ${MINS} minutes, and ${SECS} seconds"
 
-# ##############
-# #### run R script  (takes 3 min)
-# #############
-# #SECONDS=0 # used to time analyses
-# #echo "Running R scripts"
-# #Rscript --vanilla ../src/b_Proc_Sims.R ${i} $simType > ${i}"_Invers_R.out" 2> ${i}"_Invers_R.error" & echo $!
-# #wait #wait until the last background process is finished
-# #echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"
+##############
+#### run R script  (takes 3 min)
+#############
+#SECONDS=0 # used to time analyses
+#echo "Running R scripts"
+#Rscript --vanilla ../src/b_Proc_Sims.R ${i} $simType > ${i}"_Invers_R.out" 2> ${i}"_Invers_R.error" & echo $!
+#wait #wait until the last background process is finished
+#echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"

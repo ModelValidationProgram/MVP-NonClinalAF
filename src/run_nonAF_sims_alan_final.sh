@@ -6,7 +6,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=short
 #SBATCH --nodes=1
-#SBATCH --array=2-5%4
+#SBATCH --array=2-11%10
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.err
 
@@ -23,7 +23,7 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_outputs_testAlanV2/"
+outpath="finalTest/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file

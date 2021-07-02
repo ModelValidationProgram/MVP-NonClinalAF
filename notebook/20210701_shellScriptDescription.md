@@ -40,6 +40,8 @@ Slurm code is standard, but it does use the `--array` argument. This can be used
 2) The largest value in the array range should not exceed the number of rows in your parameter list.
 3) The number of simulations running simultaneously,`%4`, should not exceed the total number of rows you are looping through with the array.
 
+**KEL question** So in the above script, you are going to run rows 2-5 in the params file (4 sims), each simultaneously?
+
 ### Custom user variables
 
 At the top of the script (after the slurm arguments) I have the user inputs:

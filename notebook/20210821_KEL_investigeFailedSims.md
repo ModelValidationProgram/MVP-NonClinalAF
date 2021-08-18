@@ -14,7 +14,7 @@ On Discovery I looked at the outputs in:
 revealed an interesting pattern - the dates the files are written seem to be in succession. Why is that? If the partition wasn’t busy, shouldn’t they have all started at the same time? (maybe this is why some of them timed out - the 2 weeks is from the time the array script was submitted)
 
 Thoughts:
-- 1. I need to check if the VCF files that I'm producing are too large to work with, even after filtering. Maybe reduce the population size or mutation rate in pyslim.
+- 1. I need to check if the VCF files that I'm producing are too large to work with, even after filtering. Maybe reduce the population size or mutation rate in pyslim. File size increases from 30-40KB to 322MB
   - try opening VCF files in VCFR - there are some edits I wanted to make anyway
 - 2. check that pyslim can work on the failed sims to produce a VCF file.
   - 1231143, 1231141, 1231096, 1231098 as starting points

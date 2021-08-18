@@ -6,6 +6,13 @@ In the:
 
 20210818_150_V2_SummaryReport.html put together by Alan, all of the demographies that failed were Estuary.
 
+On Discovery I looked at the outputs in:
+
+`MVP-NonClinalAF/sim-output_150_V2`
+
+'ls -lah`
+revealed an interesting pattern - the dates the files are written seem to be in succession. Why is that? If the partition wasn’t busy, shouldn’t they have all started at the same time? (maybe this is why some of them timed out - the 2 weeks is from the time the array script was submitted)
+
 Thoughts:
 - 1. I need to check if the VCF files that I'm producing are too large to work with, even after filtering. Maybe reduce the population size or mutation rate in pyslim.
   - try opening VCF files in VCFR - there are some edits I wanted to make anyway

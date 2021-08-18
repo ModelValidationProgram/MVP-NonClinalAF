@@ -10,7 +10,7 @@ On Discovery I looked at the outputs in:
 
 `MVP-NonClinalAF/sim-output_150_V2`
 
-'ls -lah`
+`ls -lah`
 revealed an interesting pattern - the dates the files are written seem to be in succession. Why is that? If the partition wasn’t busy, shouldn’t they have all started at the same time? (maybe this is why some of them timed out - the 2 weeks is from the time the array script was submitted)
 
 Thoughts:

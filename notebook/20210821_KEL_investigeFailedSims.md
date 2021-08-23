@@ -8,7 +8,7 @@ In the:
 
 On Discovery I looked at the outputs in:
 
-`MVP-NonClinalAF/sim-output_150_V2`
+`/work/lotterhos/MVP-NonClinalAF/sim_output_150_V2`
 
 `ls -lah`
 revealed an interesting pattern - the dates the files are written seem to be in succession. Why is that? If the partition wasn’t busy, shouldn’t they have all started at the same time? (maybe this is why some of them timed out - the 2 weeks is from the time the array script was submitted)
@@ -18,4 +18,39 @@ Thoughts:
   - try opening VCF files in VCFR - there are some edits I wanted to make anyway
 - 2. check that pyslim can work on the failed sims to produce a VCF file.
   - 1231143, 1231141, 1231096, 1231098 as starting points
+
+
+# 2021-08-23
+```
+ssh lotterhos@discovery.neu.edu
+cd /work/lotterhos/MVP-NonClinalAF/
+
+ssh -T git@github.com # not sure if I needed this
+git branch # just checking
+
+srun -p lotterhos -N 1 --pty /bin/bash
+
+source ~/miniconda3/bin/activate MVP_env # activate the environment
+python3
+```
+In python:
+```
+seed = '1231143'
+r = 1e-6
+N = 10
+mu = 1e-7
+gen = 3000
+seednum = round(int(seed)**(1/2)) # slim seeds are too large
+output = ""
+os.chdir("/work/lotterhos/MVP-NonClinalAF/sim_output_150_V2")
+```
+This gives me an error: `Tree sequence contains no SLiM provenance entries(or your pyslim is out of date).`
+
+
+seed = '1231144'
+also request OOD for evaluating R code
+
+
+
+
 

@@ -2,3 +2,6 @@
 /sim_outputs_testAlanV2/
 /slurm_log/
 /finalTest/
+*.vcf
+*.DS_store
+*.Rhistory

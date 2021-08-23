@@ -17,7 +17,7 @@ git commit -a -m "add branch"
 
 ## To do for Alan:
 - [ ] make sure can access work/lotterhos/MVP-NonClinalAF
-- [ ] make sure can link github account to discovery and make changes on `alan` branch
+- [ ] make sure can link github account to discovery and make changes on `alan` branch, set up public keys
 - [ ] don't "F" up using github - review the "git" chapter in Buffalo's book and code below
 - [ ] review the command line script in `run_nonAF_sims_alan.sh`. 
 - [ ] Create a conda environment for running the shell script
@@ -29,6 +29,7 @@ git commit -a -m "add branch"
 - [ ] review the code in `0c-writeSimScript.R` that creates some of the scripts
 - [ ] Write an array to run the first 150 lines (parameter combos) of the `0b-final_params.txt`
     - [ ] update the notebook and push script to github. Note here there are some simulation outputs that are not pushed to github because they are so big. So we should review those before you try to push the outputs too.
+- [ ] merge branch `alan` with `main`
 
 #### Step 1: get off the login node
 

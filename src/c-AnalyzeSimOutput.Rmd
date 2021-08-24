@@ -40,7 +40,7 @@ library(qvalue)
 ```
 
 ```{r load data}
-path <- "../sim_outputs/"
+path <- "../sim_output_150_V2/"
 outpath <- "../results/"
 
 #seed <- 1231453

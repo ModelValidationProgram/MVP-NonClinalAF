@@ -35,6 +35,16 @@ python3
 ```
 In python:
 ```
+import pyslim 
+import msprime
+import argparse
+import numpy as np
+import random
+import time
+import re
+import ast
+import sys
+import os
 seed = '1231143'
 r = 1e-6
 N = 10
@@ -43,11 +53,29 @@ gen = 3000
 seednum = round(int(seed)**(1/2)) # slim seeds are too large
 output = ""
 os.chdir("/work/lotterhos/MVP-NonClinalAF/sim_output_150_V2")
+T2 = pyslim.load(output + seed + ".trees")
 ```
 This gives me an error: `Tree sequence contains no SLiM provenance entries(or your pyslim is out of date).`
 
+Back in command line:
+```
+conda update pyslim
+python3
+```
+I ran the above python lines, but still the error: `Tree sequence contains no SLiM provenance entries(or your pyslim is out of date).`
 
-seed = '1231144'
+
+Alan: "as a backup I made a new environment text file from my current MVP_env conda environment. You should be able to create a new MVP_env that mirrors my current environment with the following command:"
+```
+cd /work/lotterhos/MVP-NonClinalAF/src/env
+conda create --name MVP_env --file MVP_env_V2.tx
+```
+I overwrote the old MVP_env with this new environment
+
+Now the python lines are working!
+
+
+
 also request OOD for evaluating R code
 
 

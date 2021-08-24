@@ -6,7 +6,7 @@
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --nodes=2
-#SBATCH --array=2-150%149
+#SBATCH --array=2-151%149
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.err
 

@@ -21,6 +21,8 @@ Thoughts:
 
 
 # 2021-08-23
+
+## Setup
 ```
 ssh lotterhos@discovery.neu.edu
 cd /work/lotterhos/MVP-NonClinalAF/
@@ -73,6 +75,8 @@ conda create --name MVP_env --file MVP_env_V2.tx
 I overwrote the old MVP_env with this new environment
 
 Now the python lines are working!
+
+## Testing recapitation on sims that didn't finish
 
 
 

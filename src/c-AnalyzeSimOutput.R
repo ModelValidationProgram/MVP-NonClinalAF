@@ -17,7 +17,8 @@ seed = 1231134
 path = "../sim_output_150_V2/"
 
 ### load data ####
-  
+vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
+
   # Individual phenotype and fitness data in home pop
   indPhen_df <- read.table(paste0(path,seed,"_ind.txt"), header=TRUE, 
                            colClasses = c("character", rep("numeric",8)))
@@ -30,8 +31,7 @@ path = "../sim_output_150_V2/"
                       colClasses = c("character", rep("numeric",10)),
                       na.strings = "NAN")
   
-  vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
-  
+
   muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE, 
                         colClasses = c("character","numeric","character", rep("numeric",5)))
   

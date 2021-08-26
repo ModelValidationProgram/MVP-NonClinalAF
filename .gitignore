@@ -2,3 +2,11 @@
 /sim_outputs_testAlanV2/
 /slurm_log/
 /finalTest/
+/output/
+/output_archived/
+/sim_output_150_V2/
+*.trees
+*.vcf
+*.DS_store
+*.Rhistory
+

@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=SlimRun
-#SBATCH --mem=30G
+#SBATCH --job-name=SlimTest
+#SBATCH --mem=50G
 #SBATCH --mail-user=downey-wall.a@northeastern.edu
 #SBATCH --mail-type=FAIL
-#SBATCH --partition=lotterhos
+#SBATCH --partition=short
 #SBATCH --nodes=1
-#SBATCH --array=2-51%10
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun_%j.err
+#SBATCH --array=2-5%4
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimTest_%j.err
 
 source ~/miniconda3/bin/activate MVP_env
 # This is a CONDA environment I created on my own personal CONDA folder using the environment found in src/env/MVP_env.yml
@@ -23,7 +23,7 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_150_V2/"
+outpath="sim_outputs_testAlanV2/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
@@ -31,7 +31,7 @@ params="src/0b-final_params.txt"
 
 #### User variables ####
 # N for pyslim
-POP=1000
+POP=10
 # Minimum allele freq. for vcftools
 MAF=0.01
 

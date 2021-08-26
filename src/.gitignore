@@ -1,0 +1,8 @@
+/sim_outputs_testAlan/
+/sim_outputs_testAlanV2/
+/slurm_log/
+/finalTest/
+*.vcf
+*.DS_store
+*.Rhistory
+*.trees

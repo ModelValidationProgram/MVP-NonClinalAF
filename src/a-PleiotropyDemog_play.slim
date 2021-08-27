@@ -127,7 +127,7 @@ initialize()
 	m2.convertToSubstitution = F;
 	
 	initializeGenomicElementType("g1", m2, 1.0);
-	initializeGenomicElement(g1, 0, sum(C_lengths[0:(C_num - 10)]));
+	initializeGenomicElement(g1, 0, sum(C_lengths[0:(C_num - 11)]));
 	
 	rates = c(rep(c(R, 0.5), C_num-1), R);
 	ends = repEach(cumSum(C_lengths), 2);

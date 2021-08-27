@@ -1,7 +1,14 @@
 /sim_outputs_testAlan/
 /sim_outputs_testAlanV2/
+/sim_output_150_20210826/
+/sim_output_summary/
 /slurm_log/
 /finalTest/
+/output/
+/output_archived/
+/sim_output_150_V2/
+*.trees
 *.vcf
 *.DS_store
 *.Rhistory
+

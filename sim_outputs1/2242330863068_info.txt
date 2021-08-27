@@ -1,2 +1,0 @@
-seed MIG_x MIG_y N mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y S SIGMA_K SIGMA_QTN demog Ntraits ispleiotropy iscontrol Nequal isVariableM
-2242330863068 0.49 0.01 100 2.5e-08 1e-06 1000 2000 3000 10 10 0.1 0.5 0.1 SS 1 1 0 0 0

@@ -1,4 +1,6 @@
-import pyslim, msprime, argparse
+import pyslim 
+import msprime
+import argparse
 import numpy as np
 import random
 import time
@@ -7,9 +9,9 @@ import ast
 import sys
 import os
 
-#seed = '2242330863068'
+#seed = '1231143'
 #r = 1e-6
-#N = 100
+#N = 10
 #mu = 1e-7
 #gen = 3000
 
@@ -26,6 +28,7 @@ r = args['recom']
 N = args['NTot']
 mu = args['mutate']
 output = args['output']
+
 seednum = round(int(seed)**(1/2)) # slim seeds are too large
 
 # Load the .trees file

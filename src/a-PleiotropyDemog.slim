@@ -243,8 +243,8 @@ function (void)setUpMigration(void)
 			//	subpops[3].setMigrationRates(2, MIG_y); this sets from p2 to p4
 			// for reasons I don't understand, this won't graph
 				
-			destSubpop.setValue("opt0", OPTS_0[sourceID - 1]); // x cline
-			destSubpop.setValue("opt1", OPTS_1[sourceID - 1]); // y cline
+			destSubpop.setValue("opt0", OPTS_0[destID - 1]); // x cline
+			destSubpop.setValue("opt1", OPTS_1[destID - 1]); // y cline
 			destSubpop.setValue("x", x);
 			destSubpop.setValue("y", y);
 			
@@ -348,8 +348,8 @@ function (void)setUpMigration(void)
 			}
 				
 				
-			destSubpop.setValue("opt0", OPTS_0[sourceID - 1]); // x cline
-			destSubpop.setValue("opt1", OPTS_1[sourceID - 1]); // y cline
+			destSubpop.setValue("opt0", OPTS_0[destID - 1]); // x cline
+			destSubpop.setValue("opt1", OPTS_1[destID - 1]); // y cline
 			destSubpop.setValue("x", x);
 			destSubpop.setValue("y", y);
 			

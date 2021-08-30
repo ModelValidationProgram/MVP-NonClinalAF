@@ -150,12 +150,12 @@ It's taking a long time., then it didn't work when I typed `conda list` it still
 
 ## TO DO
 
--[ ] mountain range sims suggest temperature at demes 81-90 is higher than 91-100. FIX SLIM. (I CAN'T FIND THE ISSU HERE, SEE IF PERSISTS IN OTHER CLINAL SIMS)
+-[x] mountain range sims suggest temperature at demes 81-90 is higher than 91-100. FIX SLIM. (Fixed - see below)
 
 -[x] make an R script based on the markdown
   - [ ] .libPaths() "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0" "/shared/centos7/r-project/4.0.3/lib64/R/library"
   
--[ ] incorporate R code into bash script
+-[x] incorporate R code into bash script
 
 
 ## TO DO
@@ -189,10 +189,10 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
 
 - [x] Email Research Computing
 - [ ] Meet with RC
-  - Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml
-  - Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
-  - How to set the maximum time limits
-  - 
+  - [ ] Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml or make a new environment
+  - [ ] Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
+  - [ ] How to set the maximum time limits (if needed)
+  - [ ] submit R script with dependency that previous script finishes first
 
 
 ### 8/27 second submission
@@ -212,10 +212,40 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
 ### 8/27 initial results from sims with pyslim recap N=100
 
 - ~20K as opposed to 300K+ variants (maybe N=500 would be a nice compromise)
+  - 17Mb largest object  
 - stepping stone has issues with opt1. I need to debug these! the -1 is missing somewhere.
 
-### SLIM ISSUE FIXED
+### SLIM ISSUES FIXED
 
-- There was an issue with setting the optimums in the slim simulation. I fixed it and pushed to github. This means that the simulations in the output folder will all have slightly incorrect optimums: `sim_output_150_20210826`, but will all be good for de-bugging.
+- There was an issue with setting the optimums in the slim simulation. I fixed it and pushed to github. This means that the simulations in the output folder will all have slightly incorrect optimums: `sim_output_150_20210826`, but will all be good for de-bugging. FIXED AND SYNCED WITH GIT.
+
+- Also a bug in the setting the genomic element - I had set it to the first 11 elements (LGs), but only mean to set it to the first 10. FIXED AND SYNCED WITH GIT.
+
+## R script edits
+- [x] For the three methods, OUTPUT for outliers: VA_temp, VA_sal, FDR_allSNPs, FDR_neutSNPs, AUCPR_allSNPs, AUCPR_neutSNPs, and manhattan plots
+  - [x] correlation
+  - [x] RDA
+  - [x] LFMM
+- [x] ADD COR(AF, PC1) to understand effect of correction for sturcture
+- [x] ADD plot to understand if RDA loading corresponds to / locus effect size
+
+## Test R Bash Script
+- [x] Make an R Bash script `run_nonAF_sims_1R.sh`
+- [ ] Get environment with R v 4.0.3. Edit and submit for one simulation, see if it works!
+
+
+## To Do
+- [ ] R output for talk - compare 
+  - [ ] oligo SS 1 trait N-m equal to 
+  - [ ] polygenic SS 2 traits N-m equal
+- [ ] R code 
+  - [ ] - need to remove rare neutral alleles <0.01 after sampling
+  - [ ] need to add mutation-specific and genome-wide FST calculation to output
+- [ ] figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
+  - [ ] recaptitate these with N=1 and r=1e-11, it won't take long to finish. Go in R to see what's going on.   - OR: Just report that they do not coalesce, and remove from the results
+  - OR: don't let m get so small in the estuary demog.
+
+
+
 
 

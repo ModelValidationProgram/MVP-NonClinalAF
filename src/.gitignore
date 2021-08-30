@@ -6,3 +6,6 @@
 *.DS_store
 *.Rhistory
 *.trees
+/sim_output_150_V2/
+/sim_output_150_20210826/
+/sim_output_150_20210826/*

@@ -1,0 +1,6 @@
+new("pcaProject", projDir = "/work/lotterhos/MVP-NonClinalAF/sim_output_150_20210826/", 
+    pcaDir = "1231102_genotypes.pca/", n = 1000L, L = 21070L, 
+    K = 30L, center = TRUE, scale = TRUE, pcaProject.file = "1231102_genotypes.pcaProject", 
+    input.file = "1231102_genotypes.lfmm", eigenvalue.file = "1231102_genotypes.eigenvalues", 
+    eigenvector.file = "1231102_genotypes.eigenvectors", sdev.file = "1231102_genotypes.sdev", 
+    projection.file = "1231102_genotypes.projections")

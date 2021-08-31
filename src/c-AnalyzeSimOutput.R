@@ -29,8 +29,8 @@
 libraries_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools", 
                      "MLmetrics", "PRROC", "qvalue", "OutFLANK", "BiocManager", "LEA", "ggExtra")
 for (i in 1:length(libraries_needed)){
-  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
-#  library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
+#  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
+  library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
 }
 
 
@@ -39,7 +39,7 @@ for (i in 1:length(libraries_needed)){
 args = commandArgs(trailingOnly=TRUE)
 
 #seed = 1231222
-#path = "../sim_output_150_20210826/"
+#path = "../sim_output_150_20210830/"
 
 seed = args[1]
 path = args[2]
@@ -607,7 +607,7 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
   #histogram of causal vs. neutral loci correlation with structure
   
   # cor plot of the different structure correlations
-    par(mfrow=c(2,1))
+    #par(mfrow=c(2,1))
     subset_indPhen_df$LFMM_U1_temp <- mod_temp@U[,1]
     subset_indPhen_df$LFMM_U1_sal <- mod_sal@U[,1]
     #plot(subset_indPhen_df$PC1, mod_temp@U[,1])
@@ -633,7 +633,7 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
     r <- ggplot() + 
       geom_point(data=muts_full, aes(x=abs(structure_cor_G_PC1), y = LEA3.2_lfmm2_mlog10P_tempenv), color=muts_full$colors) +
       geom_point(data = muts_full[muts_full$causal_temp=="causal",], aes(x=abs(structure_cor_G_PC1), y = LEA3.2_lfmm2_mlog10P_tempenv, 
-                                                                         color=Va_temp_prop, size=Va_temp_prop), shape=shape_causal) + 
+                                                                         color=Va_temp_prop, size=Va_temp_prop), shape=shape_causal, alpha=0.5) + 
       scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) + 
       theme_classic() +
       geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig,], aes(x=abs(structure_cor_G_PC1), y =LEA3.2_lfmm2_mlog10P_tempenv),pch=23, col=outlier_color, size=3) + 
@@ -643,19 +643,19 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
     # Temp uncorreected
     s <- ggplot() + 
       geom_point(data=muts_full, aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_temp_P)), color=muts_full$colors) + 
-      geom_point(data = muts_full[muts_full$causal_temp=="causal",], aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_temp_P), 
-                                                                         color=Va_temp_prop, size=Va_temp_prop), shape=shape_causal) + 
-      scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) + 
       theme_classic()  +
       geom_point(data = muts_full[muts_full$cor_temp_sig,], aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_temp_P)),pch=23, col=adjustcolor("darkorange",0.5), size=3) + 
       ylim(0, ymax)  + ylab("-log10(P) cor(Genotype, temp)") +
-      ggtitle("Temperature - Structure not corrected") + xlab("Abs(Cor(Genotype, Structure PC1))") + labs(color="temp VA prop.", size="temp VA prop.")
+      ggtitle("Temperature - Structure not corrected") + xlab("Abs(Cor(Genotype, Structure PC1))") + labs(color="temp VA prop.", size="temp VA prop.") +
+      geom_point(data = muts_full[muts_full$causal_temp=="causal",], aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_temp_P), 
+                                                                         color=Va_temp_prop, size=Va_temp_prop), shape=shape_causal, alpha=0.5) + 
+      scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1))
    
     # Sal corrected
     rsal <- ggplot() + 
       geom_point(data=muts_full, aes(x=abs(structure_cor_G_PC1), y = LEA3.2_lfmm2_mlog10P_salenv), color=muts_full$colors) +
       geom_point(data = muts_full[muts_full$causal_sal=="causal",], aes(x=abs(structure_cor_G_PC1), y = LEA3.2_lfmm2_mlog10P_salenv, 
-                                                                         color=Va_sal_prop, size=Va_sal_prop), shape=shape_causal) + 
+                                                                         color=Va_sal_prop, size=Va_sal_prop), shape=shape_causal, alpha=0.5) + 
       scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) + 
       theme_classic() +
       geom_point(data = muts_full[muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig,], aes(x=abs(structure_cor_G_PC1), y =LEA3.2_lfmm2_mlog10P_salenv),pch=23, col=outlier_color, size=3) + 
@@ -665,13 +665,14 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
     # Sal uncorrected
     ssal <- ggplot() + 
       geom_point(data=muts_full, aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_sal_P)), color=muts_full$colors) + 
-      geom_point(data = muts_full[muts_full$causal_sal=="causal",], aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_sal_P), 
-                                                                         color=Va_sal_prop, size=Va_sal_prop), shape=shape_causal) + 
-      scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) + 
-      theme_classic()  +
+   theme_classic()  +
        geom_point(data = muts_full[muts_full$cor_sal_sig,], aes(x=abs(structure_cor_G_PC1), y =-log10(af_cor_sal_P)),pch=23, col=adjustcolor("darkorange",0.5), size=3) + 
       ylim(0, ymax)  + ylab("-log10(P) cor(Genotype, Env2)") +
-      ggtitle("Env2 - Structure not corrected") + xlab("Abs(Cor(Genotype, Structure PC1))") + labs(color="Env2 VA prop.", size="Env2 VA prop.")
+      ggtitle("Env2 - Structure not corrected") + xlab("Abs(Cor(Genotype, Structure PC1))") + labs(color="Env2 VA prop.", size="Env2 VA prop.") +
+      geom_point(data = muts_full[muts_full$causal_sal=="causal",], aes(x=abs(structure_cor_G_PC1), y = -log10(af_cor_sal_P), 
+                                                                        color=Va_sal_prop, size=Va_sal_prop), shape=shape_causal, alpha=0.5) + 
+      scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) 
+      
     
     
     grid.arrange(k, l, s, ssal, r, rsal, nrow=3)
@@ -1046,7 +1047,7 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
   par(mfrow=c(1,1))
   plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), main=plotmain)
   
-  legend(0,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="Cor (p, env)")  
+  legend(0,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="abs(Cor (p, env))")  
   legend(-1,0.5, c("linear model", "1:1 line") , lty=c(1,2))
   legend(0.5, 0.5, c("abs(cor) < 0.15", "abs(cor) > 0.15"), lwd=c(3, 0.5))
 
@@ -1057,69 +1058,56 @@ vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
   
 pdf(paste0(path,seed,"_pdf_heatmaps.pdf"), width=5, height=5)
 
-# Temps
-order_temp <- order(subset_indPhen_df$temp_opt)
-order_sal <- order(subset_indPhen_df$sal_opt)
+# Make sure in correct order
+identical(subset_indPhen_df$temp_opt , subset_indPhen_df$temp_opt[order(subset_indPhen_df$temp_opt)])
 
-par(mfrow=c(1,1), mar=c(4,0,6,4))
+G_heatmap <- G_full_subset[which(muts_full$causal),]
 
-heatmap(t(G_full_subset[muts_full$causal_temp=="causal",order_temp]), Rowv = NA,  main=paste0(plotmain," Causal alleles Temp"),cexCol = 0.3,  useRaster=FALSE, 
-        scale="none",
-        #Colv = NA,
-        labRow = round(subset_indPhen_df$temp_opt[order_temp],1), xlab="Mutation ID", ylab="South <---------> North")
+a<-heatmap(t(G_heatmap), Rowv = NA,  
+           main=paste0(plotmain,"All Causal SNPs"),cexCol = 0.3,
+           #Colv = NA,
+           labRow = round(subset_indPhen_df$temp_opt,2),
+           ylab="Temperature (South <---------> North)")
+a
 
+# low salinity sites
+heatmap(t(G_heatmap[a$colInd,subset_indPhen_df$sal_opt==-1]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, Low Env2 = -1 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[subset_indPhen_df$sal_opt==-1],2),
+        ylab="Temperature (South <---------> North)")
 
-if(sum(muts_full$causal_sal=="causal")>0){
-  heatmap(t(G_full_subset[muts_full$causal_sal=="causal",order_sal]), Rowv = NA,  main=paste0(plotmain,"Causal alleles Env2"),cexCol = 0.3,  useRaster=FALSE,
-          scale="none", xlab="Mutation ID", ylab="East <---------> West",
-          #Colv = NA,
-          labRow = round(subset_indPhen_df$temp_opt[order_temp],1))
-}
+heatmap(t(G_heatmap[a$colInd,abs(subset_indPhen_df$sal_opt)<0.15]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, Intermediate Env2 ~ 0 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[abs(subset_indPhen_df$sal_opt)<0.15],2),
+        ylab="Temperature (South <---------> North)")
 
-heatmap(t(G_full_subset[sample(which(!muts_full$causal), 100), order_temp]), Rowv = NA,  main=paste0(plotmain,"Non-causal alleles"),cexCol = 0.3,  useRaster=FALSE,
-        scale="none",
-        #Colv = NA,
-        labRow = round(subset_indPhen_df$temp_opt[order_temp],1), xlab="Mutation ID", ylab="South <---------> North")  
+heatmap(t(G_heatmap[a$colInd,subset_indPhen_df$sal_opt==1]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, High Env2 = 1 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[subset_indPhen_df$sal_opt==1],2),
+        ylab="Temperature (South <---------> North)")
 
+heatmap(t(G_heatmap[a$colInd,subset_indPhen_df$x==1]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, x = 1 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[subset_indPhen_df$x==1],2),
+        ylab="Temperature (South <---------> North)")
 
-### Visualize genotypes at low salinities ###
-subset_indPhen_df2 <- subset_indPhen_df[subset_indPhen_df$sal_opt==-1,]
-order_temp2 <- order(subset_indPhen_df2$temp_opt)
+heatmap(t(G_heatmap[a$colInd,subset_indPhen_df$x==5]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, x = 5 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[subset_indPhen_df$x==5],2),
+        ylab="Temperature (South <---------> North)")
 
-G_full_subset2 <- G_full_subset[,subset_indPhen_df$sal_opt==-1]
-
-heatmap(t(G_full_subset2[muts_full$causal,order_temp2]), Rowv = NA,  main=paste0(plotmain," Low Env2. Demes; All causal alleles"),cexCol = 0.3,  useRaster=FALSE, 
-        scale="none",
-        #Colv = NA,
-        labRow = round(subset_indPhen_df2$temp_opt[order_temp2],1), xlab="Mutation ID", ylab="South <---------> North")
-
-#heatmap(t(G_full_subset2[sample(which(!muts_full$causal), 1000),order_temp2]), Rowv = NA,  main=paste0(plotmain," Low Sal. Demes; Non-causal alleles"),cexCol = 0.3,  useRaster=FALSE, 
-#        scale="none",
-#        #Colv = NA,
-#        labRow = round(subset_indPhen_df2$temp_opt[order_temp2],1), xlab="Mutation ID", ylab="South <---------> North")
-
-subset_indPhen_df3 <- subset_indPhen_df[subset_indPhen_df$sal_opt==1,]
-order_temp3 <- order(subset_indPhen_df3$temp_opt)
-
-G_full_subset3 <- G_full_subset[,subset_indPhen_df$sal_opt==1]
-
-heatmap(t(G_full_subset3[muts_full$causal,order_temp3]), Rowv = NA,  main="High Env2. Demes; All causal alleles",cexCol = 0.3,  useRaster=FALSE,
-        scale="none",
-        #Colv = NA,
-        labRow = round(subset_indPhen_df3$temp_opt[order_temp3],1), xlab="Mutation ID", ylab="South <---------> North")
-
-# heatmap(t(G_full_subset3[sample(which(!muts_full$causal), 100),order_temp3]), Rowv = NA,  main="High Sal. Demes; Non-causal alleles",cexCol = 0.3,  useRaster=FALSE,
-#        scale="none",
-#        #Colv = NA,
-#        labRow = round(subset_indPhen_df2$temp_opt[order_temp3],1), xlab="Mutation ID", ylab="South <---------> North")
+heatmap(t(G_heatmap[a$colInd,subset_indPhen_df$x==10]), Rowv = NA,  
+        main=paste0(plotmain, "All causal SNPs, x = 10 Sites"),cexCol = 0.3,
+        Colv = NA,
+        labRow = round(subset_indPhen_df$temp_opt[subset_indPhen_df$x==10],2),
+        ylab="Temperature (South <---------> North)")
 
 dev.off()
-
-rm(subset_indPhen_df2)
-rm(subset_indPhen_df3)
-rm(G_full_subset2)
-rm(G_full_subset3)
-
 
 ### Write outputs ####
 

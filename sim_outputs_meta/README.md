@@ -1,12 +1,12 @@
 Below is a description of metadata for each set of output tables. The first number is the seed for the simulation.
 
-### 2549986039929_fitnessmat_ind.txt
+### <seed>_fitnessmat_ind.txt
 * an n_deme x n_individual table that indicates the fitness of each individual (in columns) in every metapopulation deme (in rows)
 
-### 2549986039929_fitnessmat.txt
+### <seed>_fitnessmat.txt
 * an n_deme x n_deme table that indicates the mean fitness of individuals from the source deme (in columns) in the transplant deme (in rows) CHECK THIS IS CORRECT
 
-### 2549986039929_ind.txt
+### <seed>_ind.txt
 Individual information output last generation
 
 * `seed` simulation seed
@@ -19,7 +19,7 @@ Individual information output last generation
 * `temp_opt` temperature optimum for that subpopulation
 * `fitness` fitness of the individual in it's subpopulation
     
-### 2549986039929_info.txt
+### <seed>_info.txt
 Simulation information
 
 * `seed`  simulation seed
@@ -38,7 +38,7 @@ Simulation information
 * `SIGMA_K` Strength of stabilizing selection
 * `SIGMA_QTN` Variation in QTN mutation rate
 
-### 2549986039929_LA.txt
+### <seed>_LA.txt
 This file tracks the amount of local adaptation in the simulation through time
 
 * `seed` simulation seed
@@ -53,10 +53,10 @@ This file tracks the amount of local adaptation in the simulation through time
 * `cor_sal_ind` correlation between salinity and individual phenotypes
 * `cor_temp_ind` correlation between temperature and individual phenotypes
 
-### 2549986039929_mig_mat.txt
+### <seed>_mig_mat.txt
 This is the migration matrix that was used in the sims. It is used in pyslim for recapitation. Without it, pyslim will run forever and never recapitate.
 
-### 2549986039929_muts.txt
+### <seed>_muts.txt
 This is a table of information about each mutation that is simulated SLIM AND has an allele frequency > 0.01 or < 0.99
 
 * `seed`  simulation seed
@@ -68,14 +68,14 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 * `mutSalEffect` Effect of mutation on salinity
 * `mutTempEffect` Effect of mutation on temperature
 
-### 2549986039929_plusneut_MAF01.recode2.vcf.gz
+### <seed>_plusneut_MAF01.recode2.vcf.gz
 
 * The VCF file output after pyslim and filtered to an MAF of 0.01
 * Each row is a locus simulated in SLiM or added by pyslim
 * Each column is an individual (all output)
 * The ID of the causal mutations is in the ALT table and should match `mutID` in other tables
 
-### 2549986039929_VCF_causal.vcf.gz
+### <seed>_VCF_causal.vcf.gz
 
 The VCF file output 
 
@@ -84,11 +84,11 @@ The VCF file output
 * The INFO field contains additional info about the mutation in SLiM that is not retained by pyslim
 * This table is redundant, but used to cross-check the pyslim outputs.
 
-### 2549986039929.trees
+### <seed>.trees
 
 The trees file output by SliM that is piped into pyslim.
 
-### 2549986039929_muts_analysis.txt
+### <seed>_muts_analysis.txt
 
 *`mut_ID` mutation ID, if not equal to 1, a causal mutation
 * `seed` simulation seed
@@ -118,22 +118,22 @@ The trees file output by SliM that is piped into pyslim.
 * `LEA3.2_lfmm2_mlog10P_salenv_sig`
 * `LEA3.2_lfmm2_Va_sal_prop`
 
-### 2549986039929_ind_subset_analysis.txt
+### <seed>_ind_subset_analysis.txt
 
 * `RDA_allloci_temp_pred`
 * `RDA_allloci_sal_pred`
 
 TO DO
 
-### 2549986039929_af_deme.txt
+### <seed>_af_deme.txt
 a matrix in which each row is a locus and each column is a deme, and the entry is the allele frequency
 
 DO I OUTPUT THIS?
 
-### 2549986039929_RDA_loadings.txt
+### <seed>_RDA_loadings.txt
 RDA loadings for each environment
 
-### 2549986039929_sim_analysis.txt
+### <seed>_sim_analysis.txt
 
 After each simulation is analyzed in R, 
 

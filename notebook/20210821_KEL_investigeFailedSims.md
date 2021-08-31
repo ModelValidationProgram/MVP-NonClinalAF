@@ -140,20 +140,35 @@ However, the conda environment only has R version 3.6
 
 Here is how I updated the environment:
 ```
+conda create -n MVP_env_R4.0.3
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda search r-base
+conda activate MVP_env_R4.0.3
 conda install -c conda-forge r-base=4.0.3
+conda list
+conda env export -f MVP_env_R4.0.3.yml
 ```
-It's taking a long time., then it didn't work when I typed `conda list` it still said R version was 3.6.0. Submit ticket to RC.
 
+environment location: /home/lotterhos/miniconda3/envs/MVP_env_R4.0.3
+
+
+After activating this environment, I had to install all the libraries that I needed. I typed `R` at the command line, installed the packages, and check the
+library location with `.libPaths()`, which returned:
+`/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library`
+
+Just to be safe, after I intalled the R packages I quit R and I exported the environment again with:
+`conda env export -f MVP_env_R4.0.3.yml`
+
+YML location: `/work/lotterhos/MVP-NonClinalAF/src/env/MVP_env_R4.0.3.yml`
 
 ## TO DO
 
 -[x] mountain range sims suggest temperature at demes 81-90 is higher than 91-100. FIX SLIM. (Fixed - see below)
 
 -[x] make an R script based on the markdown
-  - [ ] .libPaths() "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0" "/shared/centos7/r-project/4.0.3/lib64/R/library"
+  - [x] OOD .libPaths() "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0" "/shared/centos7/r-project/4.0.3/lib64/R/library"
+  - [x] CONDA "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library"
   
 -[x] incorporate R code into bash script
 
@@ -181,18 +196,18 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
   - [x] check all jobs on lotterhos partiition with `squeue -p lotterhos`
   - Job ID: Submitted batch job 20695234
   - [x] check job efficiency `seff 20695234`
-    - `badly formatted array jobid 20695234 with task_id = -2`
+    - `badly formatted array jobid 20695234 with task_id = -2` Probably not enough memory
     -  that's not good!
-  -  check specifics `scontrol show jobid -dd 20695234`
+  -  check specifics `scontrol show jobid -dd 20714872`
       -   `NumNodes=2-2 NumCPUs=2 NumTasks=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
    TRES=cpu=2,mem=60G,node=2,billing=2`
 
 - [x] Email Research Computing
-- [ ] Meet with RC
-  - [ ] Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml or make a new environment
-  - [ ] Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
+- [x] Meet with RC
+  - [x] Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml or make a new environment
+  - [x] Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
   - [ ] How to set the maximum time limits (if needed)
-  - [ ] submit R script with dependency that previous script finishes first
+  - [x] submit R script with dependency that previous script finishes first
 
 
 ### 8/27 second submission
@@ -234,18 +249,91 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
 - [ ] Get environment with R v 4.0.3. Edit and submit for one simulation, see if it works!
 
 
+## New Bug
+  - [X] For 2 trait architucture, subsampling does not result in AF clines from Slim Correlating with AF clines from subsample for Env2, but it does for temperature. FIXED Aug 30
+    - [x] BUG: when merging the indPhen_df, individual orders were mixed up. FIXED. This was a major bug affecting many outputs.
+
+
+
+## Notes from RC meeting Aug 30
+
+
+
+`#SBATCH --array=50-151%70`
+
+* If each task in array requires 1 CPU, %72 to maximize lotterho partition.
+* If it requires 2 CPUS, set --CPUs-per-task=2 (look it up) and set --array=50-151%36 
+* IF programs can use multiple threads, do benchmarking to determine CPU per task, 1-2 jobs at a time, and do `seff` on those tasks that completed, test 1, 2, 4, 8, 16 CPUs
+* Need to know number of CPUS per task, For maximum efficiency 
+
+
+
+`#SBATCH --nodes=2`
+
+* Set this to 1 unless we know the program can communicate between the nodes.
+
+
+```
+seff 20714872
+Job ID: 20714872
+Array Job ID: 20714872_151
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Nodes: 2
+Cores per node: 1
+CPU Utilized: 00:13:00
+CPU Efficiency: 48.51% of 00:26:48 core-walltime
+Job Wall-clock time: 00:13:24
+Memory Utilized: 768.23 MB
+Memory Efficiency: 19.21% of 3.91 GB
+```
+
+`#SBATCH --mem=170GB`
+
+This report is for each array task.
+Each requires 1 GB memory.
+So for the total array submission, mulitply mem/task * 
+
+If I set `#SBATCH --array=50-151%70`, and each task needs 1GB memory, I would specificy total mem = 70*1GB = 70GB, but add buffer and set it to mem=170GB in case one task requires more memory.
+
+If it doesn't specify anthing, it will use the default amount, for one task it might work but it might not work every time. The default memory is a limit, so it's always recommended to set it higher so you don't run out.ls
+
+## Aug 30 new bash submission
+- I synced Github with cluster. Hopefully I didn't F anything up.
+- Still working on making sure R outputs are OK
+- I canceled the last job `20714872`, since then I have fixed some of the slim scripts and some of the R outputs. I also learned how to improve the submission script from my meeting with RC
+- created new submission for 20210830
+- `sbatch run_nonAF_sims_0Slim_20210830.sh`
+- Job ID 20883113
+- `squeue -u lotterhos`
+- `seff 20883113`
+- `scontrol show jobid -dd 20883113`
+
+Note: if I set mem=170G, it only runs one job. If I take out the memory option, it uses what it can of the cluster. If I set mem=2G, it uses what it can of the lotterhos partition. I think each CPU has memory up to 3.91 GB (based on seff output).
+    
 ## To Do
 - [ ] R output for talk - compare 
-  - [ ] oligo SS 1 trait N-m equal to 
-  - [ ] polygenic SS 2 traits N-m equal
+  - [ ] oligo SS 1 trait N-m equal to : 1231102
+  - [ ] oligo 2 traits plieotropy
+  - [ ] polygenic SS 2 traits N-m equal: 1231222
+- [ ] Add to outputs
+  - [ ]  numCausalLowMAFsample
+  - [ ]  
+  - [ ]  metadata for output dataframe
 - [ ] R code 
-  - [ ] - need to remove rare neutral alleles <0.01 after sampling
-  - [ ] need to add mutation-specific and genome-wide FST calculation to output
+  - [x] need to remove rare neutral alleles <0.01 after sampling
+  - [ ] need to add mutation-specific and genome-wide FST  calculation to output and outliers
+  - [ ] 
 - [ ] figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
-  - [ ] recaptitate these with N=1 and r=1e-11, it won't take long to finish. Go in R to see what's going on.   - OR: Just report that they do not coalesce, and remove from the results
-  - OR: don't let m get so small in the estuary demog.
+  - [ ] recaptitate these with N=1 and r=1e-11, it won't take long to finish. Go in R to see what's going on.   
+  - OR: Just report that they do not coalesce, and remove from the results
+  - OR: don't let m get so small in the estuary demog and see if they recapitate
+  - OR: it could be the default memory wasn't enough (Based on `seff` output I don't think this is the case
+  - 
 
-
-
+- [ ] Rerun all sims with revised SliM Code (fixed issues with optimum and genomic element)
+- [ ] Run R analysis
+- [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group
 
 

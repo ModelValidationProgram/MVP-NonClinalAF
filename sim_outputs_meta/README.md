@@ -1,12 +1,12 @@
 Below is a description of metadata for each set of output tables. The first number is the seed for the simulation.
 
-### <seed>_fitnessmat_ind.txt
+### seed_fitnessmat_ind.txt
 * an n_deme x n_individual table that indicates the fitness of each individual (in columns) in every metapopulation deme (in rows)
 
-### <seed>_fitnessmat.txt
+### seed_fitnessmat.txt
 * an n_deme x n_deme table that indicates the mean fitness of individuals from the source deme (in columns) in the transplant deme (in rows) CHECK THIS IS CORRECT
 
-### <seed>_ind.txt
+### seed_ind.txt
 Individual information output last generation
 
 * `seed` simulation seed
@@ -19,7 +19,7 @@ Individual information output last generation
 * `temp_opt` temperature optimum for that subpopulation
 * `fitness` fitness of the individual in it's subpopulation
     
-### <seed>_info.txt
+### seed_info.txt
 Simulation information
 
 * `seed`  simulation seed
@@ -38,7 +38,7 @@ Simulation information
 * `SIGMA_K` Strength of stabilizing selection
 * `SIGMA_QTN` Variation in QTN mutation rate
 
-### <seed>_LA.txt
+### seed_LA.txt
 This file tracks the amount of local adaptation in the simulation through time
 
 * `seed` simulation seed
@@ -53,10 +53,10 @@ This file tracks the amount of local adaptation in the simulation through time
 * `cor_sal_ind` correlation between salinity and individual phenotypes
 * `cor_temp_ind` correlation between temperature and individual phenotypes
 
-### <seed>_mig_mat.txt
+### seed_mig_mat.txt
 This is the migration matrix that was used in the sims. It is used in pyslim for recapitation. Without it, pyslim will run forever and never recapitate.
 
-### <seed>_muts.txt
+### seed_muts.txt
 This is a table of information about each mutation that is simulated SLIM AND has an allele frequency > 0.01 or < 0.99
 
 * `seed`  simulation seed
@@ -68,14 +68,14 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 * `mutSalEffect` Effect of mutation on salinity
 * `mutTempEffect` Effect of mutation on temperature
 
-### <seed>_plusneut_MAF01.recode2.vcf.gz
+### seed_plusneut_MAF01.recode2.vcf.gz
 
-* The VCF file output after pyslim and filtered to an MAF of 0.01
+* The VCF file output after pyslim and filtered to an MAF of 0.01 across the entire population
 * Each row is a locus simulated in SLiM or added by pyslim
 * Each column is an individual (all output)
 * The ID of the causal mutations is in the ALT table and should match `mutID` in other tables
 
-### <seed>_VCF_causal.vcf.gz
+### seed_VCF_causal.vcf.gz
 
 The VCF file output 
 
@@ -84,27 +84,49 @@ The VCF file output
 * The INFO field contains additional info about the mutation in SLiM that is not retained by pyslim
 * This table is redundant, but used to cross-check the pyslim outputs.
 
-### <seed>.trees
+### seed.trees
 
 The trees file output by SliM that is piped into pyslim.
 
-### <seed>_muts_analysis.txt
+### seed_Rout_RDA_predictions.txt
+* `nloci` the number of loci randomly sampled from the genome
+* `Random_cor_temppredict_tempphen` the correlation between the RDA temperature prediction for an individual based on a random set of loci (see equation below) and the temperature phenotype of an individual
+    * `temp_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]`
+* `Random_cor_salpredict_salphen` the correlation between the RDA salinity prediction for an individual based on a random set of loci (see equation below) and the salinity phenotype of an individual
+    * `sal_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]`
 
-*`mut_ID` mutation ID, if not equal to 1, a causal mutation
+### seed_Rout_af_pop.txt
+* Allele frequency as a function of demeID for each mutation in ADD FILE
+* rows are demes
+* columns are mutations in ADD FILE
+
+### seed_Rout_af_sal.txt
+* Allele frequency as a function of salinity for each mutation 
+* rows are salinity values
+* columns are mutations in ADD FILE
+
+### seed_Rout_af_temp.txt
+* Allele frequency as a function of temperature for each mutation
+* rows are temperature values
+* columns are mutations in ADD FILE
+
+### seed_Rout_muts_full.txt TO DO
+
+* `mut_ID` mutation ID, if not equal to 1, a causal mutation
 * `seed` simulation seed
 * `VCFrow` row in VCF file
-*`pos_pyslim` position as output from pyslim, which is 1 less than SliM output
-*`a_freq_full` allele frequency of derived allele based on all samples
-*`a_freq_subset` allele frequency of derived allele based on subset of individuals sampled according to their fitness
-*`mutSalEffect` for causal mutations, effect of mutation on the salinity phenotype
-*`mutTempEffect`  for causal mutations, effect of mutation on the temperature phenotype
-*`INFO`  for causal mutations, information output from slim
-*`af_cor_temp` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
-*`af_cor_sal` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
-*`af_cor_temp_pooled` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness, for individuals pooled by temperature instead of by population
+* `pos_pyslim` position as output from pyslim, which is 1 less than SliM output
+* `a_freq_full` allele frequency of derived allele based on all samples
+* `a_freq_subset` allele frequency of derived allele based on subset of individuals sampled according to their fitness
+* `mutSalEffect` for causal mutations, effect of mutation on the salinity phenotype
+* `mutTempEffect`  for causal mutations, effect of mutation on the temperature phenotype
+* `INFO`  for causal mutations, information output from slim
+* `af_cor_temp` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
+* `af_cor_sal` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `af_cor_temp_pooled` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness, for individuals pooled by temperature instead of by population
 *`af_cor_sal_pooled` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness, for individuals pooled by salinity instead of by population
-*`af_slope_temp` slope between allele frequency and temperature based on subset of individuals sampled according to their fitness
-*`af_slope_sal` slope between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `af_slope_temp` slope between allele frequency and temperature based on subset of individuals sampled according to their fitness
+* `af_slope_sal` slope between allele frequency and salinity based on subset of individuals sampled according to their fitness
 * `Va_temp` VA to temperature explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
 * `Va_temp_prop` Proportion of total VA to temperature explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
 * `Va_sal` VA to salinity explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
@@ -118,22 +140,84 @@ The trees file output by SliM that is piped into pyslim.
 * `LEA3.2_lfmm2_mlog10P_salenv_sig`
 * `LEA3.2_lfmm2_Va_sal_prop`
 
-### <seed>_ind_subset_analysis.txt
+mutID                            "1"             
+seed                             "1231222"       
+VCFrow                           "1"             
+pos_pyslim                       "5"             
+a_freq_full                      "0.06025"       
+a_freq_subset                    "0.0675"        
+muttype                          NA              
+p                                NA              
+cor_sal                          NA              
+cor_temp                         NA              
+mutSalEffect                     NA              
+mutTempEffect                    NA              
+causal                           "FALSE"         
+af_cor_temp                      "-0.1795185"    
+af_slope_temp                    "-0.04622727"   
+af_cor_temp_P                    "0.02483159"    
+af_cor_sal                       "0.547292"      
+af_slope_sal                     "0.1075909"     
+af_cor_sal_P                     "7.850828e-12"  
+af_cor_temp_mlog10P              "1.604996"      
+af_cor_sal_mlog10P               "11.10508"      
+causal_temp                      "neutral-linked"
+causal_sal                       "neutral-linked"
+LG                               "1"             
+colors                           "#FFC1251A"     
+Va_temp                          NA              
+Va_temp_prop                     "0"             
+Va_sal                           NA              
+Va_sal_prop                      "0"             
+cor_temp_sig                     "FALSE"         
+cor_sal_sig                      "TRUE"          
+LEA3.2_lfmm2_mlog10P_tempenv     "0.3529028"     
+LEA3.2_lfmm2_mlog10P_tempenv_sig "FALSE"         
+LEA3.2_lfmm2_mlog10P_salenv      "1.164015"      
+LEA3.2_lfmm2_mlog10P_salenv_sig  "FALSE"         
+structure_cor_G_LFMM_U1_modsal   "-0.1160243"    
+structure_cor_G_LFMM_U1_modtemp  "-0.2870202"    
+structure_cor_G_PC1              "-0.2018207"    
+RDA1_score                       "0.06221698"    
+RDA2_score                       "-0.07683058"   
+RDA_mlog10P                      "0.7845996"     
+RDA_mlog10P_sig                  "FALSE"         
+af_cor_temp_pooled               "-0.6981386"    
+af_cor_sal_pooled                "0.8806303"  
 
-* `RDA_allloci_temp_pred`
-* `RDA_allloci_sal_pred`
+### seed_Rout_ind_subset.txt TO DO
 
-TO DO
 
-### <seed>_af_deme.txt
-a matrix in which each row is a locus and each column is a deme, and the entry is the allele frequency
+seed           "1231222"   
+subpopID       "1"         
+indID          "5"         
+indSubpopIndex "5"         
+subpop         "1"         
+phen_sal       "-0.928137" 
+phen_temp      "-0.767099" 
+sal_opt        "-1"        
+temp_opt       "-1"        
+fitness        "0.942323"  
+subset         "TRUE"      
+N              "100"       
+opt0           "-1"        
+opt1           "-1"        
+x              "1"         
+y              "1"         
+PC1            "52.08"     
+PC2            "12.4889"   
+PC3            "39.5559"   
+LFMM_U1_temp   "19.98274"  
+LFMM_U1_sal    "-20.27494" 
+LFMM_U2_temp   "19.94116"  
+LFMM_U2_sal    "-19.56712" 
+RDA1           "-2.730669" 
+RDA2           "-0.8895302"
+RDA_predict_tempPhen_20KSNPs
+RDA_predict_salPhen_20KSNPs
 
-DO I OUTPUT THIS?
 
-### <seed>_RDA_loadings.txt
-RDA loadings for each environment
-
-### <seed>_sim_analysis.txt
+### seed_Rout_simSummary.txt TO DO
 
 After each simulation is analyzed in R, 
 
@@ -146,6 +230,71 @@ After each simulation is analyzed in R,
 * `subsamp_corr_phen_sal` after sampling 20 individuals from each patch with a probability based on their fitness, correlation between individual sal phenotype and environment salinity
 *`num_causal` number of causal loci in sim
 *`num_neut` number of neutral loci in sim
+
+seed                             "1231222"     
+n_samp_tot                       "1000"        
+n_samp_per_pop                   "10"          
+K                                "3"           
+Bonf_alpha                       "2.366528e-06"
+numCausalLowMAFsample            "23"          
+all_corr_phen_temp               "0.9604135"   
+subsamp_corr_phen_temp           "0.8649487"   
+all_corr_phen_sal                "0.9552496"   
+subsamp_corr_phen_sal            "0.8569631"   
+num_causal                       "474"         
+num_non_causal                   "20654"       
+num_neut                         "10410"       
+num_causal_temp                  "473"         
+num_causal_sal                   "473"         
+LEA3.2_lfmm2_Va_temp_prop        "0"           
+LEA3.2_lfmm2_Va_sal_prop         "0.06246894"  
+LEA3.2_lfmm2_TPR_temp            "0"           
+LEA3.2_lfmm2_TPR_sal             "0.00422833"  
+LEA3.2_lfmm2_FDR_allSNPs_temp    NA            
+LEA3.2_lfmm2_FDR_allSNPs_sal     "0.7142857"   
+LEA3.2_lfmm2_FDR_neutSNPs_temp   NA            
+LEA3.2_lfmm2_FDR_neutSNPs_sal    "0"           
+LEA3.2_lfmm2_AUCPR_temp_allSNPs  "0.0281779"   
+LEA3.2_lfmm2_AUCPR_temp_neutSNPs "0.06147373"  
+LEA3.2_lfmm2_AUCPR_sal_allSNPs   "0.0281779"   
+LEA3.2_lfmm2_AUCPR_sal_neutSNPs  "0.06147373"  
+RDA_Va_temp_prop                 "0.1251184"   
+RDA_Va_sal_prop                  "0.1311002"   
+RDA_TPR                          "0.01476793"  
+RDA_FDR_allSNPs                  "0.9688889"   
+RDA_FDR_neutSNPs                 "0.9156627"   
+RDA_AUCPR_allSNPs                "0.01652866"  
+RDA_AUCPR_neutSNPs               "0.03505077"  
+cor_RDA20000_RDloadings_tempPhen "0.8271191"   
+cor_RDA20000_RDloadings_salPhen  "0.8205405"   
+cor_VA_temp_prop                 "0.5516298"   
+cor_VA_sal_prop                  "0.5384417"   
+cor_TPR_temp                     "0.2114165"   
+cor_TPR_sal                      "0.2029598"   
+cor_FDR_allSNPs_temp             "0.9743655"   
+cor_FDR_neutSNPs_temp            "0.9542962"   
+cor_FDR_allSNPs_sal              "0.9752194"   
+cor_FDR_neutSNPs_sal             "0.955535"    
+cor_AUCPR_temp_allSNPs           "0.02581878"  
+cor_AUCPR_temp_neutSNPs          "0.05166276"  
+cor_AUCPR_sal_allSNPs            "0.02556545"  
+cor_AUCPR_sal_neutSNPs           "0.05184973"  
+median_causal_temp_cor           "0.2746745"   
+median_causal_sal_cor            "0.2685987"   
+median_neut_temp_cor             "0.217133"    
+median_neut_sal_cor              "0.2153212"   
+cor_PC1_temp                     "-0.5262854"  
+cor_PC1_sal                      "-0.8366671"  
+cor_PC2_temp                     "-0.8367879"  
+cor_PC2_sal                      "0.5274318"   
+cor_LFMMU1_temp                  "-0.0284181"  
+cor_LFMMU1_sal                   "0.02959235"  
+cor_LFMMU2_temp                  "0.02630689"  
+cor_LFMMU2_sal                   "-0.04222666" 
+cor_PC1_LFMMU1_temp              "0.8610124"   
+cor_PC1_LFMMU1_sal               "-0.5587573"  
+cor_PC2_LFMMU1_temp              "-0.5074529"  
+cor_PC2_LFMMU1_sal               "-0.8283036" 
 
 
 

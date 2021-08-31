@@ -233,7 +233,10 @@ After each simulation is analyzed in R,
 
 seed                             "1231222"     
 n_samp_tot                       "1000"        
-n_samp_per_pop                   "10"          
+n_samp_per_pop                   "10"      
+sd_fitness_among_inds,
+                       sd_fitness_among_pops,
+                       final_LA 
 K                                "3"           
 Bonf_alpha                       "2.366528e-06"
 numCausalLowMAFsample            "23"          

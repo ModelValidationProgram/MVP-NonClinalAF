@@ -29,6 +29,7 @@ Memory Efficiency: 66.69% of 2.00 GB
 ## To Do
 - [ ] While I'm waiting for the slow sims to finish:
   - [ ] **metadata for output dataframe** https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/sim_outputs_meta/README.md
+  - [ ] sync github
   - [ ] Work on methods for manuscript
   - [ ] **Develop full analysis script**
     - [ ] List of questions

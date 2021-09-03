@@ -2,14 +2,13 @@ Below is a description of metadata for each set of output tables. The first numb
 
 Note: The origin of the simulations was to better understand how oysters adapt to salinity and temperature gradients in estuaries. Opt0 in the simulations corresponds to the salinity trait, which also corresponds to Env2 in the publications.
 
-### seed_fitnessmat_ind.txt
+### seed_fitnessmat_ind.txt (SLiM output)
 * an n_deme x n_individual table that indicates the fitness of each individual (in columns) in every metapopulation deme (in rows)
 
-### seed_fitnessmat.txt
+### seed_fitnessmat.txt (SLiM output)
 * an n_deme x n_deme table that indicates the mean fitness of individuals from the source deme (in columns) in the transplant deme (in rows) CHECK THIS IS CORRECT
 
-### seed_ind.txt
-Individual information output last generation
+### seed_ind.txt (SLiM output) Individual information output last generation
 
 * `seed` simulation seed
 * `indID` individual ID in SliM. Corresponds to rows in VCF file.
@@ -21,8 +20,7 @@ Individual information output last generation
 * `temp_opt` temperature optimum for that subpopulation
 * `fitness` fitness of the individual in it's subpopulation
     
-### seed_info.txt
-Simulation information
+### seed_info.txt (SLiM output) Simulation information
 
 * `seed`  simulation seed
 * `sim_type` the name of the simulation file used to produce the results
@@ -40,8 +38,7 @@ Simulation information
 * `SIGMA_K` Strength of stabilizing selection
 * `SIGMA_QTN` Variation in QTN mutation rate
 
-### seed_LA.txt
-This file tracks the amount of local adaptation in the simulation through time
+### seed_LA.txt (SLiM output) This file tracks the amount of local adaptation in the simulation through time
 
 * `seed` simulation seed
 * `gen` generation
@@ -55,10 +52,10 @@ This file tracks the amount of local adaptation in the simulation through time
 * `cor_sal_ind` correlation between salinity and individual phenotypes
 * `cor_temp_ind` correlation between temperature and individual phenotypes
 
-### seed_mig_mat.txt
+### seed_mig_mat.txt (SLiM output)
 This is the migration matrix that was used in the sims. It is used in pyslim for recapitation. Without it, pyslim will run forever and never recapitate.
 
-### seed_muts.txt
+### seed_muts.txt (SLiM output) mutation table
 This is a table of information about each mutation that is simulated SLIM AND has an allele frequency > 0.01 or < 0.99
 
 * `seed`  simulation seed
@@ -70,10 +67,10 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 * `mutSalEffect` Effect of mutation on salinity
 * `mutTempEffect` Effect of mutation on temperature
 
-### seed_popInfo.txt
+### seed_popInfo.txt (SLiM output) deme information
 * `seed`  simulation seed
 * `subpopID`
-* `N` number of individuals simmulated
+* `N` number of individuals simmulated in that deme
 * `opt0` salinity optimum
 * `opt1` Temperature optimum
 * `x` x location on grid
@@ -86,42 +83,40 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 * Each column is an individual (all output)
 * The ID of the causal mutations is in the ALT table and should match `mutID` in other tables
 
-### seed_VCF_causal.vcf.gz
-
-The VCF file output 
+### seed_VCF_causal.vcf.gz (SLiM output) The VCF file output from SLiM
 
 * Each row is a locus simulated in SLiM
 * Each column is an individual (all output)
 * The INFO field contains additional info about the mutation in SLiM that is not retained by pyslim
 * This table is redundant, but used to cross-check the pyslim outputs.
 
-### seed.trees
+### seed.trees (pyslim output)
 
 The trees file output by SliM that is piped into pyslim.
 
-### seed_Rout_RDA_predictions.txt
+### seed_Rout_RDA_predictions.txt (output after analysis of simulations)
 * `nloci` the number of loci randomly sampled from the genome
 * `Random_cor_temppredict_tempphen` the correlation between the RDA temperature prediction for an individual based on a random set of loci (see equation below) and the temperature phenotype of an individual
     * `temp_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]`
 * `Random_cor_salpredict_salphen` the correlation between the RDA salinity prediction for an individual based on a random set of loci (see equation below) and the salinity phenotype of an individual
     * `sal_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]`
 
-### seed_Rout_af_pop.txt
+### seed_Rout_af_pop.txt (output after analysis of simulations)
 * Allele frequency as a function of demeID for each mutation in ADD FILE
 * rows are demes that correspond to the popInfo.txt
 * columns are mutations in ADD FILE
 
-### seed_Rout_af_sal.txt
+### seed_Rout_af_sal.txt (output after analysis of simulations)
 * Allele frequency as a function of salinity for each mutation 
 * rows are salinity values
 * columns are mutations in ADD FILE
 
-### seed_Rout_af_temp.txt
+### seed_Rout_af_temp.txt (output after analysis of simulations)
 * Allele frequency as a function of temperature for each mutation
 * rows are temperature values
 * columns are mutations in ADD FILE
 
-### seed_Rout_muts_full.txt TO DO
+### `seed_Rout_muts_full.txt` (output after analysis of simulations) A table with information about each locus
 
 * `mut_ID` mutation ID, if not equal to 1, a causal mutation
 * `seed` simulation seed
@@ -189,7 +184,7 @@ The trees file output by SliM that is piped into pyslim.
 * `af_cor_temp_pooled` correlation between allele frequency and temperature if all demes were pooled together according to their temperature (this inflates correlations)  
 * `af_cor_sal_pooled` correlation between allele frequency and salinity if all demes were pooled together according to their salinity (this inflates correlations)
 
-### seed_Rout_ind_subset.txt TO DO
+### seed_Rout_ind_subset.txt  (output after analysis of simulations) A table with information about each individual
 
 
 seed           "1231222"   
@@ -221,7 +216,7 @@ RDA_predict_tempPhen_20KSNPs
 RDA_predict_salPhen_20KSNPs
 
 
-### seed_Rout_simSummary.txt TO DO
+### `seed_Rout_simSummary.txt` (output after analysis of simulations) A table with information about the entire simulation
 
 After each simulation is analyzed in R, 
 

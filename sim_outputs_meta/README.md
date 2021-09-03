@@ -1,5 +1,7 @@
 Below is a description of metadata for each set of output tables. The first number is the seed for the simulation.
 
+Note: The origin of the simulations was to better understand how oysters adapt to salinity and temperature gradients in estuaries. Opt0 in the simulations corresponds to the salinity trait, which also corresponds to Env2 in the publications.
+
 ### seed_fitnessmat_ind.txt
 * an n_deme x n_individual table that indicates the fitness of each individual (in columns) in every metapopulation deme (in rows)
 
@@ -68,6 +70,15 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 * `mutSalEffect` Effect of mutation on salinity
 * `mutTempEffect` Effect of mutation on temperature
 
+### seed_popInfo.txt
+* `seed`  simulation seed
+* `subpopID`
+* `N` number of individuals simmulated
+* `opt0` salinity optimum
+* `opt1` Temperature optimum
+* `x` x location on grid
+* `y` y location on grid
+
 ### seed_plusneut_MAF01.recode2.vcf.gz
 
 * The VCF file output after pyslim and filtered to an MAF of 0.01 across the entire population
@@ -97,7 +108,7 @@ The trees file output by SliM that is piped into pyslim.
 
 ### seed_Rout_af_pop.txt
 * Allele frequency as a function of demeID for each mutation in ADD FILE
-* rows are demes
+* rows are demes that correspond to the popInfo.txt
 * columns are mutations in ADD FILE
 
 ### seed_Rout_af_sal.txt
@@ -118,11 +129,41 @@ The trees file output by SliM that is piped into pyslim.
 * `pos_pyslim` position as output from pyslim, which is 1 less than SliM output
 * `a_freq_full` allele frequency of derived allele based on all samples
 * `a_freq_subset` allele frequency of derived allele based on subset of individuals sampled according to their fitness
+* `muttype` muttype from SliM (causal mutations)
+* `p` allele frenquency from SliM (causal mutations)
+* `cor_sal` correlation of deme allele frequency and deme salinity optimum from SliM (all samples)
+* `cor_temp` correlation of deme allele frequency and deme temperature optimum from SliM (all samples)
 * `mutSalEffect` for causal mutations, effect of mutation on the salinity phenotype
 * `mutTempEffect`  for causal mutations, effect of mutation on the temperature phenotype
+* `causal`a logical value indiciating whether it was a causal mutation (had a non-zero effect on either temp or salinity trait)
+
 * `INFO`  for causal mutations, information output from slim
+
+* `af_cor_temp` 
+
 * `af_cor_temp` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
+* `af_slope_temp` slope between between allele frequency and temperature based on subset of individuals sampled according to their fitness
+* `af_cor_temp_P` P-value for correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness
+* `af_cor_temp_mlog10P` -log10 P value of above measure
 * `af_cor_sal` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `af_slope_sal` slope between between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `af_cor_sal_P`  P-value for correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
+* `af_cor_sal_mlog10P` -log10 P value of above measure    
+
+* `causal_temp` a categorical variable indicating the locus type (see sub-bullets below)
+* `causal_sal` a categorical variable if the locus type  (see sub-bullets below)
+    * `causal`  the locus has an allele with a non-zero effect on the phenotype
+    * `neutral-linked` a locus with alleles that have zero effect on the phenotype, but arise in the part of the genome where they may be linked to a locus that is causal. (e.g., sites 1-500000)
+    * `neutral` a locus with alleles that have zero effect on the phenotype, and arise in the part of the genome unaffected by selection (e.g., sites 500001-1e06)
+* `LG` linkage group       
+* `colors` a color level for plotting - shades of yellow for LGs affected by selection(e.g., sites 1-500000), shades of grey for LGs unaffected by selection (e.g., sites 500001-1e06)
+* `Va_temp` estimate of additive genetic variance of the locus on the temeprature trait (based on the subset of individuals sampled according to their fitness)     
+* `Va_temp_prop` proportion of the total additive genetic variance on the temeprature trait explained by this mutation      
+* `Va_sal` estimate of additive genetic variance of the locus on the salinity trait (based on the subset of individuals sampled according to their fitness)     
+* `Va_sal_prop` proportion of the total additive genetic variance on the salinity trait explained by this mutation      
+* `cor_temp_sig`  a logical value indicating whether the `af_cor_temp` was significant after Bonferroni correction       
+* `cor_sal_sig`  a logical value indicating whether the `af_cor_sal` was significant after Bonferroni correction 
+
 * `af_cor_temp_pooled` correlation between allele frequency and temperature based on subset of individuals sampled according to their fitness, for individuals pooled by temperature instead of by population
 *`af_cor_sal_pooled` correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness, for individuals pooled by salinity instead of by population
 * `af_slope_temp` slope between allele frequency and temperature based on subset of individuals sampled according to their fitness
@@ -132,58 +173,21 @@ The trees file output by SliM that is piped into pyslim.
 * `Va_sal` VA to salinity explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
 * `Va_sal_prop` Proportion of total VA to salinity explained by locus in metapopultion (this is a little misleading because some loci are low here, but explain a lot of VA in a specific environment), based on a subset of individuals after sampling based on their fitness
 
-* `LEA3.2_lfmm2_mlog10P_tempenv`
-* `LEA3.2_lfmm2_mlog10P_tempenv_sig`
-* `LEA3.2_lfmm2_Va_temp_prop`
+* `LEA3.2_lfmm2_mlog10P_tempenv` -log10 P value from the lfmm model for temperature
+* `LEA3.2_lfmm2_mlog10P_tempenv_sig` a logical value indicating if the q-value from the lfmm model for temperature was less than 0.05
+* `LEA3.2_lfmm2_mlog10P_salenv` -log10 P value from the lfmm model for salinity
+* `LEA3.2_lfmm2_mlog10P_salenv_sig` a logical value indicating if the q-value from the lfmm model for salinity was less than 0.05
+* `structure_cor_G_LFMM_U1_modsal` for this locus, correlation between genotypes and the individual loadings on the first latent factor of the lfmm salinity model. (e.g., is this locus correlated with what the model thinks is structure)
+* `structure_cor_G_LFMM_U1_modtemp` for this locus, correlation between genotypes and the individual loadings on the first latent factor of the lfmm temperature model. (e.g., is this locus correlated with what the model thinks is structure)
 
-* `LEA3.2_lfmm2_mlog10P_salenv`
-* `LEA3.2_lfmm2_mlog10P_salenv_sig`
-* `LEA3.2_lfmm2_Va_sal_prop`
+* `structure_cor_G_PC1` for this locus, correlation between genotypes and the individual loadings on the first PC axis. (e.g., is this locus correlated with actual structure)
 
-mutID                            "1"             
-seed                             "1231222"       
-VCFrow                           "1"             
-pos_pyslim                       "5"             
-a_freq_full                      "0.06025"       
-a_freq_subset                    "0.0675"        
-muttype                          NA              
-p                                NA              
-cor_sal                          NA              
-cor_temp                         NA              
-mutSalEffect                     NA              
-mutTempEffect                    NA              
-causal                           "FALSE"         
-af_cor_temp                      "-0.1795185"    
-af_slope_temp                    "-0.04622727"   
-af_cor_temp_P                    "0.02483159"    
-af_cor_sal                       "0.547292"      
-af_slope_sal                     "0.1075909"     
-af_cor_sal_P                     "7.850828e-12"  
-af_cor_temp_mlog10P              "1.604996"      
-af_cor_sal_mlog10P               "11.10508"      
-causal_temp                      "neutral-linked"
-causal_sal                       "neutral-linked"
-LG                               "1"             
-colors                           "#FFC1251A"     
-Va_temp                          NA              
-Va_temp_prop                     "0"             
-Va_sal                           NA              
-Va_sal_prop                      "0"             
-cor_temp_sig                     "FALSE"         
-cor_sal_sig                      "TRUE"          
-LEA3.2_lfmm2_mlog10P_tempenv     "0.3529028"     
-LEA3.2_lfmm2_mlog10P_tempenv_sig "FALSE"         
-LEA3.2_lfmm2_mlog10P_salenv      "1.164015"      
-LEA3.2_lfmm2_mlog10P_salenv_sig  "FALSE"         
-structure_cor_G_LFMM_U1_modsal   "-0.1160243"    
-structure_cor_G_LFMM_U1_modtemp  "-0.2870202"    
-structure_cor_G_PC1              "-0.2018207"    
-RDA1_score                       "0.06221698"    
-RDA2_score                       "-0.07683058"   
-RDA_mlog10P                      "0.7845996"     
-RDA_mlog10P_sig                  "FALSE"         
-af_cor_temp_pooled               "-0.6981386"    
-af_cor_sal_pooled                "0.8806303"  
+* `RDA1_score` loading of the locus on the first RDA axis
+* `RDA2_score` loading of the locus on the second RDA axis
+* `RDA_mlog10P` -log 10 P-value from the "rdadapt" function from Capblanq et al. 20XX
+* `RDA_mlog10P_sig` a logical variable indicating if the RDA q-value was less than 0.001 (a more conservative estimate was used than with lfmm because lack of structure correction led to a large number of false positive results)
+* `af_cor_temp_pooled` correlation between allele frequency and temperature if all demes were pooled together according to their temperature (this inflates correlations)  
+* `af_cor_sal_pooled` correlation between allele frequency and salinity if all demes were pooled together according to their salinity (this inflates correlations)
 
 ### seed_Rout_ind_subset.txt TO DO
 

@@ -241,6 +241,8 @@ After each simulation is analyzed in R,
 * `num_neut` number of truly neutral loci in sim
 * `num_causal_temp` number of loci with non-zero phenotypic effects on the temperature phenotype
 * `num_causal_sal`number of loci with non-zero phenotypic effects on the salinity phenotype
+
+
 * `LEA3.2_lfmm2_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the LFMM temp model
 * `LEA3.2_lfmm2_Va_sal_prop` proportion of additive genetic variance (Va) in the saliniity trait explained by outliers in the LFMM salinity model
 *  `LEA3.2_lfmm2_TPR_temp` true positive rate of the LFMM temp model for loci with alleles that have non-zero effects on the temperature phenotype
@@ -252,7 +254,9 @@ After each simulation is analyzed in R,
 *  `LEA3.2_lfmm2_AUCPR_temp_allSNPs` the AUC-PR of the lfmm temp model based on the entire genome  
 * `LEA3.2_lfmm2_AUCPR_temp_neutSNPs` an optimistic calculation of the AUC-PR of the LFMM temp model, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
 * `LEA3.2_lfmm2_AUCPR_sal_allSNPs` the AUC-PR of the lfmm temp model based on the entire genome
-* `LEA3.2_lfmm2_AUCPR_sal_neutSNPs` the AUC-PR of the lfmm salinity model based on the entire genome   
+* `LEA3.2_lfmm2_AUCPR_sal_neutSNPs` the AUC-PR of the lfmm salinity model based on the entire genome  
+
+
 * `RDA_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
 * `RDA_Va_sal_prop` proportion of additive genetic variance (Va) in the salinity trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
 * `RDA_TPR` true positive rate of the RDA for all causal loci. Since RDA is a multidimensional analysis, I did not differentiate between loci that had causal effects on temperature or salinity.
@@ -262,47 +266,38 @@ After each simulation is analyzed in R,
 * `RDA_AUCPR_neutSNPs` an optimistic calculation of the AUC-PR of the RDA, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
 * `cor_RDA20000_RDloadings_tempPhen` correlation between the true temperature phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`
 * `cor_RDA20000_RDloadings_salPhen` correlation between the true salinity phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`  
-* 
-cor_VA_temp_prop                 "0.5516298"   
-cor_VA_sal_prop                  "0.5384417"   
-cor_TPR_temp                     "0.2114165"   
-cor_TPR_sal                      "0.2029598"   
-cor_FDR_allSNPs_temp             "0.9743655"   
-cor_FDR_neutSNPs_temp            "0.9542962"   
-cor_FDR_allSNPs_sal              "0.9752194"   
-cor_FDR_neutSNPs_sal             "0.955535"    
-cor_AUCPR_temp_allSNPs           "0.02581878"  
-cor_AUCPR_temp_neutSNPs          "0.05166276"  
-cor_AUCPR_sal_allSNPs            "0.02556545"  
-cor_AUCPR_sal_neutSNPs           "0.05184973"  
-median_causal_temp_cor           "0.2746745"   
-median_causal_sal_cor            "0.2685987"   
-median_neut_temp_cor             "0.217133"    
-median_neut_sal_cor              "0.2153212"   
-cor_PC1_temp                     "-0.5262854"  
-cor_PC1_sal                      "-0.8366671"  
-cor_PC2_temp                     "-0.8367879"  
-cor_PC2_sal                      "0.5274318"   
-cor_LFMMU1_temp                  "-0.0284181"  
-cor_LFMMU1_sal                   "0.02959235"  
-cor_LFMMU2_temp                  "0.02630689"  
-cor_LFMMU2_sal                   "-0.04222666" 
-cor_PC1_LFMMU1_temp              "0.8610124"   
-cor_PC1_LFMMU1_sal               "-0.5587573"  
-cor_PC2_LFMMU1_temp              "-0.5074529"  
-cor_PC2_LFMMU1_sal               "-0.8283036" 
 
 
+* `cor_VA_temp_prop` proportion of VA in temperature phenotype explained by clinal outliers for temperature, based on kendall's correlation between deme allele frequency and deme temperature
+* `cor_VA_sal_prop`  proportion of VA in salinity phenotype explained by clinal outliers for salinity, based on kendall's correlation between deme allele frequency and deme salinity
+* `cor_TPR_temp` true positive rate for loci with non-zero effects on temperature, based on kendall's correlation between deme allele frequency and deme temperature 
+* `cor_TPR_sal`true positive rate for loci with non-zero effects on salinity, based on kendall's correlation between deme allele frequency and deme salinity
+* `cor_FDR_allSNPs_temp` false discovery rate of (kendall's correlation between deme allele frequency and deme temperature) for loci with non-zero effects on temperature 
+* `cor_FDR_neutSNPs_temp` an optimistic calculation for false discovery rate of  (kendall's correlation between deme allele frequency and deme temperature) for loci with non-zero effects on temperature, excluding non-causal loci in half of genome affected by selection 
+* `cor_FDR_allSNPs_sal` false discovery rate of (kendall's correlation between deme allele frequency and deme salinity) for loci with non-zero effects on salinity
+* `cor_FDR_neutSNPs_sal` an optimistic calculation for false discovery rate of  (kendall's correlation between deme allele frequency and deme temperature) for loci with non-zero effects on temperature, excluding non-causal loci in half of genome affected by selection
+* `cor_AUCPR_temp_allSNPs` AUC-PR of kendall's correlation between deme allele frequency and deme temperature, based on the whole genome and causal loci for temperature
+* `cor_AUCPR_temp_neutSNPs` an optimistic estimate of AUC-PR of kendall's correlation between deme allele frequency and deme temperature, based on causal loci for temperature and neutral loci not affected by selection (excluding non-causal loci in half of genome affected by selection)
+* `cor_AUCPR_sal_allSNPs` AUC-PR of kendall's correlation between deme allele frequency and deme salinity, based on the whole genome and causal loci for salinity
+* `cor_AUCPR_sal_neutSNPs` an optimistic estimate of AUC-PR of kendall's correlation between deme allele frequency and deme salinity, based on causal loci for salinity and neutral loci not affected by selection (excluding non-causal loci in half of genome affected by selection)
 
-*`cor_RDA500_RDloadings_tempPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
-*`cor_RDA500_RDloadings_salPhen` For an RDA based on 500 random loci, the correlation between (a linear prediction of the weighted RDA loadings) and (the individual's salinity phenotype)
 
-*`num_causal_sig_temp_corr` number of causal loci that have significant Spearman's correlations with temperature after Bonferroni correction
-*`num_causal_sig_sal_corr` number of causal loci that have significant Spearman's correlations with salinity after Bonferroni correction
-*`num_neut_sig_temp_corr` number of neutral loci that have significant  Spearman's correlations with temperature after Bonferroni correction
-*`num_neut_sig_sal_corr` number of neutral loci that have significant Spearman's correlations with salinity after Bonferroni correction
+* `median_causal_temp_cor` median abs(Spearman's correlation) between allele frequency and temperature for causal loci
+* `median_causal_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for causal loci
+* `median_neut_temp_cor` median abs(Spearman's correlation)  between allele frequency and temperature for neutral loci
+* `median_neut_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for neutral loci
 
-*`median_causal_temp_cor` median abs(Spearman's correlation) between allele frequency and temperature for causal loci
-*`median_causal_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for causal loci
-*`median_neut_temp_cor` median abs(Spearman's correlation)  between allele frequency and temperature for neutral loci
-*`median_neut_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for neutral loci
+* `cor_PC1_temp` correlation between individual loading on PC1 from the principle components based on the Genotype-matrix (individual genotypes labeled as 0,1,2) and temperature of the deme where it was sampled
+* `cor_PC1_sal` correlation between individual loading on PC1 from the principle components based on the Genotype-matrix and salnity of the deme where it was sampled
+* `cor_PC2_temp` correlation between individual  loading on  PC2 from the principle components based on the Genotype-matrix and temperature of the deme where it was sampled
+* `cor_PC2_sal` correlation between individual  loading on PC2 from the principle components based on the Genotype-matrix and salnity of the deme where it was sampled
+* `cor_LFMMU1_temp` correlation between the individual loading on the latent factor 1 from the lfmm model based on temperature
+* `cor_LFMMU1_sal` correlation between the individual loading on the latent factor 1 from the lfmm model based on salnity
+* `cor_LFMMU2_temp` correlation between the individual loading on the latent factor 2 from the lfmm model based on temperature
+* `cor_LFMMU2_sal` correlation between the individual loading on the latent factor 2 from the lfmm model based on salnity
+* `cor_PC1_LFMMU1_temp` correlation between (individual loading on PC1 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on temperature)
+* `cor_PC1_LFMMU1_sal` correlation between (individual loading on PC1 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on salinity)
+* `cor_PC2_LFMMU1_temp` correlation between (individual loading on PC2 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on temperature)
+* `cor_PC2_LFMMU1_sal` correlation between (individual loading on PC2 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on salinity)
+
+

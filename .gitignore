@@ -3,6 +3,7 @@
 /output/
 /output_archived/
 /sim_output_150_20210830/
+sim_output_150_20210830/*
 *.trees
 *.vcf
 *.gz

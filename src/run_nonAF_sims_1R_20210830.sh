@@ -4,13 +4,13 @@
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
-#SBATCH --mem=2G
+#SBATCH --mem=12G
 #SBATCH --nodes=1
 #SBATCH --array=2-151%70
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210830_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210830_%j.err
 
-source ~/miniconda/bin/activate MVP_env_R4.0.3
+source ~/miniconda3/bin/activate MVP_env_R4.0.3
 
 set -e
 set -u
@@ -67,5 +67,7 @@ seed=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $27}'`
 #############
 SECONDS=0 # used to time analyses
 echo "Running R scripts"
-Rscript --vanilla src/c_AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
+Rscript --vanilla src/c-AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
 echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"
+
+mv ${seed}"_genotypes.pcaProject" ${outpath} 

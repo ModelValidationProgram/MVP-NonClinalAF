@@ -95,6 +95,9 @@ This is a table of information about each mutation that is simulated SLIM AND ha
 The trees file output by SliM that is piped into pyslim.
 
 ### seed_Rout_RDA_predictions.txt (output after analysis of simulations)
+
+correlation between (a linear prediction of the weighted RDA loadings) and (the individual's temp phenotype)
+
 * `nloci` the number of loci randomly sampled from the genome
 * `Random_cor_temppredict_tempphen` the correlation between the RDA temperature prediction for an individual based on a random set of loci (see equation below) and the temperature phenotype of an individual
     * `temp_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]`
@@ -184,91 +187,82 @@ The trees file output by SliM that is piped into pyslim.
 * `af_cor_temp_pooled` correlation between allele frequency and temperature if all demes were pooled together according to their temperature (this inflates correlations)  
 * `af_cor_sal_pooled` correlation between allele frequency and salinity if all demes were pooled together according to their salinity (this inflates correlations)
 
-### seed_Rout_ind_subset.txt  (output after analysis of simulations) A table with information about each individual
+### seed_Rout_ind_subset.txt  (output after analysis of simulations) A table with information about each individual that was sampled for analysis
 
 
-seed           "1231222"   
-subpopID       "1"         
-indID          "5"         
-indSubpopIndex "5"         
-subpop         "1"         
-phen_sal       "-0.928137" 
-phen_temp      "-0.767099" 
-sal_opt        "-1"        
-temp_opt       "-1"        
-fitness        "0.942323"  
-subset         "TRUE"      
-N              "100"       
-opt0           "-1"        
-opt1           "-1"        
-x              "1"         
-y              "1"         
-PC1            "52.08"     
-PC2            "12.4889"   
-PC3            "39.5559"   
-LFMM_U1_temp   "19.98274"  
-LFMM_U1_sal    "-20.27494" 
-LFMM_U2_temp   "19.94116"  
-LFMM_U2_sal    "-19.56712" 
-RDA1           "-2.730669" 
-RDA2           "-0.8895302"
-RDA_predict_tempPhen_20KSNPs
-RDA_predict_salPhen_20KSNPs
+* `seed`    simulation seed
+* `subpopID` ID of deme in SliM sim
+* `indID`   individual ID for the subset of individuals
+* `indSubpopIndex` index of individual within that subpop    
+* `subpop`        redundant with `subpopID`   
+* `phen_sal`     salinity phenotype
+* `phen_temp`    temperature phenotype
+* `sal_opt`      optimum salinity of the deme where it was sampled    
+* `temp_opt`      optimum temperature of the deme where it was sampled    
+* `fitness`       fitness in the deme where it was sampled
+* `subset`       logical indicating if the individual was included in all analyses (should be all TRUE)    
+* `N`             population size of the deme that the individual was sampled from      
+* `opt0`          redundant with `sal_opt`       
+* `opt1`           redundant with `temp_opt`     
+* `x`             x location of the deme where it was sampled     
+* `y`             y location of the deme where it was sampled    
+* `PC1`          loading of individual on PC1 axis    
+* `PC2`             loading of individual on PC2 axis 
+* `PC3`        loading of individual on PC3 axis
+* `LFMM_U1_temp`    loading of individual on 1st latent factor from LFMM temp model 
+* `LFMM_U1_sal`    loading of individual on 1st latent factor from LFMM salinity model
+* `LFMM_U2_temp`    loading of individual on 2nd latent factor from LFMM temp model
+* `LFMM_U2_sal`    loading of individual on 2nd latent factor from LFMM salinity model
+* `RDA1`           loading of individual on first RDA axis
+* `RDA2`           loading of individual on second RDA axis
+* `RDA_predict_tempPhen_20KSNPs`temperature phenotype prediction from an RDA with 20K random loci. See `seed_Rout_RDA_predictions.txt`
+* `RDA_predict_salPhen_20KSNPs`salinity phenotype prediction from an RDA with 20K random loci.  See `seed_Rout_RDA_predictions.txt`
 
 
 ### `seed_Rout_simSummary.txt` (output after analysis of simulations) A table with information about the entire simulation
 
 After each simulation is analyzed in R, 
 
-*`seed` 
-* `nind_samp` number of individuals in sample
+*`seed` simulation seed
+* `n_samp_tot` total number of individuals sampled
+* `nind_samp_per_pop` number of individuals sampled from each deme
+* `sd_fitness_among_inds` variance in fitness among all sampled individuals in the simulation (sampling prob. is proportional to fitness to mimic viability selection)
+* `sd_fitness_among_pops` variance in fitness among all demes in the simulation after sampling (sampling prob. is proportional to fitness to mimic viability selection)
+* `final_LA` final amount of local adaptation in the simulation
 * `K` number of populations used in analyses
+* `Bonf_alpha` the significance threshold for P-values applied to the correlation
+* `numCausalLowMAFsample` number of causal loci that were not filtered out, but were below the MAF cutoff. These were included in the calculations. **REVISIT**
 * `all_corr_phen_temp` for all individuals, correlation between individual temp phenotype and environment temperature
 * `subsamp_corr_phen_temp` after sampling 20 individuals from each patch with a probability based on their fitness, correlation individual temp phenotype and environment temperature
 * `all_corr_phen_sal` for all individuals, correlation between individual sal phenotype and environment salinity
 * `subsamp_corr_phen_sal` after sampling 20 individuals from each patch with a probability based on their fitness, correlation between individual sal phenotype and environment salinity
-*`num_causal` number of causal loci in sim
-*`num_neut` number of neutral loci in sim
-
-seed                             "1231222"     
-n_samp_tot                       "1000"        
-n_samp_per_pop                   "10"      
-sd_fitness_among_inds,
-                       sd_fitness_among_pops,
-                       final_LA 
-K                                "3"           
-Bonf_alpha                       "2.366528e-06"
-numCausalLowMAFsample            "23"          
-all_corr_phen_temp               "0.9604135"   
-subsamp_corr_phen_temp           "0.8649487"   
-all_corr_phen_sal                "0.9552496"   
-subsamp_corr_phen_sal            "0.8569631"   
-num_causal                       "474"         
-num_non_causal                   "20654"       
-num_neut                         "10410"       
-num_causal_temp                  "473"         
-num_causal_sal                   "473"         
-LEA3.2_lfmm2_Va_temp_prop        "0"           
-LEA3.2_lfmm2_Va_sal_prop         "0.06246894"  
-LEA3.2_lfmm2_TPR_temp            "0"           
-LEA3.2_lfmm2_TPR_sal             "0.00422833"  
-LEA3.2_lfmm2_FDR_allSNPs_temp    NA            
-LEA3.2_lfmm2_FDR_allSNPs_sal     "0.7142857"   
-LEA3.2_lfmm2_FDR_neutSNPs_temp   NA            
-LEA3.2_lfmm2_FDR_neutSNPs_sal    "0"           
-LEA3.2_lfmm2_AUCPR_temp_allSNPs  "0.0281779"   
-LEA3.2_lfmm2_AUCPR_temp_neutSNPs "0.06147373"  
-LEA3.2_lfmm2_AUCPR_sal_allSNPs   "0.0281779"   
-LEA3.2_lfmm2_AUCPR_sal_neutSNPs  "0.06147373"  
-RDA_Va_temp_prop                 "0.1251184"   
-RDA_Va_sal_prop                  "0.1311002"   
-RDA_TPR                          "0.01476793"  
-RDA_FDR_allSNPs                  "0.9688889"   
-RDA_FDR_neutSNPs                 "0.9156627"   
-RDA_AUCPR_allSNPs                "0.01652866"  
-RDA_AUCPR_neutSNPs               "0.03505077"  
-cor_RDA20000_RDloadings_tempPhen "0.8271191"   
-cor_RDA20000_RDloadings_salPhen  "0.8205405"   
+* `num_causal` number of causal loci in sim
+* `num_non_causal`number of neutral loci in sim arising on the half of the genome where they could be linked to causal loci
+* `num_neut` number of truly neutral loci in sim
+* `num_causal_temp` number of loci with non-zero phenotypic effects on the temperature phenotype
+* `num_causal_sal`number of loci with non-zero phenotypic effects on the salinity phenotype
+* `LEA3.2_lfmm2_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the LFMM temp model
+* `LEA3.2_lfmm2_Va_sal_prop` proportion of additive genetic variance (Va) in the saliniity trait explained by outliers in the LFMM salinity model
+*  `LEA3.2_lfmm2_TPR_temp` true positive rate of the LFMM temp model for loci with alleles that have non-zero effects on the temperature phenotype
+*  `LEA3.2_lfmm2_TPR_sal` true positive rate of the LFMM salinity model for loci with alleles that have non-zero effects on the salnity phenotype
+*  `LEA3.2_lfmm2_FDR_allSNPs_temp` false discovery rate of the LFMM temp model for the entire genome      
+* `LEA3.2_lfmm2_FDR_allSNPs_sal` false discovery rate of the LFMM temp model for the entire genome   
+* `LEA3.2_lfmm2_FDR_neutSNPs_temp` an optimistic calculation of the false discovery rate of the LFMM temp model, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
+* `LEA3.2_lfmm2_FDR_neutSNPs_sal` an optimistic calculation of the false discovery rate of the LFMM salinity model, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
+*  `LEA3.2_lfmm2_AUCPR_temp_allSNPs` the AUC-PR of the lfmm temp model based on the entire genome  
+* `LEA3.2_lfmm2_AUCPR_temp_neutSNPs` an optimistic calculation of the AUC-PR of the LFMM temp model, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
+* `LEA3.2_lfmm2_AUCPR_sal_allSNPs` the AUC-PR of the lfmm temp model based on the entire genome
+* `LEA3.2_lfmm2_AUCPR_sal_neutSNPs` the AUC-PR of the lfmm salinity model based on the entire genome   
+* `RDA_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
+* `RDA_Va_sal_prop` proportion of additive genetic variance (Va) in the salinity trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
+* `RDA_TPR` true positive rate of the RDA for all causal loci. Since RDA is a multidimensional analysis, I did not differentiate between loci that had causal effects on temperature or salinity.
+* `RDA_FDR_allSNPs` false discovery rate of the RDA outlier analysis based on the entire genome
+* `RDA_FDR_neutSNPs` an optimistic calculation of the false discovery rate of the RDA, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
+* `RDA_AUCPR_allSNPs`AUC-PR of the RDA outlier analysis based on the entire genome
+* `RDA_AUCPR_neutSNPs` an optimistic calculation of the AUC-PR of the RDA, including only causal loci and neutral loci not affected by selection (any non-causal loci that arises on the half of the genome affected by selection was excluded)
+* `cor_RDA20000_RDloadings_tempPhen` correlation between the true temperature phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`
+* `cor_RDA20000_RDloadings_salPhen` correlation between the true salinity phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`  
+* 
 cor_VA_temp_prop                 "0.5516298"   
 cor_VA_sal_prop                  "0.5384417"   
 cor_TPR_temp                     "0.2114165"   
@@ -297,21 +291,6 @@ cor_PC1_LFMMU1_temp              "0.8610124"
 cor_PC1_LFMMU1_sal               "-0.5587573"  
 cor_PC2_LFMMU1_temp              "-0.5074529"  
 cor_PC2_LFMMU1_sal               "-0.8283036" 
-
-
-
-* `LEA3.2_lfmm2_Va_sal_prop`  proportion of Va in salinity trait explained by LFMM outliers
-* `LEA3.2_lfmm2_Va_temp_prop` proportion of Va in temperature trait explained by LFMM outliers
-*`LEA3.2_lfmm2_TPR_temp` true positive rate - proportion of causal loci that are significant by LFMM
-*`LEA3.2_lfmm2_TPR_sal` true positive rate - proportion of causal loci that are significant by LFMM
-*`LEA3.2_lfmm2_FDR_temp` false discovery rate - proportion of outliers that are true positives
-*`LEA3.2_lfmm2_FDR_sal` false discovery rate - proportion of outliers that are true positives
-
-
-* `RDA_Va_temp_prop` proportion of Va in temperature trait explained by RDA outliers
-* `RDA_Va_sal_prop` proportion of Va in salinity trait explained by RDA outliers
-*`RDA_TPR`  true positive rate - proportion of causal loci that are significant by RDA
-* `RDA_FDR` false discovery rate - proportion of outliers that are true positives
 
 
 

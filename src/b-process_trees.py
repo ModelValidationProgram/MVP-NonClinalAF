@@ -29,7 +29,7 @@ N = args['NTot']
 mu = args['mutate']
 output = args['output']
 
-seednum = round(int(seed)**(1/2)) # slim seeds are too large
+seednum = seed#round(int(seed)**(1/2)) # slim seeds are too large
 
 # Load the .trees file
 T2 = pyslim.load(output + seed + ".trees")

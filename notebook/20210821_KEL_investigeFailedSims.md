@@ -312,28 +312,108 @@ If it doesn't specify anthing, it will use the default amount, for one task it m
 
 Note: if I set mem=170G, it only runs one job. If I take out the memory option, it uses what it can of the cluster. If I set mem=2G, it uses what it can of the lotterhos partition. I think each CPU has memory up to 3.91 GB (based on seff output).
     
-## To Do
-- [ ] R output for talk - compare 
-  - [ ] oligo SS 1 trait N-m equal to : 1231102
-  - [ ] oligo 2 traits plieotropy
-  - [ ] polygenic SS 2 traits N-m equal: 1231222
-- [ ] Add to outputs
-  - [ ]  numCausalLowMAFsample
-  - [ ]  
-  - [ ]  metadata for output dataframe
-- [ ] R code 
-  - [x] need to remove rare neutral alleles <0.01 after sampling
-  - [ ] need to add mutation-specific and genome-wide FST  calculation to output and outliers
-  - [ ] 
-- [ ] figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
+## Done
+- [x] Rerun first 150 sims with revised SliM Code (fixed issues with optimum and genomic element)
+- [x] R code need to remove rare neutral alleles <0.01 after sampling
+- [x] **Add to outputs**
+  - [x]  numCausalLowMAFsample
+  - [x]   Bonf_alpha
+  - [x]  subsamp_corr_phen_temp, subsamp_corr_phen_sal
+  - [x]  K
+  - [x]      cor_PC1_temp <- cor(subset_indPhen_df$PC1, subset_indPhen_df$temp_opt)
+    cor_PC1_sal <- cor(subset_indPhen_df$PC1, subset_indPhen_df$sal_opt)
+    cor_PC2_temp <- cor(subset_indPhen_df$PC2, subset_indPhen_df$temp_opt)
+    cor_PC2_sal <- cor(subset_indPhen_df$PC2, subset_indPhen_df$sal_opt)
+    cor_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$temp_opt)
+    cor_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$sal_opt)
+    cor_LFMMU2_temp <- cor(subset_indPhen_df$LFMM_U2_temp, subset_indPhen_df$temp_opt)
+    cor_LFMMU2_sal <- cor(subset_indPhen_df$LFMM_U2_sal, subset_indPhen_df$sal_opt)
+    cor_PC1_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$PC1) 
+    cor_PC1_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$PC1) 
+    cor_PC2_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$PC2) 
+    cor_PC2_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$PC2) 
+
+# Testing R script and R v4.0.3 Conda environment
+For some reason, the path that works for `source ~/miniconda/bin/activate MVP_env`
+doesn't exist anymore, the folder is now `miniconda3`
+
+By using `conda info --envs` I found the locations of the environments are at:
+`source ~/miniconda3/bin/activate MVP_env_R4.0.3`
+
+`sbatch run_nonAF_sims_1R_20210830.sh`
+
+20891462
+
+`squeue -u lotterhos`
+
+debugging:
+```
+vi ../slurm_log/R-Run20210830_20888XXX.err
+vi /work/lotterhos/MVP-NonClinalAF/sim_output_150_20210830/1231094_R.error
+vi /work/lotterhos/MVP-NonClinalAF/sim_output_150_20210830/1231094_R.out
+```
+
+Performance:
+`seff 20891462_2`
+```
+Cores: 1
+CPU Utilized: 00:19:20
+CPU Efficiency: 99.83% of 00:19:22 core-walltime
+Job Wall-clock time: 00:19:22
+Memory Utilized: 8.71 GB
+Memory Efficiency: 435.70% of 2.00 GB
+```
+
+# Running full R array
+
+`sbatch run_nonAF_sims_1R_20210830.sh`
+
+20891805
+
+
+## figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
+
+One of them finished! But it took longer than a week.
+
+Est-Clines_N-variable_m-variable
+
+```
+(MVP_env) [lotterhos@login-01 src]$ seff 20883113_4
+Job ID: 20883116
+Array Job ID: 20883113_4
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Cores: 1
+CPU Utilized: 1-00:05:37
+CPU Efficiency: 99.62% of 1-00:11:06 core-walltime
+Job Wall-clock time: 1-00:11:06
+Memory Utilized: 1.33 GB
+Memory Efficiency: 66.69% of 2.00 GB
+```
+
+- [ ] 
   - [ ] recaptitate these with N=1 and r=1e-11, it won't take long to finish. Go in R to see what's going on.   
   - OR: Just report that they do not coalesce, and remove from the results
   - OR: don't let m get so small in the estuary demog and see if they recapitate
   - OR: it could be the default memory wasn't enough (Based on `seff` output I don't think this is the case
-  - 
 
-- [ ] Rerun all sims with revised SliM Code (fixed issues with optimum and genomic element)
-- [ ] Run R analysis
+## To Do
+- [x] R output for talk - compare 
+  - [x] oligo SS 1 trait N-m equal to : 1231102
+  - [x] oligo 2 traits plieotropy: 1231147 - 1231151
+  - [x] polygenic SS 2 traits pleiotropy: 1231219 - 1231223
+- [ ] **metadata for output dataframe**
+- [ ] **Parameters**
+  - [ ]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
+- [ ] **R code** 
+  - [ ] 1231150 gave an error in the histogram of the effect sizes - breaks do not span range of x
+  - [ ] plot VA-prop vs. af cline
+  - [ ] prop of causal alleles with significant clines?
+  - [ ] change background for mutation AF clines density plot and explore different histogram types
+  - [ ] need to add mutation-specific and genome-wide FST  calculation to output and outliers
+- [ ] **Issues**
+- [ ] Run R analysis for first 150 sims that worked
 - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group
 
 

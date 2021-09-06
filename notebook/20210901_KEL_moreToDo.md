@@ -48,8 +48,8 @@ Memory Efficiency: 66.69% of 2.00 GB
   - [ ] check outputs for other parameter levels and write a notebook post (e.g. m breaks scenarios)
   - [ ] Work on methods for manuscript
   - [ ] **Develop full analysis script**
-    - [ ] List of questions
-    - [ ] Brainstorm figures to answer the questions
+    - [x] List of questions
+    - [x] Brainstorm figures to answer the questions
     - [ ] cat together all the outputs
     - [ ] write R code to analyze and make figures
 - [ ] **R code** 

@@ -108,6 +108,7 @@ position_dodge requires non-overlapping x intervals
 Error in mod_temp@U[, 2] : subscript out of bounds`
 
   - [ ] change "neutral-linked" to "non-causal"
+  - [ ] export RDA pc loadings for individuals. I bet this is interesting for the m-variable case.
   - [ ] set salinity bubbles to be dark grey, decrease size of graphic output
   - [ ] RDA - add TPR for causal temp and causal sal
   - [ ] should I include the low MAF causal loci in the analysis? what about the highly polygenic case?

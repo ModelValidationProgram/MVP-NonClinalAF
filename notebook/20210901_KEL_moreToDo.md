@@ -38,6 +38,7 @@ Memory Efficiency: 66.69% of 2.00 GB
     - [ ] write R code to analyze and make figures
 - [ ] **R code** 
   - [ ] 1231150 gave an error in the histogram of the effect sizes - breaks do not span range of x
+  - [ ] add INFO to mutations output
   - [ ] plot VA-prop vs. af cline
   - [ ] prop of causal alleles with significant clines?
   - [ ] change background for mutation AF clines density plot and explore different histogram types

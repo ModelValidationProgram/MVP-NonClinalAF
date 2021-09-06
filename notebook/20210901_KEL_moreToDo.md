@@ -1,5 +1,6 @@
+# Aug 2021
 
-## To Do: figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
+### To Do: figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
 
 One of them finished! But it took a day. Others are still running.
 
@@ -26,10 +27,25 @@ Memory Efficiency: 66.69% of 2.00 GB
   - OR: don't let m get so small in the estuary demog and see if they recapitate
   - OR: it could be the default memory wasn't enough (Based on `seff` output I don't think this is the case
 
+- The rest of them are still running after 6 days:
+```
+- (MVP_env) [lotterhos@login-01 src]$ squeue -u lotterhos
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+      20883113_141 lotterhos SlimRun2 lotterho  R 6-12:07:45      1 d3037
+       20883113_96 lotterhos SlimRun2 lotterho  R 6-13:53:52      1 d3037
+       20883113_81 lotterhos SlimRun2 lotterho  R 6-14:14:00      1 d3037
+       20883113_66 lotterhos SlimRun2 lotterho  R 6-14:42:44      1 d3037
+       20883113_51 lotterhos SlimRun2 lotterho  R 6-15:10:44      1 d3037
+          20919505 lotterhos     bash lotterho  R 4-16:53:16      1 d3037
+        20883113_6 lotterhos SlimRun2 lotterho  R 6-15:41:45      1 d3037
+       20883113_36 lotterhos SlimRun2 lotterho  R 6-15:41:45      1 d3037
+```
+
 ## To Do
 - [ ] While I'm waiting for the slow sims to finish:
-  - [ ] **metadata for output dataframe** https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/sim_outputs_meta/README.md
+  - [x] **metadata for output dataframe** https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/sim_outputs_meta/README.md
   - [ ] sync github
+  - [ ] check outputs for other parameter levels and write a notebook post (e.g. m breaks scenarios)
   - [ ] Work on methods for manuscript
   - [ ] **Develop full analysis script**
     - [ ] List of questions
@@ -38,6 +54,10 @@ Memory Efficiency: 66.69% of 2.00 GB
     - [ ] write R code to analyze and make figures
 - [ ] **R code** 
   - [ ] 1231150 gave an error in the histogram of the effect sizes - breaks do not span range of x
+  - [ ] change "neutral-linked" to "non-causal"
+  - [ ] set salinity bubbles to be dark grey, decrease size of graphic output
+  - [ ] RDA - add TPR for causal temp and causal sal
+  - [ ] should I include the low MAF causal loci in the analysis? what about the highly polygenic case?
   - [ ] add INFO to mutations output
   - [ ] plot VA-prop vs. af cline
   - [ ] prop of causal alleles with significant clines?

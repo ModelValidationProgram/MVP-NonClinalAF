@@ -140,22 +140,37 @@ However, the conda environment only has R version 3.6
 
 Here is how I updated the environment:
 ```
+conda create -n MVP_env_R4.0.3
 conda config --add channels conda-forge
 conda config --set channel_priority strict
 conda search r-base
+conda activate MVP_env_R4.0.3
 conda install -c conda-forge r-base=4.0.3
+conda list
+conda env export -f MVP_env_R4.0.3.yml
 ```
-It's taking a long time., then it didn't work when I typed `conda list` it still said R version was 3.6.0. Submit ticket to RC.
 
+environment location: /home/lotterhos/miniconda3/envs/MVP_env_R4.0.3
+
+
+After activating this environment, I had to install all the libraries that I needed. I typed `R` at the command line, installed the packages, and check the
+library location with `.libPaths()`, which returned:
+`/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library`
+
+Just to be safe, after I intalled the R packages I quit R and I exported the environment again with:
+`conda env export -f MVP_env_R4.0.3.yml`
+
+YML location: `/work/lotterhos/MVP-NonClinalAF/src/env/MVP_env_R4.0.3.yml`
 
 ## TO DO
 
--[ ] mountain range sims suggest temperature at demes 81-90 is higher than 91-100. FIX SLIM. (I CAN'T FIND THE ISSU HERE, SEE IF PERSISTS IN OTHER CLINAL SIMS)
+-[x] mountain range sims suggest temperature at demes 81-90 is higher than 91-100. FIX SLIM. (Fixed - see below)
 
 -[x] make an R script based on the markdown
-  - [ ] .libPaths() "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0" "/shared/centos7/r-project/4.0.3/lib64/R/library"
+  - [x] OOD .libPaths() "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0" "/shared/centos7/r-project/4.0.3/lib64/R/library"
+  - [x] CONDA "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library"
   
--[ ] incorporate R code into bash script
+-[x] incorporate R code into bash script
 
 
 ## TO DO
@@ -181,18 +196,18 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
   - [x] check all jobs on lotterhos partiition with `squeue -p lotterhos`
   - Job ID: Submitted batch job 20695234
   - [x] check job efficiency `seff 20695234`
-    - `badly formatted array jobid 20695234 with task_id = -2`
+    - `badly formatted array jobid 20695234 with task_id = -2` Probably not enough memory
     -  that's not good!
-  -  check specifics `scontrol show jobid -dd 20695234`
+  -  check specifics `scontrol show jobid -dd 20714872`
       -   `NumNodes=2-2 NumCPUs=2 NumTasks=2 CPUs/Task=1 ReqB:S:C:T=0:0:*:*
    TRES=cpu=2,mem=60G,node=2,billing=2`
 
 - [x] Email Research Computing
-- [ ] Meet with RC
-  - Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml
-  - Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
-  - How to set the maximum time limits
-  - 
+- [x] Meet with RC
+  - [x] Want to upload R to version 4.0.3 in my conda environment /work/lotterhos/MVP-NonClinalAF/src/env/MVP_env.yml or make a new environment
+  - [x] Want to make submission of simulations more efficient: /work/lotterhos/MVP-NonClinalAF/src/run_nonAF_sims_0Slim.sh 
+  - [ ] How to set the maximum time limits (if needed)
+  - [x] submit R script with dependency that previous script finishes first
 
 
 ### 8/27 second submission
@@ -212,10 +227,193 @@ R Studio on chunck  - I left off on chunck 27 with heatmaps
 ### 8/27 initial results from sims with pyslim recap N=100
 
 - ~20K as opposed to 300K+ variants (maybe N=500 would be a nice compromise)
+  - 17Mb largest object  
 - stepping stone has issues with opt1. I need to debug these! the -1 is missing somewhere.
 
-### SLIM ISSUE FIXED
+### SLIM ISSUES FIXED
 
-- There was an issue with setting the optimums in the slim simulation. I fixed it and pushed to github. This means that the simulations in the output folder will all have slightly incorrect optimums: `sim_output_150_20210826`, but will all be good for de-bugging.
+- There was an issue with setting the optimums in the slim simulation. I fixed it and pushed to github. This means that the simulations in the output folder will all have slightly incorrect optimums: `sim_output_150_20210826`, but will all be good for de-bugging. FIXED AND SYNCED WITH GIT.
+
+- Also a bug in the setting the genomic element - I had set it to the first 11 elements (LGs), but only mean to set it to the first 10. FIXED AND SYNCED WITH GIT.
+
+## R script edits
+- [x] For the three methods, OUTPUT for outliers: VA_temp, VA_sal, FDR_allSNPs, FDR_neutSNPs, AUCPR_allSNPs, AUCPR_neutSNPs, and manhattan plots
+  - [x] correlation
+  - [x] RDA
+  - [x] LFMM
+- [x] ADD COR(AF, PC1) to understand effect of correction for sturcture
+- [x] ADD plot to understand if RDA loading corresponds to / locus effect size
+
+## Test R Bash Script
+- [x] Make an R Bash script `run_nonAF_sims_1R.sh`
+- [ ] Get environment with R v 4.0.3. Edit and submit for one simulation, see if it works!
+
+
+## New Bug
+  - [X] For 2 trait architucture, subsampling does not result in AF clines from Slim Correlating with AF clines from subsample for Env2, but it does for temperature. FIXED Aug 30
+    - [x] BUG: when merging the indPhen_df, individual orders were mixed up. FIXED. This was a major bug affecting many outputs.
+
+
+
+## Notes from RC meeting Aug 30
+
+
+
+`#SBATCH --array=50-151%70`
+
+* If each task in array requires 1 CPU, %72 to maximize lotterho partition.
+* If it requires 2 CPUS, set --CPUs-per-task=2 (look it up) and set --array=50-151%36 
+* IF programs can use multiple threads, do benchmarking to determine CPU per task, 1-2 jobs at a time, and do `seff` on those tasks that completed, test 1, 2, 4, 8, 16 CPUs
+* Need to know number of CPUS per task, For maximum efficiency 
+
+
+
+`#SBATCH --nodes=2`
+
+* Set this to 1 unless we know the program can communicate between the nodes.
+
+
+```
+seff 20714872
+Job ID: 20714872
+Array Job ID: 20714872_151
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Nodes: 2
+Cores per node: 1
+CPU Utilized: 00:13:00
+CPU Efficiency: 48.51% of 00:26:48 core-walltime
+Job Wall-clock time: 00:13:24
+Memory Utilized: 768.23 MB
+Memory Efficiency: 19.21% of 3.91 GB
+```
+
+`#SBATCH --mem=170GB`
+
+This report is for each array task.
+Each requires 1 GB memory.
+So for the total array submission, mulitply mem/task * 
+
+If I set `#SBATCH --array=50-151%70`, and each task needs 1GB memory, I would specificy total mem = 70*1GB = 70GB, but add buffer and set it to mem=170GB in case one task requires more memory.
+
+If it doesn't specify anthing, it will use the default amount, for one task it might work but it might not work every time. The default memory is a limit, so it's always recommended to set it higher so you don't run out.ls
+
+## Aug 30 new bash submission
+- I synced Github with cluster. Hopefully I didn't F anything up.
+- Still working on making sure R outputs are OK
+- I canceled the last job `20714872`, since then I have fixed some of the slim scripts and some of the R outputs. I also learned how to improve the submission script from my meeting with RC
+- created new submission for 20210830
+- `sbatch run_nonAF_sims_0Slim_20210830.sh`
+- Job ID 20883113
+- `squeue -u lotterhos`
+- `seff 20883113`
+- `scontrol show jobid -dd 20883113`
+
+Note: if I set mem=170G, it only runs one job. If I take out the memory option, it uses what it can of the cluster. If I set mem=2G, it uses what it can of the lotterhos partition. I think each CPU has memory up to 3.91 GB (based on seff output).
+    
+## Done
+- [x] Rerun first 150 sims with revised SliM Code (fixed issues with optimum and genomic element)
+- [x] R code need to remove rare neutral alleles <0.01 after sampling
+- [x] **Add to outputs**
+  - [x]  numCausalLowMAFsample
+  - [x]   Bonf_alpha
+  - [x]  subsamp_corr_phen_temp, subsamp_corr_phen_sal
+  - [x]  K
+  - [x]      cor_PC1_temp <- cor(subset_indPhen_df$PC1, subset_indPhen_df$temp_opt)
+    cor_PC1_sal <- cor(subset_indPhen_df$PC1, subset_indPhen_df$sal_opt)
+    cor_PC2_temp <- cor(subset_indPhen_df$PC2, subset_indPhen_df$temp_opt)
+    cor_PC2_sal <- cor(subset_indPhen_df$PC2, subset_indPhen_df$sal_opt)
+    cor_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$temp_opt)
+    cor_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$sal_opt)
+    cor_LFMMU2_temp <- cor(subset_indPhen_df$LFMM_U2_temp, subset_indPhen_df$temp_opt)
+    cor_LFMMU2_sal <- cor(subset_indPhen_df$LFMM_U2_sal, subset_indPhen_df$sal_opt)
+    cor_PC1_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$PC1) 
+    cor_PC1_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$PC1) 
+    cor_PC2_LFMMU1_temp <- cor(subset_indPhen_df$LFMM_U1_temp, subset_indPhen_df$PC2) 
+    cor_PC2_LFMMU1_sal <- cor(subset_indPhen_df$LFMM_U1_sal, subset_indPhen_df$PC2) 
+
+# Testing R script and R v4.0.3 Conda environment
+For some reason, the path that works for `source ~/miniconda/bin/activate MVP_env`
+doesn't exist anymore, the folder is now `miniconda3`
+
+By using `conda info --envs` I found the locations of the environments are at:
+`source ~/miniconda3/bin/activate MVP_env_R4.0.3`
+
+`sbatch run_nonAF_sims_1R_20210830.sh`
+
+20891462
+
+`squeue -u lotterhos`
+
+debugging:
+```
+vi ../slurm_log/R-Run20210830_20888XXX.err
+vi /work/lotterhos/MVP-NonClinalAF/sim_output_150_20210830/1231094_R.error
+vi /work/lotterhos/MVP-NonClinalAF/sim_output_150_20210830/1231094_R.out
+```
+
+Performance:
+`seff 20891462_2`
+```
+Cores: 1
+CPU Utilized: 00:19:20
+CPU Efficiency: 99.83% of 00:19:22 core-walltime
+Job Wall-clock time: 00:19:22
+Memory Utilized: 8.71 GB
+Memory Efficiency: 435.70% of 2.00 GB
+```
+
+# Running full R array
+
+`sbatch run_nonAF_sims_1R_20210830.sh`
+
+20891805
+
+
+## figure out why these sims take so long: `Est-Clines_N-equal_m_breaks` `Est-Clines_N-variable_m-variable`
+
+One of them finished! But it took longer than a week.
+
+Est-Clines_N-variable_m-variable
+
+```
+(MVP_env) [lotterhos@login-01 src]$ seff 20883113_4
+Job ID: 20883116
+Array Job ID: 20883113_4
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Cores: 1
+CPU Utilized: 1-00:05:37
+CPU Efficiency: 99.62% of 1-00:11:06 core-walltime
+Job Wall-clock time: 1-00:11:06
+Memory Utilized: 1.33 GB
+Memory Efficiency: 66.69% of 2.00 GB
+```
+
+- [ ] 
+  - [ ] recaptitate these with N=1 and r=1e-11, it won't take long to finish. Go in R to see what's going on.   
+  - OR: Just report that they do not coalesce, and remove from the results
+  - OR: don't let m get so small in the estuary demog and see if they recapitate
+  - OR: it could be the default memory wasn't enough (Based on `seff` output I don't think this is the case
+
+## To Do
+- [x] R output for talk - compare 
+  - [x] oligo SS 1 trait N-m equal to : 1231102
+  - [x] oligo 2 traits plieotropy: 1231147 - 1231151
+  - [x] polygenic SS 2 traits pleiotropy: 1231219 - 1231223
+- [ ] **metadata for output dataframe**
+- [ ] **Parameters**
+  - [ ]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
+- [ ] **R code** 
+  - [ ] 1231150 gave an error in the histogram of the effect sizes - breaks do not span range of x
+  - [ ] plot VA-prop vs. af cline
+  - [ ] prop of causal alleles with significant clines?
+  - [ ] change background for mutation AF clines density plot and explore different histogram types
+  - [ ] need to add mutation-specific and genome-wide FST  calculation to output and outliers
+- [ ] **Issues**
+- [ ] Run R analysis for first 150 sims that worked
+- [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group
 
 

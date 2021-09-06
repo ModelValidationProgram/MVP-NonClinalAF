@@ -1,0 +1,3 @@
+The tree sequence has 251035 trees on a genome of length 1000001.0, 10000 individuals, 20000 'sample' genomes, and 16 mutations.
+Time it took to to recapitate: 962.5045382976532
+The tree sequence now has 325714 trees, and 45928 mutations.

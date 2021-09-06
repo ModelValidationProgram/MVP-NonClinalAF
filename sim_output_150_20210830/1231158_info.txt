@@ -1,0 +1,2 @@
+seed MIG_x MIG_y mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y SIGMA_K_1 SIGMA_K_2 SIGMA_K_Cov SIGMA_QTN_1 SIGMA_QTN_2 SIGMA_QTN_Cov demog Ntraits ispleiotropy iscontrol Nequal isVariableM MIG_breaks
+1231158 0.49 0.01 1e-10 1e-06 1000 2000 3000 10 10 0.5 4 0 0.4 0.4 0 Estuary 2 1 0 3 1 0

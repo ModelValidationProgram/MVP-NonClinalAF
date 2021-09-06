@@ -1,0 +1,12 @@
+/sim_outputs_testAlan/
+/sim_outputs_testAlanV2/
+/slurm_log/
+/finalTest/
+*.vcf
+*.DS_store
+*.Rhistory
+*.trees
+/sim_output_150_V2/
+/sim_output_150_20210826/
+/sim_output*
+/sim_output_150_20210826/*

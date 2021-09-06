@@ -1,43 +1,12 @@
+/slurm_log/
+/finalTest/
+/output/
+/output_archived/
+/sim_output_150_20210830/
+sim_output_150_20210830/*
+*.trees
 *.vcf
-*.vcf.gz
-*.lfmm
-*.DS_Store
-# History files
-.Rhistory
-.Rapp.history
+*.gz
+*.DS_store
+*.Rhistory
 
-# Session Data files
-.RData
-
-# User-specific files
-.Ruserdata
-
-# Example code in package build process
-*-Ex.R
-
-# Output files from R CMD build
-/*.tar.gz
-
-# Output files from R CMD check
-/*.Rcheck/
-
-# RStudio files
-.Rproj.user/
-
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
-
-# OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
-.httr-oauth
-
-# knitr and R markdown default cache directories
-*_cache/
-/cache/
-
-# Temporary files created by R markdown
-*.utf8.md
-*.knit.md
-
-# R Environment Variables
-.Renviron

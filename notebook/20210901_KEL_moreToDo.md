@@ -86,7 +86,7 @@ I kept the sampling for the SS to `sample(c(rep(0.001,6),0.01,0.1,0.25)`, since 
 
 - [ ] While I'm waiting for the slow sims to finish:
   - [x] **metadata for output dataframe** https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/alan/sim_outputs_meta/README.md
-  - [ ] sync github
+  - [x] sync github
   - [x] check outputs for other parameter levels and write a notebook post (e.g. m breaks scenarios)
   - [ ] Work on methods for manuscript
   - [ ] **Develop full analysis script**

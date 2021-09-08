@@ -117,6 +117,8 @@ Error in mod_temp@U[, 2] : subscript out of bounds`
   - [ ] prop of causal alleles with significant clines?
   - [ ] change background for mutation AF clines density plot and explore different histogram types
   - [ ] need to add mutation-specific and genome-wide FST  calculation to output and outliers
+  - [ ] COR (MUT EFFECT ON PHENOTYPE, MUT LOADING ON RDA AXIS) - test on an unequal S scenario
+  - [ ] remove row names from output table
 
 
 - [ ] **Parameters**

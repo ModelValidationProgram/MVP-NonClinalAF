@@ -242,6 +242,7 @@ After each simulation is analyzed in R,
 * `num_causal_temp` number of loci with non-zero phenotypic effects on the temperature phenotype
 * `num_causal_sal`number of loci with non-zero phenotypic effects on the salinity phenotype
 
+----
 
 * `LEA3.2_lfmm2_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the LFMM temp model
 * `LEA3.2_lfmm2_Va_sal_prop` proportion of additive genetic variance (Va) in the saliniity trait explained by outliers in the LFMM salinity model
@@ -256,6 +257,7 @@ After each simulation is analyzed in R,
 * `LEA3.2_lfmm2_AUCPR_sal_allSNPs` the AUC-PR of the lfmm temp model based on the entire genome
 * `LEA3.2_lfmm2_AUCPR_sal_neutSNPs` the AUC-PR of the lfmm salinity model based on the entire genome  
 
+----
 
 * `RDA_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
 * `RDA_Va_sal_prop` proportion of additive genetic variance (Va) in the salinity trait explained by outliers in the RDA outlier analysis, following (Capblanq 2018, https://onlinelibrary.wiley.com/doi/abs/10.1111/1755-0998.12906)
@@ -267,6 +269,7 @@ After each simulation is analyzed in R,
 * `cor_RDA20000_RDloadings_tempPhen` correlation between the true temperature phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`
 * `cor_RDA20000_RDloadings_salPhen` correlation between the true salinity phenotype and that predicted from an RDA based on 20K SNPs. see `seed_Rout_RDA_predictions`  
 
+----
 
 * `cor_VA_temp_prop` proportion of VA in temperature phenotype explained by clinal outliers for temperature, based on kendall's correlation between deme allele frequency and deme temperature
 * `cor_VA_sal_prop`  proportion of VA in salinity phenotype explained by clinal outliers for salinity, based on kendall's correlation between deme allele frequency and deme salinity
@@ -281,11 +284,14 @@ After each simulation is analyzed in R,
 * `cor_AUCPR_sal_allSNPs` AUC-PR of kendall's correlation between deme allele frequency and deme salinity, based on the whole genome and causal loci for salinity
 * `cor_AUCPR_sal_neutSNPs` an optimistic estimate of AUC-PR of kendall's correlation between deme allele frequency and deme salinity, based on causal loci for salinity and neutral loci not affected by selection (excluding non-causal loci in half of genome affected by selection)
 
+----
 
 * `median_causal_temp_cor` median abs(Spearman's correlation) between allele frequency and temperature for causal loci
 * `median_causal_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for causal loci
 * `median_neut_temp_cor` median abs(Spearman's correlation)  between allele frequency and temperature for neutral loci
 * `median_neut_sal_cor` median abs(Spearman's correlation)  between allele frequency and salinity for neutral loci
+
+----
 
 * `cor_PC1_temp` correlation between individual loading on PC1 from the principle components based on the Genotype-matrix (individual genotypes labeled as 0,1,2) and temperature of the deme where it was sampled
 * `cor_PC1_sal` correlation between individual loading on PC1 from the principle components based on the Genotype-matrix and salnity of the deme where it was sampled
@@ -300,4 +306,33 @@ After each simulation is analyzed in R,
 * `cor_PC2_LFMMU1_temp` correlation between (individual loading on PC2 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on temperature)
 * `cor_PC2_LFMMU1_sal` correlation between (individual loading on PC2 from the principle components based on the Genotype-matrix) and (individual loading on the latent factor 1 from the lfmm model based on salinity)
 
+----
+
+* `cor_af_temp_noutliers` number of outliers for cor(af,temp) after Bonferroni correction
+* `cor_af_sal_noutliers` number of outliers for cor(af,salinity) after Bonferroni correction
+* `nSNPs` total number of SNPs in analysis
+* `cor_FPR_temp_neutSNPs` false positive rate in cor(af,temp) after Bonferroni correction, based on loci unaffected by selection
+* `cor_FPR_sal_neutSNPs` false positive rate in cor(af,sal) after Bonferroni correction, based on loci unaffected by selection
+* `LEA3.2_lfmm2_mlog10P_tempenv_noutliers` number of outliers for the lfmm temp model (qvalue <0.05)
+* `LEA3.2_lfmm2_mlog10P_salenv_noutliers` number of outliers for the lfmm salinity model (qvalue <0.05)
+* `LEA3.2_lfmm2_num_causal_sig_temp` number of causal loci on the temp trait, significant in the lfmm temp model (qvalue <0.05)
+* `LEA3.2_lfmm2_num_neut_sig_temp` number of neutral loci false positives (only neutral loci not affected by selection), significant in the lfmm temp model (qvalue <0.05)
+* `LEA3.2_lfmm2_num_causal_sig_sal` number of causal loci on the salinity trait, significant in the lfmm salinity model (qvalue <0.05)
+* `LEA3.2_lfmm2_num_neut_sig_sal` number of neutral loci false positives (only neutral loci not affected by selection), significant in the lfmm salinity model (qvalue <0.05)
+*  `LEA3.2_lfmm2_FPR_neutSNPs_temp` false positive rate of lfmm temperature model
+*  `LEA3.2_lfmm2_FPR_neutSNPs_sal` false positive rate of lfmm salinity model
+
+----
+
+*  `RDA1_temp_cor` output of `summary(rdaout)$biplot[2,1]`, which is the correlation between RDA1 and the temperature environmental variable
+*  `RDA1_sal_cor`  output of `summary(rdaout)$biplot[1,1]`, which is the correlation between RDA1 and the salinity environmental variable
+*  `RDA2_temp_cor` output of `summary(rdaout)$biplot[2,2]`, which is the correlation between RDA2 and the temperature environmental variable
+*  `RDA2_sal_cor` output of `summary(rdaout)$biplot[1,2]`, which is the correlation between RDA2 and the salinity environmental variable
+*  `RDA_mlog10P_sig_noutliers` number of outliers in the RDA analysis 
+*  `RDA_FPR_neutSNPs` false positive rate of the RDA analysis, based only on neutral SNPs
+*  `RDA_RDA1Loading_cor_tempEffect` correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on temperature
+*  `RDA_RDA1Loading_cor_salEffect` <- correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on salinity
+*  `RDA_RDA2Loading_cor_tempEffect` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on temperature
+*  `RDA_RDA2Loading_cor_salEffect` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on salinity
+  
 

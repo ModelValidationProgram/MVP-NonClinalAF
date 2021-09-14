@@ -14,10 +14,11 @@ Job ID: 21066656
 
 ## To Do 
 
-
-
 - [ ] **Parameters**
   - [ ]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
+    - [ ]  Sigma_QTN=0.4, proportion of mutations = 0.001 (same as before)
+    - [ ]  sigma_QTN=0.002, proportion of mutations = 0.25 (same as before)
+    - [ ]  Sigma_QTN=0.1, proportion of mutations = 0.1 (set to add)
   - [ ]  Do higher gene flow - less LA - over a larger number of sims?
 
 
@@ -25,5 +26,5 @@ Job ID: 21066656
   - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group
 
 - [ ] **Methods**
-  - [ ] 
+  - [ ] update methods of manuscript
 

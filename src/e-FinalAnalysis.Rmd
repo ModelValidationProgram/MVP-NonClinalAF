@@ -76,6 +76,8 @@ pervar
 ```
 
 ## How does demography contribute to the evolution of phenotypic clines without clines in causal allele frequencies?
+
+Number of loci with correlations
 ```{r}
 boxplot(final.df$cor_TPR_temp~final.df$demog_level, ylim=c(0,1))
 
@@ -83,16 +85,28 @@ ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.min
 
 final.df$demog_level <- factor(final.df$demog_level, levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered=TRUE)
 
-a<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")
+a<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1)
 
 
 forb <- final.df[final.df$N_traits==2,]
 forb$N_traits <- factor(forb$N_traits)
-b<- ggplot(forb, aes(x=N_traits, y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) 
+b<- ggplot(forb, aes(x=N_traits, y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1)
 
 
 #pdf("PropCausalAllelesSigClines.pdf", width)
 grid.arrange(a,b, nrow=1)
+```
+
+Percent of Va explained by clinal loci
+```{r}
+
+a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1)
+
+b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1)
+
+
+#pdf("PropCausalAllelesSigClines.pdf", width)
+grid.arrange(a1,b1, nrow=1)
 ```
 
 ```{r}
@@ -105,7 +119,7 @@ final.df$demog_level_sub<- factor(final.df$demog_level_sub, levels=c("N-equal_m-
 
 g<- ggplot(final.df, aes(x=as.factor(demog_level_sub), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_blank())
 
-h <- ggplot(final.df, aes(x=as.factor(demog_level_sub), y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Demography sublevel") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90, size = 10))
+h <- ggplot(final.df, aes(x=as.factor(demog_level_sub), y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Demography sublevel") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=1, size = 10))
 
 grid.arrange(g,h, nrow=7, ncol=1, layout_matrix=matrix(c(1,1,2,2,2,2,2), nrow=7))
 ```
@@ -114,9 +128,9 @@ grid.arrange(g,h, nrow=7, ncol=1, layout_matrix=matrix(c(1,1,2,2,2,2,2), nrow=7)
 
 ```{r}
 
-c <- ggplot(final.df, aes(x=as.factor(arch_level), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Genic level") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")
+c <- ggplot(final.df, aes(x=as.factor(arch_level), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Genic level") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1)
 
-d<- ggplot(final.df, aes(x=as.factor(arch_level), y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Genic level") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")
+d<- ggplot(final.df, aes(x=as.factor(arch_level), y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Genic level") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1)
 
 grid.arrange(a,b,c,d, nrow=2, ncol=2)
 
@@ -133,11 +147,130 @@ f <- ggplot(final.df, aes(x=as.factor(arch), y=cor_TPR_sal, fill=demog_level)) +
 
 grid.arrange(e,f, nrow=7, ncol=1, layout_matrix=matrix(c(1,1,2,2,2,2,2), nrow=7))
 
-TO DO: seperate out equal_S from un_equal S to show WHAT IT DOES
+#TO DO: seperate out equal_S from un_equal S to show WHAT IT DOES
+```
+
+### Pleiotropy vs no pleiotropy
+
+```{r}
+subdf_arch <- final.df[final.df$N_traits==2,]
+
+e1<- ggplot(subdf_arch, aes(x=as.factor(ispleiotropy), y=cor_TPR_temp)) + geom_boxplot(color="grey", fill="navyblue") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_blank())
+
+unique(final.df$SIGMA_K_1)
+unique(subdf_arch$SIGMA_K_2)
+subdf_arch$SIGMA_K_2 <- as.factor(subdf_arch$SIGMA_K_2)
+
+my_col_arch <- c(viridis(10)[3], viridis(10)[7])
+
+f1 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
+
+f2 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
+f2
+
+TO DO: Combine data together for a single plot f1/f2
+#unique(subdf_arch$SIGMA_K_2)
+
+pleiotropy.df <- gather(subdf_arch, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
+
+f2 <-   ggplot(pleiotropy.df, aes(x=arch_level, y=cor_TPR, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1)
+
+grid.arrange(a,b,f2, nrow=2, ncol=2, layout_matrix=matrix(c(1,2,3,3), nrow=2, byrow=TRUE))
+```
+
+Strength of selection
+```{r}
+my_col_S <- c(mako(10)[2], mako(10)[8])
+
+ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(SIGMA_K_2))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_S, labels=c("Strong selection (sigma_K=0.5)", "Weak selection (sigma_K=4)"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
+
+ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(SIGMA_K_2))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_S, labels=c("Strong selection on other trait (sigma_K=0.5)", "Weak selection on other trait (sigma_K=4)"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
 ```
 
 ## Under what conditions can we reliably identify the alleles with effects on adaptive phenotypes using genetic-environment associations (latent factor mixed models, uncorrected correlations, and redundancy analysis)? 
 
+```{r}
+
+comparemethods.AUC.temp <- gather(final.df, key=method, value=AUCPR, cor_AUCPR_temp_neutSNPs, LEA3.2_lfmm2_AUCPR_temp_neutSNPs, RDA_AUCPR_neutSNPs)
+comparemethods.AUC.sal <- gather(final.df, key=method, value=AUCPR, cor_AUCPR_sal_neutSNPs, LEA3.2_lfmm2_AUCPR_sal_neutSNPs, RDA_AUCPR_neutSNPs)
+
+whichcols <- c("method", "AUCPR", "cor_PC1_temp", "cor_PC1_sal","cor_LFMMU1_temp", "cor_LFMMU1_sal", "cor_LFMMU2_temp", "cor_LFMMU2_sal")
+
+comparemethods.AUC <- rbind(comparemethods.AUC.temp[,whichcols], comparemethods.AUC.sal[whichcols])
+
+g<- ggplot(comparemethods.AUC, aes(x=as.factor(method), y=AUCPR, fill=method)) + geom_boxplot(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR") + scale_fill_viridis(option="mako", discrete=TRUE) + theme(legend.position = "none")
+
+
+# Does structure
+unique(final.df$arch_level)
+
+final.df$maxcor_LFMMU_temp <- NA
+for (i in 1:nrow(final.df)){
+  final.df$maxcor_LFMMU_temp[i] <- max(abs(final.df$cor_LFMMU1_temp[i]), abs(final.df$cor_LFMMU2_temp[i]))
+}
+
+
+h <- ggplot(final.df, aes(x=abs(cor_LFMMU1_temp), y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) +  ylim(0,1) + ylab("AUC-PR temp") + geom_smooth() + xlim(0,1)
+
+i <- ggplot(final.df, aes(x=abs(cor_LFMMU1_sal), y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) + geom_smooth() + ylim(0,1)+ ylab("AUC-PR Env2")+ xlim(0,1)
+
+#h2 <-  ggplot(final.df, aes(x=maxcor_LFMMU_temp, y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) +  ylim(0,1) + ylab("AUC-PR temp") + geom_smooth() 
+
+grid.arrange(g, h, i, nrow=2, ncol=2, layout_matrix=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
+```
+
+```{r}
+j <- ggplot(final.df, aes(x=abs(cor_LFMMU1_temp), y=LEA3.2_lfmm2_TPR_temp, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) +  ylim(0,1) + ylab("TPR temp") + geom_smooth()  + xlim(0,1)
+
+k <- ggplot(final.df, aes(x=abs(cor_LFMMU1_sal), y=LEA3.2_lfmm2_TPR_sal, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) + geom_smooth() + ylim(0,1)+ ylab("TPR Env2")+ xlim(0,1)
+
+l <- ggplot(final.df, aes(x=abs(cor_LFMMU1_temp), y=LEA3.2_lfmm2_FDR_neutSNPs_temp, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) +  ylim(0,1) + ylab("FDR temp") + geom_smooth() + xlim(0,1)
+
+  
+m <- ggplot(final.df, aes(x=abs(cor_LFMMU1_sal), y=LEA3.2_lfmm2_FDR_neutSNPs_sal, color=as.factor(N_traits))) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) + geom_smooth() + ylim(0,1)+ ylab("FDR Env2")+ xlim(0,1)
+
+
+grid.arrange(j, k, l, m, nrow=2)
+
+#ggplot(comparemethods.AUC.temp, aes(x=abs(cor_LFMMU2_temp), y=AUCPR, color=method, shape=method)) + geom_point() + ggtheme + scale_color_viridis(option="mako", discrete=TRUE) 
+
+#ggplot(comparemethods.AUC.temp, aes(x=abs(cor_PC1_temp), y=AUCPR, color=method, shape=method)) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) 
+
+
+#ggplot(comparemethods.AUC.sal, aes(x=abs(cor_PC1_sal), y=AUCPR, color=method, shape=method)) + geom_point() + ggtheme + scale_color_viridis(option="mako", begin=.20, end=.80, discrete=TRUE) 
+
+#ggplot(comparemethods.AUC.sal, aes(x=abs(cor_LFMMU2_sal), y=AUCPR, color=method, shape=method)) + geom_point() + ggtheme + scale_color_viridis(option="mako", discrete=TRUE) 
+
+```
+
+Is there a relationship between phenotypic clines and number of outliers?
+```{r}
+will be able to do with new outputs
+```
+
 ## Can redundancy analysis identify mutations with pleiotropic effects?
+```{r}
+will be able to do with new outputs
+```
 
 ## Under what conditions can redundancy analysis predict an individual’s optimal environment, without knowledge of the genetic architecture of adaptation?
+
+```{r}
+n <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=demog_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)")
+o <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_salPhen, fill=demog_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(Env2 phenotype, RDA predicted Env2 phenotype)")
+
+grid.arrange(n, o, nrow=2)
+
+#hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+#hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+```
+
+```{r}
+n1 <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=arch_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)")
+o1 <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_salPhen, fill=arch_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(Env2 phenotype, RDA predicted Env2 phenotype)")
+
+grid.arrange(n1, o1, nrow=2)
+
+#hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+#hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+```

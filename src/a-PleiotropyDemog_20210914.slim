@@ -153,7 +153,8 @@ function (void)setUpMigration(void)
 	
 	if (demog=="Estuary"){
 
-	var_m_estuary = c(0.001,0.01,0.1,0.25);
+	var_m_estuary = c(0.001,rep(0.01,10),rep(0.1,10),rep(0.25,5));
+	mig_breaks_estuary = 0.001
 	
 	for (x in 1:METAPOP_SIDE_x)
 		{
@@ -207,11 +208,11 @@ function (void)setUpMigration(void)
 					if (MIG_breaks ==1){ // Bottom (source) to top (destination)
 						if (destID <= 80 & destID >= 61){
 							sourceID = destID - METAPOP_SIDE_x;
-							destSubpop.setMigrationRates(sourceID, 0.0001);
+							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 						if (destID <= 50 & destID >= 31){
 							sourceID = destID - METAPOP_SIDE_x;
-							destSubpop.setMigrationRates(sourceID, 0.0001);
+							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 					}
 					
@@ -234,10 +235,10 @@ function (void)setUpMigration(void)
 						// Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
 						if (destID <= 40 & destID >= 21){ 
-						destSubpop.setMigrationRates(sourceID, 0.0001);
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 						if (destID <= 70 & destID >= 51){ 
-						destSubpop.setMigrationRates(sourceID, 0.0001);
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 					}
 				}

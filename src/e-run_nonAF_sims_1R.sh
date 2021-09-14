@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#SBATCH --job-name=R-Run-20210830
+#SBATCH --job-name=R-Run-20210909
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
-#SBATCH --mem=2G
+#SBATCH --mem=10G
 #SBATCH --nodes=1
-#SBATCH --array=2-151%70
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210830_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210830_%j.err
+#SBATCH --array=141%1
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210909_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210909_%j.err
 
-source ~/miniconda/bin/activate MVP_env_R4.0.3
+source ~/miniconda3/bin/activate MVP_env_R4.0.3
 
 set -e
 set -u
@@ -22,11 +22,11 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_150_20210830/"
+outpath="sim_output_150_20210909/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params.txt"
+params="src/0b-final_params_20210830.txt"
 
 
 # Extracting individual variables
@@ -67,5 +67,5 @@ seed=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $27}'`
 #############
 SECONDS=0 # used to time analyses
 echo "Running R scripts"
-Rscript --vanilla src/c_AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
+Rscript --vanilla src/c-AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
 echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"

@@ -1,0 +1,6 @@
+ERROR (EidosScript::Match): unexpected token '<for>' in expression statement; expected ';'.
+
+Error on script line 159, character 1:
+
+   for (x in 1:METAPOP_SIDE_x)
+   ^^^

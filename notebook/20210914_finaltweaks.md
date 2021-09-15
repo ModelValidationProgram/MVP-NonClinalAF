@@ -9,8 +9,22 @@ and in addition a very large number of SNPs would evolve, which took a long time
 I changed the migration rates for these scenarios in SliM, in the file: `d-run_nonAF_sims_0Slim_20210914.sh`, 
 so there woudn't be quite so much isolation between populations.
 
-Job ID: 21066656
+```
+(base) [lotterhos@login-01 ~]$ seff  21072516
+Job ID: 21072516
+Array Job ID: 21072516_141
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Cores: 1
+CPU Utilized: 01:34:18
+CPU Efficiency: 97.87% of 01:36:21 core-walltime
+Job Wall-clock time: 01:36:21
+Memory Utilized: 1.46 GB
+Memory Efficiency: 14.59% of 10.00 GB
+```
 
+Sims easier to handle! Checking R script...
 
 ## To Do 
 

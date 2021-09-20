@@ -53,9 +53,26 @@ In addition, I saved the params file as an R object (since I had all the factors
 # start runs
 
 
+I discovered that the max array size is 1000! That's no fun. 
+
+The fast runs ahve 1950 sims. The long runs have 300 sims.
+
+`sbatch d-run_nonAF_sims_0Slim-20210920-fastruns-1to1000.sh` # 
+
+21152261_2, 21152272
+
+```
+(base) [lotterhos@login-01 src]$ sbatch d-run_nonAF_sims_0Slim-20210920-fastruns-1001to1950.sh
+sbatch: error: Batch job submission failed: Invalid job array specification
+```
+
+I don't think it will run this one, because it takes me over the max limit for Array submission. Drats!
 
 
 # To Do 
+
+- [ ] when first round of short jobs finish, run second round of short jobs
+- [ ] create array submission for long jobs
 
 - [ ] **Housekeeping**
   - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group

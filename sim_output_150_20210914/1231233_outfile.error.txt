@@ -1,6 +1,1 @@
-ERROR (EidosScript::Match): unexpected token '<for>' in expression statement; expected ';'.
-
-Error on script line 159, character 1:
-
-   for (x in 1:METAPOP_SIDE_x)
-   ^^^
+#WARNING (SLiMSim::RunInitializeCallbacks): with tree-sequence recording enabled and a non-zero mutation rate, a neutral mutation type was defined and used; this is legal, but usually undesirable, since neutral mutations can be overlaid later using the tree-sequence information.

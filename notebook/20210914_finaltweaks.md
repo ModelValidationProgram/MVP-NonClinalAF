@@ -26,7 +26,9 @@ Memory Efficiency: 14.59% of 10.00 GB
 
 Sims easier to handle! Checking R script...
 
-## 2021 09 20
+# 2021 09 20
+
+## update parameter list
 
 - [x] **Parameters**
   - [x]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
@@ -48,11 +50,12 @@ In addition, I saved the params file as an R object (since I had all the factors
 
 `src/0b-final_params-20210920.RData`
 
+# start runs
 
 
 
 
-## To Do 
+# To Do 
 
 - [ ] **Housekeeping**
   - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group

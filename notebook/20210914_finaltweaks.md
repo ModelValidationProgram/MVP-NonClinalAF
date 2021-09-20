@@ -26,15 +26,33 @@ Memory Efficiency: 14.59% of 10.00 GB
 
 Sims easier to handle! Checking R script...
 
-## To Do 
+## 2021 09 20
 
-- [ ] **Parameters**
-  - [ ]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
-    - [ ]  Sigma_QTN=0.4, proportion of mutations = 0.001 (same as before)
-    - [ ]  sigma_QTN=0.002, proportion of mutations = 0.25 (same as before)
-    - [ ]  Sigma_QTN=0.1, proportion of mutations = 0.1 (set to add)
+- [x] **Parameters**
+  - [x]  Previously I got cool results with the polygenic mutation rate with Sigma_QTN=0.1. Now I have it set to sigma_QTN=0.002. The oligogenic case is set to Sigma_QTN=0.4. So I think we should revise the parameter set 
+    - [x]  Sigma_QTN=0.4, proportion of mutations = 0.001 (same as before)
+    - [x]  sigma_QTN=0.002, proportion of mutations = 0.25 (same as before)
+    - [x]  Sigma_QTN=0.1, proportion of mutations = 0.1 (set to add)
   - [ ]  Do higher gene flow - less LA - over a larger number of sims?
 
+I created a new parameters file, we now have 225 levels in the simulations, each replicated 10 times.
+
+I separated the runs into "long runs" and "fast runs".
+
+`longruns <- which(final$demog_name=="Est-Clines_N-variable_m-variable" | final$demog_name=="Est-Clines_N-equal_m_breaks")`
+
+* `src/0b-final_params-fastruns-20210920.txt` Give these standard memory and time limits
+* `src/0b-final_params-longruns-20210920.txt` Give these more memory and time limits
+
+In addition, I saved the params file as an R object (since I had all the factors ordered appropriately when I made it)
+
+`src/0b-final_params-20210920.RData`
+
+
+
+
+
+## To Do 
 
 - [ ] **Housekeeping**
   - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group

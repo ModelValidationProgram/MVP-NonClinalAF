@@ -130,7 +130,7 @@ str(final)
 ```{r}
 longruns <- which(final$demog_name=="Est-Clines_N-variable_m-variable" | final$demog_name=="Est-Clines_N-equal_m_breaks")
 
-write.table(final[!longruns,], "src/0b-final_params-fastruns-20210920.txt", row.names=FALSE)
+write.table(final[-longruns,], "src/0b-final_params-fastruns-20210920.txt", row.names=FALSE)
 write.table(final[longruns,], "src/0b-final_params-longruns-20210920.txt", row.names=FALSE)
 
 save(final, file="src/0b-final_params-20210920.RData")

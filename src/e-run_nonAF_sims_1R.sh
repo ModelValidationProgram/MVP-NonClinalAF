@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=R-Run-20210909
+#SBATCH --job-name=R-Run-20210914
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --mem=10G
 #SBATCH --nodes=1
 #SBATCH --array=141%1
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210909_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210909_%j.err
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210914_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20210914_%j.err
 
 source ~/miniconda3/bin/activate MVP_env_R4.0.3
 
@@ -22,7 +22,7 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_150_20210909/"
+outpath="sim_output_150_20210914/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file

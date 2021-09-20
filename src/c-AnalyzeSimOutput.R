@@ -40,7 +40,7 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 args = commandArgs(trailingOnly=TRUE)
 
 #seed = 1231142
-#path = "sim_output_150_20210830/"
+#path = "sim_output_150_20210914/"
 
 seed = args[1]
 path = args[2]
@@ -57,7 +57,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   pop_df <- read.table(paste0(path,seed,"_popInfo.txt"), header=TRUE, 
                        colClasses = c("character", rep("numeric",6))) 
   
-  :q:# Local adaptation through time df
+  # Local adaptation through time df
   LA_df <- read.table(paste0(path,seed,"_LA.txt"), header=TRUE, 
                       colClasses = c("character", rep("numeric",10)),
                       na.strings = "NAN")

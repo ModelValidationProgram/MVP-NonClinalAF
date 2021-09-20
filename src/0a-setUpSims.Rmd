@@ -51,16 +51,16 @@ demog_df <- demog_df[order(demog_df$demog_level_sub, demog_df$demog_level),]
 demog_df
 ```
 
-# 14 architectures
+# architectures
 
-The 10 genetic architectures were broadly divided into 2 categories: polygenic (many loci of small effect that affect the trait) and oligogenic (few loci of large effect that affect the trait). 
+The 10 genetic architectures were broadly divided into 3 categories: highly polygenic (many loci of small effect that affect the trait), moderately polygenic, and oligogenic (few loci of large effect that affect the trait). 
 
 ```{r arch base}
-arch_level <- factor(c("oliogenic", "polygenic"), ordered=TRUE)
+arch_level <- factor(c("oliogenic", "mod-polygenic", "highly-polygenic"), ordered=TRUE)
 MU_base <- 1e-07
-MU_QTL_proportion <- c(0.001, 0.25) # proportion of mutations that are QTNs
-SIGMA_QTN_1 <- c(0.4, 0.002)
-SIGMA_QTN_2 <- c(0.4, 0.002) #standard deviation of mutational effect size - for trait 2
+MU_QTL_proportion <- c(0.001, 0.1, 0.25) # proportion of mutations that are QTNs
+SIGMA_QTN_1 <- c(0.4, 0.1, 0.002)
+SIGMA_QTN_2 <- c(0.4, 0.1, 0.002) #standard deviation of mutational effect size - for trait 2
 
 arch_base_df <- data.frame(arch_level, MU_base, MU_QTL_proportion, SIGMA_QTN_1, SIGMA_QTN_2)
 ```
@@ -70,7 +70,7 @@ Within each category were 5 sub-categories: 1 trait (which adapted to the latitu
 
 ```{r arch sub}
 arch_level_sub <- factor(c("1-trait", "2-trait-no-pleiotropy-equal-S", "2-trait-no-pleiotropy-unequal-S", "2-trait-pleiotropy-equal-S", "2-trait-pleiotropy-unequal-S"), levels=c("1-trait", "2-trait-no-pleiotropy-equal-S", "2-trait-no-pleiotropy-unequal-S", "2-trait-pleiotropy-equal-S", "2-trait-pleiotropy-unequal-S"), ordered=TRUE)
-arch_sub
+arch_level_sub
 
 SIGMA_K_1 <- c(0.5, 0.5, 0.5, 0.5, 0.5) # trait 1 is x-axis cline/env
 SIGMA_K_2 <- c(0.5, 0.5, 4.0, 0.5, 4.0) # trait 2 is y-axis cline/env
@@ -128,7 +128,11 @@ str(final)
 
 
 ```{r}
-write.table(final, "src/0b-final_params.txt", row.names=FALSE)
+longruns <- which(final$demog_name=="Est-Clines_N-variable_m-variable" | final$demog_name=="Est-Clines_N-equal_m_breaks")
 
+write.table(final[!longruns,], "src/0b-final_params-fastruns-20210920.txt", row.names=FALSE)
+write.table(final[longruns,], "src/0b-final_params-longruns-20210920.txt", row.names=FALSE)
+
+save(final, file="src/0b-final_params-20210920.RData")
 ```
 

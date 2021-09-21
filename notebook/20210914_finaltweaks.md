@@ -89,7 +89,7 @@ It shows that for this node, it has 36 cores and 190 GB (0.19TB) RAM (the CfgTRE
 
 190 GB/ 36 cores = 5.27 GB per CPU.
 
-So I could submit more jobs at a time with the array.
+So I could submit more jobs at a time with the array, if each job only takes 2GB.
 
 # To Do 
 

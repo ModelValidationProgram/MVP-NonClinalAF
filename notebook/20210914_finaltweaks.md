@@ -82,8 +82,6 @@ NodeName=d3037 Arch=x86_64 CoresPerSocket=18
    CfgTRES=cpu=36,mem=190000M,billing=36
    AllocTRES=cpu=36,mem=90G
 ```
-CfgTRES=cpu=72,mem=1519000M,billing=6005
-AllocTRES=cpu=72,mem=441840M
 
 It shows that for this node, it has 36 cores and 190 GB (0.19TB) RAM (the CfgTRES part), and currently jobs are using 36 cores, and 90GB RAM (the AllocTRES part).
 

@@ -4,9 +4,9 @@
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
-#SBATCH --mem=2G
+#SBATCH --mem=10G
 #SBATCH --nodes=1
-#SBATCH --array=2-1000%68 
+#SBATCH --array=2-301%68 
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210920fast_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210920fast_%j.err
 
@@ -27,7 +27,7 @@ outpath="sim_output_20210920/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params-fastruns-20210920.txt"
+params="src/0b-final_params-longruns-20210920.txt"
 
 #### User variables ####
 # N for pyslim

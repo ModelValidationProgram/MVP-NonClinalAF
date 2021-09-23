@@ -83,7 +83,7 @@ boxplot(final.df$cor_TPR_temp~final.df$demog_level, ylim=c(0,1))
 
 ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
 
-final.df$demog_level <- factor(final.df$demog_level, levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered=TRUE)
+final.df$demog_level <- factor(final.df$demog_level, levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered?=TRUE)
 
 a<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1)
 

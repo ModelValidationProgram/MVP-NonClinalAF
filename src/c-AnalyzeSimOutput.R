@@ -989,7 +989,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   write.table(data.frame(seed=as.character(seed), summary(rdaout)$biplot),paste0(path,seed,"_RDAloadings.txt")) 
   
 ### RDA predict phenotype from random loci ####
-  nmax <- min(c(20000, num_causal+num_neut))
+  nmax <- min(c(20000, num_causal_postfilter+num_neut))
   nloci <- c(10, 50, 100, 500, nmax)
   Random_cor_salpredict_salphen <- rep(NA, length(nloci))
   Random_cor_temppredict_tempphen <- rep(NA, length(nloci))
@@ -1107,7 +1107,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
 
   mtext(paste0(plotmain), side=3, outer=TRUE, cex=0.5, line=0)
 
-  col <- (turbo(num_causal, begin = 0, end=0.8))
+  col <- (turbo(num_causal_postfilter, begin = 0, end=0.8))
   
   #Temp plot
   plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Deme Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)

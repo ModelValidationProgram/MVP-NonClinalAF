@@ -81,12 +81,13 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                     rep("numeric",6)))
   
   
-  allsims <- read.table("src/0b-final_params.txt", header=TRUE)
+  allsims <- load("src/0b-final_params-20210920.RData")
+  allsims<- final
   thissim <- allsims[grep(seed, allsims$seed),]
   (plotmain <- paste(thissim$level, seed, sep="\n"))
 
 #### plot subpops and migration ####
-  allsim
+  #allsim
   mig <- read.table(paste0(path,seed,"_popInfo_m.txt"), header=TRUE)
   
   

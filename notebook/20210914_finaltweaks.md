@@ -89,10 +89,67 @@ It shows that for this node, it has 36 cores and 190 GB (0.19TB) RAM (the CfgTRE
 
 So I could submit more jobs at a time with the array, if each job only takes 2GB.
 
+### Running out of disk space - over 23 TB!!
+
+it looks like not all of the VCF files were compressed. perhaps
+there were a number of jobs running simultaneously and space
+filled up, causing the gzip operations to fail (out of space).
+
+here is a list of those files > 100G
+```
+[root@d0127 MVP-NonClinalAF]# ls -lhS sim_output_20210920/*vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 2.1T Sep 22 20:17 sim_output_20210920/1231158_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 2.1T Sep 22 17:48 sim_output_20210920/1231473_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 1.3T Sep 23 03:13 sim_output_20210920/1231443_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 788G Sep 22 20:48 sim_output_20210920/1231863_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 740G Sep 23 03:13 sim_output_20210920/1232313_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 670G Sep 22 10:09 sim_output_20210920/1231653_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 543G Sep 22 21:11 sim_output_20210920/1232193_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 522G Sep 23 03:14 sim_output_20210920/1231653_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 290G Sep 23 03:13 sim_output_20210920/1231473_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 275G Sep 22 16:40 sim_output_20210920/1231983_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 274G Sep 23 02:47 sim_output_20210920/1231983_plusneut_MAF01.recode2.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 274G Sep 23 02:27 sim_output_20210920/1231983_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 213G Sep 23 03:13 sim_output_20210920/1231158_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 188G Sep 22 22:03 sim_output_20210920/1232298_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 185G Sep 23 03:14 sim_output_20210920/1232193_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 180G Sep 23 03:13 sim_output_20210920/1231863_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 174G Sep 22 21:08 sim_output_20210920/1232478_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 167G Sep 23 03:14 sim_output_20210920/1232478_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 146G Sep 22 22:16 sim_output_20210920/1232508_PlusNeuts.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 146G Sep 23 03:13 sim_output_20210920/1232298_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 137G Sep 23 03:14 sim_output_20210920/1232508_plusneut_MAF01.recode.vcf
+-rw-rw-r--+ 1 lotterhos lotterhos 136G Sep 23 01:05 sim_output_20210920/1232628_PlusNeuts.vcf
+```
+[greg shomo]
+
+These are all under my long sims.
+
+`rm sim_output_20210920/*vcf`
+
+I removed those files, and space decreased for the folder from 23 TB to 11 TB.
+
+`du -sh output_archived` gave 11TB
+
+My old sim outputs also contained many uncompressed files, so I also deleted these to save space.
+
+```
+(base) [lotterhos@login-01 MVP-NonClinalAF]$ du -sh
+293G	.
+```
+
+much better!
+
+I could look into zipping my vcf files after they are output by pyslim, and operating on the zipped files for recoding. To do
+
+
 # To Do 
 
-- [ ] when first round of short jobs finish, run second round of short jobs
-- [ ] create array submission for long jobs
+- [x] when first round of short jobs finish, run second round of short jobs
+- [x] create array submission for long jobs
+
+- [ ] first round of full results (minus the failed sims)
+- [ ] look into zipping my vcf files after they are output by pyslim, and operating on the zipped files for MAF filtering
 
 - [ ] **Housekeeping**
   - [ ] Download YML files from `/work/lotterhos/MVP-NonClinalAF/src` to  https://github.com/northeastern-rc/lotterhos_group

@@ -827,7 +827,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   sal <- subset_indPhen_df$sal_opt
   temp <- subset_indPhen_df$temp_opt
   rdaout <- rda(t(G_full_subset)~ sal + temp)
-  
+    
   str(rdaout)
   scores <- scores(rdaout, choices=1:4)
   loci.sc <- scores$species
@@ -1011,6 +1011,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   RDA1_sal_cor <- summary(rdaout)$biplot[1,1]
   RDA2_temp_cor <- summary(rdaout)$biplot[2,2]
   RDA2_sal_cor <- summary(rdaout)$biplot[1,2]
+  
+  
   
   RDA_RDA1Loading_cor_tempEffect <- cor(muts_full$RDA1_score, muts_full$mutTempEffect, use="complete.obs")
   RDA_RDA1Loading_cor_salEffect <- cor(muts_full$RDA1_score, muts_full$mutSalEffect, use="complete.obs")

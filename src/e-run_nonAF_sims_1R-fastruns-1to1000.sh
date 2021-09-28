@@ -69,3 +69,5 @@ SECONDS=0 # used to time analyses
 echo "Running R scripts"
 Rscript --vanilla src/c-AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
 echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"
+
+mv ${seed}"_genotypes.pcaProject" ${outpath}${seed}"_genotypes.pcaProject"

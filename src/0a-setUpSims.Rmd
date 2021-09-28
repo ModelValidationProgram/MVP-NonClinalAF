@@ -137,5 +137,7 @@ nrow(final[longruns,])
 write.table(final[longruns,], "src/0b-final_params-longruns-20210920.txt", row.names=FALSE)
 
 save(final, file="src/0b-final_params-20210920.RData")
+
+# head(final[final$N_traits==2,], 20)
 ```
 

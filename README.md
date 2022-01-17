@@ -14,3 +14,6 @@ Folder
 * `src` - Scripts
 * `sim_output_150_20210830` - outputs from an intial set of SliM runs. Some of the runs may have bugs and some may not, as code was being updated while these were running. This had simulations with m_breaks set to 0.0001, which caused some of the estuary sims to take a really long time to coalesce.
 * 
+
+## Environments
+MVP_env_R4.0.3

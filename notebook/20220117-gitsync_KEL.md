@@ -25,7 +25,7 @@ remember for a password I have to use my personal access token
 - On my computer, I recreated the list of simulation parameters, recall that these should produce architectures that don't take so long to coalesce
    - I also moved the files for the 20210920 runs to my archived folder
 
-# To Do List for R code c-AnalyzeSimOutput.R
+## To Do List for R code c-AnalyzeSimOutput.R
 
 I initiated this with OOD, since all my simulation outputs are not synced to github. 
 
@@ -56,7 +56,7 @@ I initiated this with OOD, since all my simulation outputs are not synced to git
    - [ ]    muts_full$Fst_outflank   **ADD TO METADATA**
    - [ ]    meanFst in sim output  **ADD TO METADATA**
 - [ ] RDA
-   - [ ] `RDA1_propvar` and `RDA2_propvar` - add to output and metadata
+   - [ ] `RDA1_propvar` and `RDA2_propvar` - **add to metadata**
    - [ ] `subset_indPhen_df$RDA_predict_salPhen_20KSNPs` - this was previosuly called `t`
    - [x] FIX RDA MUTATION PREDICTION
       - [ ] added `muts_full$RDA_mut_temp_pred` and `muts_full$RDA_mut_sal_pred`, need to **ADD TO METADATA**
@@ -78,7 +78,18 @@ RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSal
    - [x] RDA plot too busy - black diamonds
 
 
-# Graphs TO DO:
+# Setting up for 20220117 Run
+* Starting with the first 1000 fast simulation parameters on lotterhos partiition. If I understand the architecture correctly, each node has 36 cores and each core has 5 GB. So I should be able to run: 5 GB/core * 36 cores * 2 nodes / 2.5GB per job = 144 jobs at a time. I'm going to try:
+```
+#SBATCH --partition=lotterhos
+#SBATCH --mem=2G
+#SBATCH --nodes=1
+#SBATCH --array=2-1000%136
+```
+
+`sbatch d-run_nonAF_sims_0Slim-fastruns-20220117.sh`
+
+## Graphs TO DO:
 -  [ ] Put together a 10x2 figure for the SS and Est demographies
 -  [ ] The phenotypic clines, AF clines, and heatmap figure
 -  [ ] LFMM figures - what to show?
@@ -87,5 +98,5 @@ RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSal
   - create main text figure for simple scenarios
   - create a supplemental figure for the complex scenarios
 
-# Housekeeping
+## Housekeeping
 - [ ] Download YML files from /work/lotterhos/MVP-NonClinalAF/src to https://github.com/northeastern-rc/lotterhos_group

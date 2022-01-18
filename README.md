@@ -29,10 +29,11 @@ Use a naming system with the date that corresponds to the notebook post date.
 
 For low memory jobs:
 ```
-#SBATCH --mem=2G
+#SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=2-1000%136
+#SBATCH --array=2-1000%72
 ```
+Each core can have up to 5G memory, and an array won't run more jobs than cores available. So up to 72 jobs in the array can be requested at a time.
 
 From /work/lotterhos/MVP_NonClinalAF/ run the SliM Script: `sbatch d-run_nonAF_sims_0Slim-fastruns-20220117.sh`
 

@@ -23,7 +23,7 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_20220118/"
+outpath="sim_output_20220117/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file

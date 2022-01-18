@@ -16,4 +16,20 @@ Folder
 * 
 
 ## Environments
-MVP_env_R4.0.3
+MVP_env for running SLiM
+MVP_env_R4.0.3 for running R
+
+## Preparing a run
+In `d-run_nonAF_sims_0Slim.sh` specify:
+* `jobname`, `output`, and `error` files at the top
+* `outpath` 
+* `params` file 
+
+Use a naming system with the date that corresponds to the notebook post date.
+
+For low memory jobs:
+```
+#SBATCH --mem=2G
+#SBATCH --nodes=1
+#SBATCH --array=2-1000%136
+```

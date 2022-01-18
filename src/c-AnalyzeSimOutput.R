@@ -39,8 +39,8 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 
 args = commandArgs(trailingOnly=TRUE)
 
-#seed = 1231142
-#path = "sim_output_150_20210914/"
+#seed = 1231094
+#path = "sim_output_20210920/"
 
 seed = args[1]
 path = args[2]
@@ -66,13 +66,18 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE, 
                         colClasses = c("character","numeric","character", rep("numeric",5)))
   
-  vatemp <- muts_df$p*(1-muts_df$p)*muts_df$mutTempEffect^2
-  vasal <- muts_df$p*(1-muts_df$p)*muts_df$mutSalEffect^2
+  muts_df$va_temp_full <- muts_df$p*(1-muts_df$p)*muts_df$mutTempEffect^2
+  muts_df$va_sal_full <- muts_df$p*(1-muts_df$p)*muts_df$mutSalEffect^2
   #plot(round(vatemp/sum(vatemp),2), abs(muts_df$cor_temp), xlim=c(0,1), ylim=c(0,1))
-  vasal <- muts_df$p*(1-muts_df$p)*muts_df$mutSalEffect^2
   #if(sum(vasal)>0){
   #  plot(round(vasal/sum(vasal),2), abs(muts_df$cor_sal), xlim=c(0,1), ylim=c(0,1))
   #}
+  va_temp_total <- sum(muts_df$va_temp_full)
+  va_sal_total <- sum(muts_df$va_sal_full)
+  
+  muts_df$va_temp_full_prop <- muts_df$va_temp_full/va_temp_total
+  muts_df$va_sal_full_prop <- muts_df$va_sal_full/va_sal_total
+  
   
   info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
                      colClasses = c("character", 
@@ -96,8 +101,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                 legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey20"))
   
   
+  
   par(mfrow=c(1,1), mar=c(4,4,3,1))
-  pdf(paste0(path,seed,"_pdf_1pop.pdf"), width=5, height=4)
+  pdf(paste0(path,seed,"_pdf_1pop.pdf"), width=5, height=5)
   
   if (var(mig$m)>0){
     mig_thick <- log10(mig$m) + 5
@@ -120,13 +126,14 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   text(pop_df$x, pop_df$y, pop_df$N, cex=0.6)
   
   ggplot(pop_df) + ggtheme + geom_point(aes(x=x, y=y,size=opt0), color="grey20") + geom_point(aes(x=x, y=y, color=opt1), size=2.5) + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + geom_text(aes(x=x, y=y+0.3,label=subpopID)) + labs(size="Env2") + ggtitle(plotmain) + theme(plot.title = element_text(size = 7))
+  ggplot(pop_df) + ggtheme + geom_point(aes(x=x, y=y,size=opt0), color="grey20") + geom_point(aes(x=x, y=y, color=opt1), size=2.5) + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") +  labs(size="Env2") + ggtitle(plotmain) + theme(plot.title = element_text(size = 7))
   
   #pdf(paste0(seed,"_pdf_1apop.pdf"), width=5, height=4)
   #f <- ggplot(pop_df) + geom_point(aes(x=x, y=y,size=opt0)) + geom_point(aes(x=x, y=y, color=opt1)) + theme(plot.background = element_rect(fill = "transparent",colour = NA)) +  scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") +  labs(size="Env2") + ggtitle(plotmain) + theme(plot.title = element_text(size = 7))
   #ggsave(paste0(seed,"_pdf_1apop.png"), f, bg="transparent")
   
   plot(LA_df$gen, LA_df$cor_temp_ind, type="l", col="orange", lwd=3, main=plotmain, 
-       ylab="cor (Env, phenotype)", xlab="Generation", ylim=c(0,1))
+       ylab="cor (Env, phenotype)", xlab="Generation", ylim=c(0,1), bty="n")
   
   if (sum(LA_df$cor_sal_ind, na.rm=TRUE)>0){
     points(LA_df$gen, LA_df$cor_sal_ind, col="cornflowerblue", type="l", lwd=3, lty=2)
@@ -134,7 +141,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   legend(0,1, c("Temp", "Env2"), lwd=3, col=c("orange", "cornflowerblue"), lty=c(1,2), bty="n")
   
   plot(LA_df$gen, LA_df$local_adapt, type="l", col="cornflowerblue", main=plotmain, 
-       ylab="Amount of local adaptation", xlab="Generation", ylim=c(0,1))
+       ylab="Amount of local adaptation", xlab="Generation", ylim=c(0,1.2), bty="n")
   
   plot(LA_df$gen, LA_df$mean_phen1, type="l", col="cornflowerblue", main=plotmain, 
        ylab="Mean metapopulation phenotype", xlab="Generation", ylim=c(-1,1))
@@ -260,6 +267,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                            a_freq_full = a_freq_full,
                            a_freq_subset = a_freq_subset)
   dim(muts_full0)
+  muts_full0$mutID <- as.character(muts_full0$mutID)
+  muts_df$mutID <- as.character(muts_df$mutID)
   
   muts_full <- merge(muts_full0, muts_df, by=c("mutID", "seed"), all.x=TRUE)
   muts_full <- muts_full[order(muts_full$pos_pyslim),]
@@ -383,7 +392,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   # Sanity check that what I calculate here (from the subsample)
   # is similar to what I outputted from SliM in muts_df
-  
+  plotsamp <- sample(1:nrow(muts_full), 2000, replace=FALSE)
   plot( muts_full$cor_temp, muts_full$af_cor_temp, ylim=c(-1,1), xlim=c(-1,1), xlab="SliM cor(p, Temp)", ylab="Subsample cor(p, Temp)", main=plotmain)
   abline(0,1)
   
@@ -427,16 +436,26 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_full$colors <- as.character(muts_full$colors)
   
   muts_full$Va_temp <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutTempEffect^2
-  
+  muts_full$Va_temp[is.na(muts_full$Va_temp)] <- 0
   muts_full$Va_temp_prop <- muts_full$Va_temp/sum(muts_full$Va_temp, na.rm=TRUE)
   
   hist(muts_full$Va_temp_prop[muts_full$causal_temp=="causal"], xlab="VA temp prop", main=plotmain, xlim=c(0,1), breaks=seq(0,1,0.01))
   muts_full$Va_temp_prop[is.na(muts_full$Va_temp_prop)] <- 0
-  muts_full$Va_sal <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutSalEffect^2
   
+  muts_full$Va_sal <- muts_full$a_freq_subset*(1-muts_full$a_freq_subset)*muts_full$mutSalEffect^2
+  muts_full$Va_sal[is.na(muts_full$Va_sal)] <- 0
   muts_full$Va_sal_prop <- muts_full$Va_sal/sum(muts_full$Va_sal, na.rm=TRUE)
   muts_full$Va_sal_prop[is.na(muts_full$Va_sal_prop)] <- 0
   hist(muts_full$Va_sal_prop[muts_full$causal_sal=="causal"], xlab= "VA Env2 prop.", main= plotmain, xlim=c(0,1), breaks=seq(0,1,0.01))
+  
+  plot(muts_full$va_temp_full_prop, muts_full$Va_temp_prop)
+  abline(0,1)
+  
+  if(sum(va_sal_total>0)){
+    plot(muts_full$va_sal_full_prop, muts_full$Va_sal_prop)
+    abline(0,1)
+  }
+
   
   plot(muts_full$Va_temp_prop[muts_full$causal==TRUE],
        muts_full$Va_sal_prop[muts_full$causal==TRUE],
@@ -445,19 +464,30 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
        ylab="Subset VA Env2 prop.", main=plotmain)
   
   
+  muts_full$causal_temp <- factor(muts_full$causal_temp, levels=c("causal", "neutral", "neutral-linked"),
+                                  ordered=TRUE)
+  muts_full$causal_sal <- factor(muts_full$causal_sal, levels=c("causal", "neutral", "neutral-linked"),
+                                 ordered=TRUE)
+  
   p1<- ggplot(aes(x=Va_temp_prop,y=abs(af_cor_temp), colour=causal_temp), data=muts_full) + 
     geom_point() + ggtheme +
     ggtitle(plotmain) + 
     scale_x_continuous(limits=c(0,1)) +
-    scale_y_continuous(limits=c(0,1))
+    scale_y_continuous(limits=c(0,1)) +
+    scale_color_manual(values=c("blue", adjustcolor("grey70", alpha.f=0.4), 
+                                adjustcolor("cornflowerblue", alpha.f = 0.1)),
+                       drop=FALSE)
   p1a<-ggExtra::ggMarginal(p1, type="violin",groupColour = TRUE, groupFill = TRUE)
-  
+
   
   p<- ggplot(aes(x=Va_sal_prop,y=abs(af_cor_sal), colour=causal_sal), data=muts_full) + 
     geom_point() +  ggtheme +
     ggtitle(plotmain) + 
     scale_x_continuous(limits=c(0,1)) +
-    scale_y_continuous(limits=c(0,1))
+    scale_y_continuous(limits=c(0,1))+
+    scale_color_manual(values=c("blue", adjustcolor("grey70", 0.4), 
+                                adjustcolor("cornflowerblue",0.1)),
+                       drop=FALSE)
   pqb <- ggExtra::ggMarginal(p, type="violin",groupColour = TRUE, groupFill = TRUE)
   
   grid.arrange(p1a, pqb, nrow=2)
@@ -580,6 +610,37 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   dev.off()
   
+# FST ####
+  fst <- MakeDiploidFSTMat(t(G_full_subset), locusNames = muts_full$pos_pyslim, 
+                           popNames = subset_indPhen_df$subpopID)
+  
+  muts_full$He_outflank <- fst$He
+  muts_full$Fst_outflank <- fst$FST
+  meanFst <- mean(fst$T1)/mean(fst$T2)
+  
+  # FST manhattan ###
+  
+  pdf(paste0(path,seed,"_pdf_8manhattan_fst.pdf"), width=15, height=5)
+  
+  cs <- "mako"
+  begin_cs <- 0.9
+  end_cs <- 0.2
+  shape_causal <- 17
+  outlier_color <- adjustcolor("brown1", 0.8)
+  ymax=max(c(-log10(muts_full$af_cor_sal_P), -log10(muts_full$af_cor_temp_P), 10))
+  
+  ggplot() + ggtheme + 
+    geom_point(data=muts_full, aes(x=pos_pyslim, y = Fst_outflank), color=muts_full$colors) +
+    #geom_point(data = muts_full[muts_full$cor_temp_sig,], aes(x=pos_pyslim, y =-log10(af_cor_temp_P)),pch=23, col=outlier_color, size=3, alpha=0.5) + 
+    ylim(0, 1)  + ylab("FST") +
+    geom_point(data = muts_full[muts_full$causal_temp=="causal",], aes(x=pos_pyslim, y = Fst_outflank, 
+                                                                       color=Va_temp_prop, size=Va_temp_prop), shape=shape_causal, alpha=0.7) + 
+    scale_colour_viridis(option=cs, begin = begin_cs, end=end_cs, limits=c(0,1)) + 
+    ggtitle(paste0(plotmain," temp")) + xlab("position") + labs(color="temp VA prop.", size="temp VA prop.") +
+    geom_hline(aes(yintercept=meanFst), color=adjustcolor("darkred",0.5))
+  
+  dev.off()
+  
 # LFMM ####
   
   mod_temp <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$temp_opt, K = K)
@@ -641,6 +702,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   
 ## Correlate pop structure and allele frequencies ####
+  # this takes a tick
   muts_full$structure_cor_G_PC1 <- muts_full$structure_cor_G_LFMM_U1_modtemp<- muts_full$structure_cor_G_LFMM_U1_modsal<- NA
   for (i in 1:nrow(muts_full)){
     muts_full$structure_cor_G_PC1[i] <- cor(G_full_subset[i,], subset_indPhen_df$PC1, method = "kendall")
@@ -898,7 +960,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   a<- screeplot(rdaout)
   str(a)
   a$y # save this it's the eigenvalues
-
+  RDA1_propvar <- round(a$y[1]/sum(a$y),3)
+  RDA2_propvar <- round(a$y[2]/sum(a$y),3)
   
   ## Mutation RDA
   
@@ -923,7 +986,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                          limits=c(-lims, lims)
                          )+  
     ggtheme +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),
-                                  pch=23, col=adjustcolor("black",0.5), size=3) +  xlab("RDA 1") + ylab("RDA 2") + 
+                                  pch=23, col=adjustcolor("black",0.3), size=3) +  
+    xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) + 
     ggtitle(paste0(plotmain, " mutations - temp")) + 
     geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
     geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="mut Temp effect", size="temp VA prop.")
@@ -937,10 +1001,12 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                          limits=c(-lims, lims)
     )+  
     ggtheme +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),
-                                  pch=23, col=adjustcolor("black",0.5), size=3) +  xlab("RDA 1") + ylab("RDA 2") + 
+                                  pch=23, col=adjustcolor("black",0.3), size=3) +  
+    xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) + 
     ggtitle(paste0(plotmain, " mutations - Env2")) + 
     geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
-    geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="mut Env2 effect", size="Env2 VA prop.")
+    geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ 
+    labs(color="mut Env2 effect", size="Env2 VA prop.")
   
   
 ## RDA individual plot
@@ -954,8 +1020,11 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                            dy = c(sal_arrow_muts[2], temp_arrow_muts[2]), name = c("Env2", "Temp"))
   
   ggplot(subset_indPhen_df) + 
-    geom_point(aes(x=RDA1, y = RDA2, size=sal_opt), color="grey20") + geom_point(aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) + ggtheme + 
-    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="Env2") + 
+    geom_point(aes(x=RDA1, y = RDA2, size=sal_opt), color="grey20") + 
+    geom_point(aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) + ggtheme + 
+    xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) +
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + 
     ggtitle(paste0(plotmain,"; Individs.; N traits = ", info$Ntraits)) + 
     geom_segment(data=arrows_ind, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
     geom_text(data=arrows_ind, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
@@ -967,17 +1036,22 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   pdf(paste0(path,seed,"_pdf_6manhattan_RDA.pdf"), width=15, height=10)
   
   a<- ggplot() + 
-    geom_point(data=muts_full, aes(x=pos_pyslim, y = RDA_mlog10P), color=muts_full$colors) +
-    geom_point(data = muts_full[muts_full$causal_temp=="causal",], aes(x=pos_pyslim, y = RDA_mlog10P, color= mutTempEffect, size=Va_temp_prop), shape=shape_causal) + 
-    scale_colour_viridis(option="turbo",  limits=c(-1,1)) + 
+    geom_point(data=muts_full, 
+               aes(x=pos_pyslim, y = RDA_mlog10P), color=muts_full$colors) +
+    geom_point(data = muts_full[muts_full$causal_temp=="causal",], 
+               aes(x=pos_pyslim, y = RDA_mlog10P, color= mutTempEffect, 
+                   size=Va_temp_prop), shape=shape_causal) + 
+    scale_colour_viridis(option="turbo") + 
     ggtheme +
     geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     ylim(0, ymax)  + ylab("-log10(P) RDA") + ggtitle(paste0(plotmain," temp")) + xlab("position") + labs(color="MutTempEffect", size="Temp VA prop.")
   
   b<- ggplot() + 
     geom_point(data=muts_full, aes(x=pos_pyslim, y = RDA_mlog10P), color=muts_full$colors) +
-    geom_point(data = muts_full[muts_full$causal_sal=="causal",], aes(x=pos_pyslim, y = RDA_mlog10P, color=mutSalEffect, size=Va_sal_prop), shape=shape_causal) + 
-    scale_colour_viridis(option="turbo", limits=c(-1,1)) + 
+    geom_point(data = muts_full[muts_full$causal_sal=="causal",], 
+               aes(x=pos_pyslim, y = RDA_mlog10P, color=mutSalEffect, size=Va_sal_prop), 
+               shape=shape_causal) + 
+    scale_colour_viridis(option="turbo") + 
     ggtheme +
     geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     ylim(0, ymax)  + ylab("-log10(P) RDA") + ggtitle(paste0(plotmain," Env2")) + xlab("position") + labs(color="MutSalEffect", size="Env2 VA prop.")
@@ -986,7 +1060,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   dev.off()
   
 #### write RDA table ####
-  write.table(data.frame(seed=as.character(seed), summary(rdaout)$biplot),paste0(path,seed,"_RDAloadings.txt")) 
+  write.table(data.frame(seed=as.character(seed), 
+                         summary(rdaout)$biplot),paste0(path,seed,"_RDAloadings.txt")) 
   
 ### RDA predict phenotype from random loci ####
   nmax <- min(c(20000, num_causal_postfilter+num_neut))
@@ -997,11 +1072,13 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   for (i in 1:length(nloci)){
     G_random_out <- G_full_subset[sample(1:nrow(muts_full), nloci[i], replace=FALSE),]
     rdaout_rand <- rda(t(G_random_out)~ subset_indPhen_df$sal_opt + subset_indPhen_df$temp_opt)
-    scores <- scores(rdaout_rand, choices=1:4)
-    loci.sc <- scores$species
-    ind.sc <- scores$sites
-    temp_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]
-    sal_pred <- ind.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + ind.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]
+    scores_rand <- scores(rdaout_rand, choices=1:4)
+    loci.sc_rand <- scores$species
+    ind.sc_rand <- scores$sites
+    temp_pred <- ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + 
+                  ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]
+    sal_pred <- ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + 
+                ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]
     
     Random_cor_temppredict_tempphen[i] <- cor(scale(subset_indPhen_df$phen_temp), scale(temp_pred), method = "kendall")
     Random_cor_salpredict_salphen[i] <- cor(scale(subset_indPhen_df$phen_sal), scale(sal_pred), method = "kendall")
@@ -1012,18 +1089,33 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   RDA2_temp_cor <- summary(rdaout)$biplot[2,2]
   RDA2_sal_cor <- summary(rdaout)$biplot[1,2]
   
-  
-  
-  RDA_RDA1Loading_cor_tempEffect <- cor(muts_full$RDA1_score, muts_full$mutTempEffect, use="complete.obs")
-  RDA_RDA1Loading_cor_salEffect <- cor(muts_full$RDA1_score, muts_full$mutSalEffect, use="complete.obs")
-  RDA_RDA2Loading_cor_tempEffect <- cor(muts_full$RDA2_score, muts_full$mutTempEffect, use="complete.obs")
-  RDA_RDA2Loading_cor_salEffect <- cor(muts_full$RDA2_score, muts_full$mutSalEffect, use="complete.obs")
-  
   subset_indPhen_df$RDA_predict_tempPhen_20KSNPs <- temp_pred
-  subset_indPhen_df$t <- sal_pred
+  subset_indPhen_df$RDA_predict_salPhen_20KSNPs <- sal_pred
+  
+  ## RDA correlation mutation effect vs. mutation loading ####
+  #loci.sc <- scores$species
+  #ind.sc <- scores$sites
+  
+  # sum(locus_score * eigenvalue * loading_env_RDA_axis)
+  muts_full$RDA_mut_temp_pred <- loci.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + #RDA1
+                   loci.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]   #RDA2
+  
+  muts_full$RDA_mut_sal_pred <- loci.sc[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] +
+                  loci.sc[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2] 
+    
+
+  
+  #plot(muts_full$mutTempEffect, muts_full$RDA1_score)
+  
+  RDA_RDALoading_cor_tempEffect <- cor(muts_full$RDA_mut_temp_pred, muts_full$mutTempEffect, use="complete.obs")
+  RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSalEffect, use="complete.obs")
   
   pdf(paste0(path,seed,"_pdf_6zRDA_predict.pdf"), width=7, height=7)
   par(mfrow=c(1,1))
+  
+  plot(muts_full$mutTempEffect, muts_full$RDA_mut_temp_pred, main = paste0(plotmain), cex.main=0.5)
+  plot(muts_full$mutSalEffect, muts_full$RDA_mut_sal_pred, main =  paste0(plotmain), cex.main=0.5)
+  
   plot(nloci, Random_cor_temppredict_tempphen, type="l", ylim=c(-0.1,1), ylab="Cor(RDA prediction, true phenotype)", bty="l" , 
        xlab="Number random loci in RDA", col="darkred", lwd=2, xlim=c(0, 20000), main = paste0(plotmain), cex.main=0.5, las=2)
   points(nloci, Random_cor_salpredict_salphen, type="l", col="cornflowerblue", lwd=2, lty=2)
@@ -1110,14 +1202,22 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   mtext(paste0(plotmain), side=3, outer=TRUE, cex=0.5, line=0)
 
   col <- (turbo(num_causal_postfilter, begin = 0, end=0.8))
+  muts_full$color_af.temp.cline <- muts_full$color_af.sal.cline <- NA
+  muts_full1 <- muts_full[order(abs(muts_full$cor_temp), decreasing=TRUE),]
+  muts_full1$color_af.temp.cline[1:length(col)] <- as.character(col)
+  muts_full <- muts_full1[order(muts_full1$pos_pyslim),]
+  
+  muts_full1 <- muts_full[order(abs(muts_full$cor_sal), decreasing=TRUE),]
+  muts_full1$color_af.sal.cline[1:length(col)] <- as.character(col)
+  muts_full <- muts_full1[order(muts_full1$pos_pyslim),]
+  
   
   #Temp plot
-  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Deme Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)
+  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Deme Temperature", 
+       ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)
   
   #str(af_temp)
-  k=0
   for (i in which(muts_full$causal_temp=="causal")){
-    k=k+1
     cor_mut <- muts_full$cor_temp[i]
     if(abs(cor_mut)<0.2){
       lwd=5
@@ -1134,106 +1234,55 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
       lty=2
       alpha1 = 0.5
     }
-    lines(temp_levels, af_temp[,i], col=adjustcolor(col[k], alpha1), lwd=lwd, lty=lty)
+    lines(temp_levels, af_temp[,i], 
+          col=adjustcolor(muts_full$color_af.temp.cline[i], alpha1), lwd=lwd, lty=lty)
   }  
 
-  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Deme Env2", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)  
-  k=0
+  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Deme Env2", 
+       ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)  
   for (i in which(muts_full$causal_sal=="causal")){
-    k=k+1
     cor_mut <- muts_full$cor_sal[i]
-    if(abs(cor_mut)<0.35){
+    if(abs(cor_mut)<0.2){
       lwd=5
       lty=1
       alpha1 = 0.5
     }
-    if(abs(cor_mut)>0.35 & abs(cor_mut)<0.65){
+    if(abs(cor_mut)>0.2 & abs(cor_mut)<0.5){
       lwd=3
       lty=1
       alpha1 = 0.5
     }
-    if(abs(cor_mut)>0.65){
+    if(abs(cor_mut)>0.5){
       lwd=2
       lty=2
       alpha1 = 0.5
     }
-    lines(sal_levels, af_sal[,i], col=adjustcolor(col[k], alpha1), lwd=lwd, lty=lty)
+    lines(sal_levels, af_sal[,i], col=adjustcolor(muts_full$color_af.sal.cline[i], 
+                                                  alpha1), lwd=lwd, lty=lty)
   }  
 
-  par(mfrow=c(1,1))
-  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), main=plotmain)
+  ## Make the legends ##
+  # Create two panels side by side
+  layout(t(1:2), widths=c(5,1))
+  # Set margins and turn all axis labels horizontally (with `las=1`)
+  par(mar=c(0.5, 0.5,4,0.5), oma=c(0, 0, 0,4), las=1)
   
-  legend(0,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="abs(Cor (p, env))")  
-  legend(-1,0.5, c("linear model", "1:1 line") , lty=c(1,2))
-  legend(0.5, 0.5, c("abs(cor) < 0.35", "0.35 < abs(cor) > 0.65", "abs(cor) > 0.65"), lwd=c(5, 3, 2), lty=c(1,1,2))
+  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", 
+       ylab="Allele frequency", 
+       col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), main=plotmain, cex.main=0.5)
+  
+  legend(-1,0.5, c("linear model", "1:1 line") , lty=c(1,2), bty="n")
+  legend(0, 0.5, c("abs(cor) < 0.2", "0.2 < abs(cor) > 0.5", 
+                     "abs(cor) > 0.5"), lwd=c(5, 3, 2), lty=c(1,1,2), bty="n")
 
+  # Draw the color legend
+  image(1, seq(0.0,1, length.out=100), t(seq_along(seq(0,1, length.out=100))), 
+        col=rev(turbo(100, begin = 0, end=0.8)), axes=FALSE, las=1,
+        main="abs[Cor(p,env)]", cex.main=0.7)
+  axis(4)
   
-  ### Different color scheme
-  
-  par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,0,2,1))
-  
-  plot(jitter(subset_indPhen_df$temp_opt), subset_indPhen_df$phen_temp, 
-       xlab="Deme Temperature", ylab="Ind. optimum temp.",pch=18,  
-       las=1, bty="n", col=adjustcolor("purple",0.1), xlim=c(-1,1), ylim=c(-1.2,1.2))
-  abline(lm(subset_indPhen_df$phen_temp~subset_indPhen_df$temp_opt),col="purple", lwd=2)  
-  abline(0,1, lty=2)
-  
-  plot(jitter(subset_indPhen_df$sal_opt), subset_indPhen_df$phen_sal, 
-       xlab="Deme Env2", ylab="Ind. optimum Env2.",pch=18,  
-       las=1, bty="n", col=adjustcolor("blue",0.1), xlim=c(-1,1), ylim=c(-1.2,1.2))
-  abline(lm(subset_indPhen_df$phen_sal~subset_indPhen_df$sal_opt),col="blue", lwd=2)  
-  abline(0,1, lty=2)
-  
-  mtext(paste0(plotmain), side=3, outer=TRUE, cex=0.5, line=0)
-  
-  col <- (mako(10, begin = 0, end=0.8))
-  
-  #Temp plot
-  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Deme Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)
-  
-  #str(af_temp)
-  k=0
-  for (i in which(muts_full$causal_temp=="causal")){
-    k=k+1
-    cor_mut <- cor(temp_levels, af_temp[,i])
-    if(muts_full$Va_temp_prop[i]>0.15){
-      lwd=5
-      alpha1 = 0.5
-      lty=1
-    }else{
-      lwd=2
-      alpha1 = 0.5
-      lty=2
-    }
-    lines(temp_levels, af_temp[,i], col=adjustcolor(col[k], alpha1), lwd=lwd, lty=lty)
-  }  
-  
-  plot(pop_df$opt0, rep(0, length(pop_df$opt0)), ylim=c(0,1), xlab="Deme Env2", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), las=1)  
-  k=0
-  for (i in which(muts_full$causal_sal=="causal")){
-    k=k+1
-    cor_mut <- cor(sal_levels, af_sal[,i])
-    if(muts_full$Va_sal_prop[i]>0.15){
-      lwd=5
-      alpha1 = 0.5
-      lty=1
-    }else{
-      lwd=2
-      alpha1 = 0.5
-      lty=2
-    }
-    lines(sal_levels, af_sal[,i], col=adjustcolor(col[k], alpha1), lwd=lwd, lty=lty)
-  }  
-  
-  par(mfrow=c(1,1))
-  plot(pop_df$opt1, rep(0, length(pop_df$opt1)), ylim=c(0,1), xlab="Temperature", ylab="Allele frequency", col=rgb(0,0,0,0), bty="n", xlim=c(-1, 1), main=plotmain)
-  
-  legend(0,1,seq(0.05,0.95, length.out=10), fill=col, cex=0.7, bty="n", title="abs(Cor (p, env))")  
-  legend(-1,0.5, c("linear model", "1:1 line") , lty=c(1,2))
-  legend(0.5, 0.5, c("prop. VA > 0.15", "prop. VA > 0.15"), lwd=c(5, 5), lty=c(1,2))
-  
-  
-  dev.off()
+  #legend(0,1, seq(0.05,0.95, length.out=10), fill=turbo(10, begin = 0, end=0.8), 
+  #       cex=0.7, bty="n", title="abs(Cor (p, env))") 
   
   
 ### genotype heatmaps
@@ -1328,6 +1377,10 @@ out_full <- data.frame(seed=as.character(seed),
                        num_neut = sum(muts_full$causal_temp=="neutral"), #loci in 2nd half of genome
                        num_causal_temp = sum(muts_full$causal_temp=="causal"),
                        num_causal_sal = sum(muts_full$causal_sal=="causal"),
+                       
+                       meanFst = meanFst,
+                       vatemp_total = vatemp_total,
+                       vasal_total = vasal_total,
 
                        LEA3.2_lfmm2_Va_temp_prop, 
                        LEA3.2_lfmm2_Va_sal_prop, 
@@ -1388,16 +1441,16 @@ LEA3.2_lfmm2_num_causal_sig_sal, #` number of causal loci on the salinity trait,
 LEA3.2_lfmm2_FPR_neutSNPs_temp, #` false positive rate of lfmm temperature model
 LEA3.2_lfmm2_FPR_neutSNPs_sal, #` false positive rate of lfmm salinity model
 
-----
+#----
+RDA1_propvar, #proportion of variance explained by 1st RDA axis
+RDA2_propvar, #proportion of variance explained by 2nd RDA axis
 RDA1_temp_cor, #` output of `summary(rdaout)$biplot[2,1]`, which is the correlation between RDA1 and the temperature environmental variable
 RDA1_sal_cor, #`  output of `summary(rdaout)$biplot[1,1]`, which is the correlation between RDA1 and the salinity environmental variable
 RDA2_temp_cor, #` output of `summary(rdaout)$biplot[2,2]`, which is the correlation between RDA2 and the temperature environmental variable
 RDA2_sal_cor, #` output of `summary(rdaout)$biplot[1,2]`, which is the correlation between RDA2 and the salinity environmental variable
 RDA_mlog10P_sig_noutliers, #` number of outliers in the RDA analysis 
-RDA_RDA1Loading_cor_tempEffect, #` correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on temperature
-RDA_RDA1Loading_cor_salEffect, #` <- correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on salinity
-RDA_RDA2Loading_cor_tempEffect, #` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on temperature
-RDA_RDA2Loading_cor_salEffect #` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on salinity
+RDA_RDALoading_cor_tempEffect, #` correlation between RDA prediction a mutation effect on temperature and effect size of allele on temperature
+RDA_RDALoading_cor_salEffect, #` correlation between RDA prediction a mutation effect on salinityand effect size of allele on salinity
 
 )
 

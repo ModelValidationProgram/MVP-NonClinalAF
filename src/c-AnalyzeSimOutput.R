@@ -3,13 +3,13 @@
 # 
 # packages_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools")
 # 
-# for (i in 1:length(packages_needed)){
-#   if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
-# }
+#  for (i in 1:length(packages_needed)){
+#    if(!(packages_needed[i] %in% installed.packages())){install.packages(packages_needed[i])}
+#  }
 # 
 # if (!requireNamespace("BiocManager", quietly = TRUE)){install.packages("BiocManager")}
 # 
-# if (!requireNamespace("LEA", quietly = TRUE)){BiocManager::install("LEA")} 
+# if (!requireNamespace("LEA", quietly = TRUE)){BiocManager::install("LEA")}
 # 
 # if (!requireNamespace("qvalue", quietly = TRUE)){
 #   BiocManager::install("qvalue")

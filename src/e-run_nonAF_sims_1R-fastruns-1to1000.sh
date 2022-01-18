@@ -22,11 +22,11 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_20210920/"
+outpath="sim_output_20220117/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params-fastruns-20210920.txt"
+params="src/0b-final_params-fastruns-20220117.txt"
 
 
 # Extracting individual variables

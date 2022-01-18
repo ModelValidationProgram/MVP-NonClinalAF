@@ -84,10 +84,16 @@ RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSal
 #SBATCH --partition=lotterhos
 #SBATCH --mem=2G
 #SBATCH --nodes=1
-#SBATCH --array=2-1000%136
+#SBATCH --array=2-1000%70
 ```
 
 `sbatch d-run_nonAF_sims_0Slim-fastruns-20220117.sh`
+
+Submitted batch job 22811525
+
+`squeue -u lotterhos` to check the jobs of the user
+
+`squeue - 
 
 ## Graphs TO DO:
 -  [ ] Put together a 10x2 figure for the SS and Est demographies

@@ -33,3 +33,16 @@ For low memory jobs:
 #SBATCH --nodes=1
 #SBATCH --array=2-1000%136
 ```
+
+From /work/lotterhos/MVP_NonClinalAF/ run the SliM Script: `sbatch d-run_nonAF_sims_0Slim-fastruns-20220117.sh`
+
+Check the run: `squeue -u lotterhos`
+
+Check what's running on the lotterhos nodes: `squeue -p lotterhos`
+
+Make sure the outputs are there and then edit the R script:
+
+TO DO
+
+Run the R script:
+

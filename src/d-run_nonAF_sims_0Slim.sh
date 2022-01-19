@@ -4,9 +4,9 @@
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
-#SBATCH --mem=10G
+#SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=141%1
+#SBATCH --array=2-1000%70
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210914_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210914_%j.err
 

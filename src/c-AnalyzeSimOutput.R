@@ -86,7 +86,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                     rep("numeric",6)))
   
   
-  allsims <- load("src/0b-final_params-20210920.RData")
+  allsims <- load("src/0b-final_params-20220117.RData")
   allsims<- final
   thissim <- allsims[grep(seed, allsims$seed),]
   (plotmain <- paste(thissim$level, seed, sep="\n"))

@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=SlimRun20210914
+#SBATCH --job-name=SlimRun20220117
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
-#SBATCH --mem=10G
+#SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=141%1
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210914_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20210914_%j.err
+#SBATCH --array=2-1000%72
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220117_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220117_%j.err
 
 source ~/miniconda3/bin/activate MVP_env
 # This is a CONDA environment I created on my own personal CONDA folder using the environment found in src/env/MVP_env.yml

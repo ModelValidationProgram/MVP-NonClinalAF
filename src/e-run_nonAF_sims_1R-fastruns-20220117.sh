@@ -26,7 +26,7 @@ outpath="sim_output_20220117/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params_20220117.txt"
+params="src/0b-final_params-fastruns-20220117.txt"
 
 
 # Extracting individual variables

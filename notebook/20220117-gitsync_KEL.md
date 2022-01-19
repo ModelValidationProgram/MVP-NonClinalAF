@@ -116,5 +116,11 @@ Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/202
   - create main text figure for simple scenarios
   - create a supplemental figure for the complex scenarios
 
+Potential additional steps:
+- [ ] run outflank for FST outliers
+- [ ] run higher gene flow sims with less LA in SS scenarios
+- [ ] add fake correlated environments to RDA analysis
+- [ ] add ROC scores to output
+
 ## Housekeeping
 - [ ] Download YML files from /work/lotterhos/MVP-NonClinalAF/src to https://github.com/northeastern-rc/lotterhos_group

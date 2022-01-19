@@ -51,6 +51,9 @@ Make sure the outputs are there and then copy the R script `e-run_nonAF_sims_1R.
 
 The date is like a runID, so using the same date across all files helps to coordinate different runs.
 
+Edit the R script `c-AnalyzeSimOutput.R` to update with the date of the runs on this line:
+`allsims <- load("src/0b-final_params-20220117.RData")`
+
 Run the R script:
 
 `sbatch e-run_nonAF_sims_1R-fastruns-20220117.sh`

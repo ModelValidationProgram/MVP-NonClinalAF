@@ -93,10 +93,22 @@ Submitted batch job 22811525
 
 `squeue -u lotterhos` to check the jobs of the user
 
-`squeue - 
+`squeue -p lotterhos` to check what's running on our nodes
+
+Edit the R script to update with the date of the runs `c-AnalyzeSimOutput.R` on this line:
+`allsims <- load("src/0b-final_params-20220117.RData")`
+
+Run the R code for the first 1000 runs:
+
+`sbatch src/e-run_nonAF_sims_1R-fastruns-20220117.sh`
+
+Submitted batch job 22823441
 
 ## Graphs TO DO:
+Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/20210920_graphs/`
+
 -  [ ] Put together a 10x2 figure for the SS and Est demographies
+-  [ ] Fst across sims
 -  [ ] The phenotypic clines, AF clines, and heatmap figure
 -  [ ] LFMM figures - what to show?
 -  [ ] RDA figure 1 - demography histograms, demography scatterplots

@@ -67,3 +67,15 @@ To cancel the runs: `scancel <jobID>`
 After the runs are finished, check how efficient they were with `seff <jobID>` and write that info in the notebook post
 
 https://rc-docs.northeastern.edu/en/latest/using-discovery/usingslurm.html
+
+## Git tips on Discovery
+
+```
+vi .gitignore #edit the gitignore file
+git branch
+git status # gives an overview of what's going on
+git add -A # add/stage all changes to be commited
+git commit # commit the changes
+git pull # pull any updates from the remote repo (do not run this before you commit!)
+git push # push the committed changes to the repo
+```

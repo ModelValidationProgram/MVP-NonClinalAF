@@ -72,7 +72,7 @@ https://rc-docs.northeastern.edu/en/latest/using-discovery/usingslurm.html
 
 ```
 vi .gitignore #edit the gitignore file
-git branch
+git branch # make sure you are on the right branch!
 git status # gives an overview of what's going on
 git add -A # add/stage all changes to be commited
 git commit # commit the changes

@@ -33,8 +33,8 @@ I initiated this with OOD, since all my simulation outputs are not synced to git
    - [x] Based on the entire sample, currently I have:
       - `va_temp_full` and `va_sal_full` to describe the va of each mutation
       - `va_temp_total` and `va_sal_total` are the sums of the previous columns and also based on the entire sample
-      - `va_temp_full_prop` and `va_temp_full_prop` the proportion of va based on the entire sample
-      - [ ] **TO DO: add definitions to metadata**
+      - `va_temp_full_prop` and `va_sal_full_prop` the proportion of va based on the entire sample
+      - [x] **DONE: add definitions to metadata**
    - [x] Based on the subsample, these columns have been called (not changing since it would affect too much code):
       - `Va_temp` and `Va_sal`
       - `Va_temp_prop` and `Va_sal_prop`
@@ -52,14 +52,14 @@ I initiated this with OOD, since all my simulation outputs are not synced to git
    -    I have a vague memory of editing the sims to try to reduce the above effect, so for now nothing has been done. 
 
 - [x] Calculate and plot FST for the sims 
-   - [ ]    muts_full$He_outflank   **ADD TO METADATA**
-   - [ ]    muts_full$Fst_outflank   **ADD TO METADATA**
-   - [ ]    meanFst in sim output  **ADD TO METADATA**
-- [ ] RDA
-   - [ ] `RDA1_propvar` and `RDA2_propvar` - **add to metadata**
-   - [ ] `subset_indPhen_df$RDA_predict_salPhen_20KSNPs` - this was previosuly called `t`
+   - [x]    muts_full$He_outflank   **ADDED TO METADATA**
+   - [x]    muts_full$Fst_outflank   **ADDED TO METADATA**
+   - [ ]    meanFst in sim output  **ADDED TO METADATA**
+- [x] RDA
+   - [x] `RDA1_propvar` and `RDA2_propvar` - **added to metadata**
+   - [x] `subset_indPhen_df$RDA_predict_salPhen_20KSNPs` - this was previosuly called `t`
    - [x] FIX RDA MUTATION PREDICTION
-      - [ ] added `muts_full$RDA_mut_temp_pred` and `muts_full$RDA_mut_sal_pred`, need to **ADD TO METADATA**
+      - [x] added `muts_full$RDA_mut_temp_pred` and `muts_full$RDA_mut_sal_pred`, need to **ADDED TO METADATA**
       - [x] I removed this code:
 
 ```  
@@ -70,8 +70,8 @@ I initiated this with OOD, since all my simulation outputs are not synced to git
 ```
       - [x] and replaced it with this code: 
 ```
-RDA_RDALoading_cor_tempEffect <- cor(muts_full$RDA_mut_temp_pred, muts_full$mutTempEffect, use="complete.obs")  **ADD TO METADATA**
-RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSalEffect, use="complete.obs")  **ADD TO METADATA**
+RDA_RDALoading_cor_tempEffect <- cor(muts_full$RDA_mut_temp_pred, muts_full$mutTempEffect, use="complete.obs")  **ADDED TO METADATA**
+RDA_RDALoading_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSalEffect, use="complete.obs")  **ADDED TO METADATA**
 ```
 
    - [x] output: "X....RDA1_temp_cor" - I think I fixed this

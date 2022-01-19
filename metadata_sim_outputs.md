@@ -155,10 +155,20 @@ correlation between (a linear prediction of the weighted RDA loadings) and (the 
     * `neutral` a locus with alleles that have zero effect on the phenotype, and arise in the part of the genome unaffected by selection (e.g., sites 500001-1e06)
 * `LG` linkage group       
 * `colors` a color level for plotting - shades of yellow for LGs affected by selection(e.g., sites 1-500000), shades of grey for LGs unaffected by selection (e.g., sites 500001-1e06)
+
+* `va_temp_full` true value additive genetic variance of the locus on the temeprature trait, based on entire sample
+* `va_sal_full` true value additive genetic variance of the locus on the temeprature trait, based on entire sample
+* `va_temp_full_prop` the true proportion of Va explained by this locus on the temperature trait, based on the entire sample
+* `va_sal_full_prop` the true proportion of Va explained by this locus on the salinity trait, based on the entire sample
 * `Va_temp` estimate of additive genetic variance of the locus on the temeprature trait (based on the subset of individuals sampled according to their fitness)     
 * `Va_temp_prop` proportion of the total additive genetic variance on the temeprature trait explained by this mutation      
 * `Va_sal` estimate of additive genetic variance of the locus on the salinity trait (based on the subset of individuals sampled according to their fitness)     
 * `Va_sal_prop` proportion of the total additive genetic variance on the salinity trait explained by this mutation      
+
+* `He_outflank` Expected heterozygosity based on the sample, calculated in outflank
+* `Fst_outflank` W&C's 1984 Fst based on the sample, calculated in outflank
+* 
+
 * `cor_temp_sig`  a logical value indicating whether the `af_cor_temp` was significant after Bonferroni correction       
 * `cor_sal_sig`  a logical value indicating whether the `af_cor_sal` was significant after Bonferroni correction 
 
@@ -182,6 +192,8 @@ correlation between (a linear prediction of the weighted RDA loadings) and (the 
 
 * `RDA1_score` loading of the locus on the first RDA axis
 * `RDA2_score` loading of the locus on the second RDA axis
+* `RDA_mut_sal_pred` RDA prediction of effect mutation has on salinity
+* `RDA_mut_temp_pred` RDA prediction of effect mutation has on temperature
 * `RDA_mlog10P` -log 10 P-value from the "rdadapt" function from Capblanq et al. 20XX
 * `RDA_mlog10P_sig` a logical variable indicating if the RDA q-value was less than 0.001 (a more conservative estimate was used than with lfmm because lack of structure correction led to a large number of false positive results)
 * `af_cor_temp_pooled` correlation between allele frequency and temperature if all demes were pooled together according to their temperature (this inflates correlations)  
@@ -242,6 +254,9 @@ After each simulation is analyzed in R,
 * `num_causal_temp` number of loci with non-zero phenotypic effects on the temperature phenotype
 * `num_causal_sal`number of loci with non-zero phenotypic effects on the salinity phenotype
 
+* `va_temp_total` total additive genetic variance in the temperatuer trait, based on the entire sample
+* `va_sal_total` total additive genetic variance in the salinity trait, based on the entire sample
+* `mean_Fst` overall FST calculated from mean(T1)/mean(T2) in outflank
 ----
 
 * `LEA3.2_lfmm2_Va_temp_prop` proportion of additive genetic variance (Va) in the temperature trait explained by outliers in the LFMM temp model
@@ -324,15 +339,15 @@ After each simulation is analyzed in R,
 
 ----
 
+*  `RDA1_propvar` proportion of variance explained by first RDA axis
+*  `RDA2_propvar` proportion of variance explained by second RDA axis
 *  `RDA1_temp_cor` output of `summary(rdaout)$biplot[2,1]`, which is the correlation between RDA1 and the temperature environmental variable
 *  `RDA1_sal_cor`  output of `summary(rdaout)$biplot[1,1]`, which is the correlation between RDA1 and the salinity environmental variable
 *  `RDA2_temp_cor` output of `summary(rdaout)$biplot[2,2]`, which is the correlation between RDA2 and the temperature environmental variable
 *  `RDA2_sal_cor` output of `summary(rdaout)$biplot[1,2]`, which is the correlation between RDA2 and the salinity environmental variable
 *  `RDA_mlog10P_sig_noutliers` number of outliers in the RDA analysis 
 *  `RDA_FPR_neutSNPs` false positive rate of the RDA analysis, based only on neutral SNPs
-*  `RDA_RDA1Loading_cor_tempEffect` correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on temperature
-*  `RDA_RDA1Loading_cor_salEffect` <- correlation between loading of a mutation on the first RDA axis (usually temperature) and effect size of allele on salinity
-*  `RDA_RDA2Loading_cor_tempEffect` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on temperature
-*  `RDA_RDA2Loading_cor_salEffect` <- correlation between loading of a mutation on the second RDA axis (usually salinity) and effect size of allele on salinity
-  
+*  `RDA_RDALoading_cor_tempEffect` correlation between RDA prediction of a mutation effect on temperature and the true effect size of allele on temperature
+*  `RDA_RDALoading_cor_salEffect` correlation between RDA prediction a mutation effect on salinity and the true effect size of allele on salinity
+
 

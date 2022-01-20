@@ -347,7 +347,9 @@ After each simulation is analyzed in R,
 *  `RDA2_sal_cor` output of `summary(rdaout)$biplot[1,2]`, which is the correlation between RDA2 and the salinity environmental variable
 *  `RDA_mlog10P_sig_noutliers` number of outliers in the RDA analysis 
 *  `RDA_FPR_neutSNPs` false positive rate of the RDA analysis, based only on neutral SNPs
-*  `RDA_RDALoading_cor_tempEffect` correlation between RDA prediction of a mutation effect on temperature and the true effect size of allele on temperature
-*  `RDA_RDALoading_cor_salEffect` correlation between RDA prediction a mutation effect on salinity and the true effect size of allele on salinity
+* `RDA_RDAmutpred_cor_tempEffect` # pearson's correlation between the predicted temperature effect from RDA and the true mutation effect on temperature
+* `RDA_RDAmutpred_cor_salEffect` # pearson's correlation between the predicted salinity effect from RDA and the true mutation effect on salinity
+* `RDA_absRDAmutpred_cor_tempVa` # pearson's correlation between the abs(predicted temperature effect from RDA) and the true mutation Va on temperature
+* `RDA_absRDAmutpred_cor_salVa` # pearson's correlation between the abs(predicted salinity effect from RDA) and the true mutation Va on salinity
 
 

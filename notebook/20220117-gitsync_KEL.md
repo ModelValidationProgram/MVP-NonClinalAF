@@ -100,13 +100,42 @@ Edit the R script to update with the date of the runs `c-AnalyzeSimOutput.R` on 
 
 Run the R code for the first 1000 runs:
 
-## R code TO DO:
-- mutation loading on RDA is due to effect size and proportion Va?
-- mutation graph not working
-
 `sbatch src/e-run_nonAF_sims_1R-fastruns-20220117.sh`
 
 Submitted batch job 22834818
+
+## First 1000 runs - did they work?
+```
+ls -l *_muts.txt | wc -l # this is the number of sims that completed the SliM run
+999
+
+ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l # this is the number of sims that completed the vcf filtering
+999
+
+ls -l *_pdf_1pop.pdf | wc -l # number of sims that were analyzed through the population step
+984
+
+ls -l *_2muts.pdf | wc -l # number that analyzed the mutations
+984
+
+ls -l ../*.pcaProject | wc -l # this is the number of sims that were analyzed through the PCA step in the R script
+804
+
+ls -l *_Rout_simSummary.txt | wc -l # this is the number of sims that were analyzed through the final output in the R script
+701
+```
+
+### That's weird
+
+FIGURE OUT WHAT THE HELL IS GOING ON! Something is happening in the R script. I
+
+## In the mean time, I think I can run the rest of the simulations.
+
+`sbatch d-run_nonAF_sims_0Slim-fastruns-20220117-b.sh` after updating the file in the shell script to run the correct params
+
+Submitted batch job 22887383
+
+
 
 ## Graphs TO DO:
 Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/20210920_graphs/`

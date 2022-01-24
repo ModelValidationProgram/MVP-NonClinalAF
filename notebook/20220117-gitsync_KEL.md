@@ -100,9 +100,13 @@ Edit the R script to update with the date of the runs `c-AnalyzeSimOutput.R` on 
 
 Run the R code for the first 1000 runs:
 
+## R code TO DO:
+- mutation loading on RDA is due to effect size and proportion Va?
+- mutation graph not working
+
 `sbatch src/e-run_nonAF_sims_1R-fastruns-20220117.sh`
 
-Submitted batch job 22823441
+Submitted batch job 22834818
 
 ## Graphs TO DO:
 Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/20210920_graphs/`
@@ -113,14 +117,15 @@ Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/202
 -  [ ] LFMM figures - what to show?
 -  [ ] RDA figure 1 - demography histograms, demography scatterplots
 -  [ ] RDA figure 2 - a 6 panel plot - SS Clines, SS Mtn, and Est - mutation loading on top, individual scores on bottom
-  - create main text figure for simple scenarios
-  - create a supplemental figure for the complex scenarios
+- [ ] create main text figure for simple scenarios
+- [ ] create a supplemental figure for the complex scenarios
 
 Potential additional steps:
 - [ ] run outflank for FST outliers
 - [ ] run higher gene flow sims with less LA in SS scenarios
 - [ ] add fake correlated environments to RDA analysis
 - [ ] add ROC scores to output
+- [ ] add sims that have demog correlated with a non-selective environment
 
 ## Housekeeping
 - [ ] Download YML files from /work/lotterhos/MVP-NonClinalAF/src to https://github.com/northeastern-rc/lotterhos_group

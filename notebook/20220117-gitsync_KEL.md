@@ -127,7 +127,7 @@ ls -l *_Rout_simSummary.txt | wc -l # this is the number of sims that were analy
 
 ### That's weird
 
-FIGURE OUT WHAT THE HELL IS GOING ON! Something is happening in the R script. I
+FIGURE OUT WHAT THE HELL IS GOING ON! From the numbers above, I can tell something is happening in the R script. It's not finishing on all simulations.
 
 ## In the mean time, I think I can run the rest of the simulations.
 
@@ -135,7 +135,44 @@ FIGURE OUT WHAT THE HELL IS GOING ON! Something is happening in the R script. I
 
 Submitted batch job 22887383
 
+```
+ls -l *_muts.txt | wc -l # this is the number of sims that completed the SliM run
+1950 # all ran!
 
+ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l 
+1950
+```
+
+## R code to do
+
+-[ ] Figure out which simulations aren't finishing the beginning of the R script and which aren't getting to the end of the R script
+
+OK, so one sim that didn't finish was 1231097. The sim failed at the Outflank stage, because some markers had NAs. In tracing the issue, I 
+found that some loci had triallelic sites (sites should be a combo of 0 and 1):
+
+```
+table(vcf_full@gt[8993,])
+
+ 0|0  0|1  0|2  1|0  1|1  2|0  2|2   GT 
+8802  173  318  202   60  384   61    1 
+```
+
+After filtering, this was a single site in the genome:
+
+```
+which(!complete.cases(G_full_subset))
+8869
+```
+
+Triallelic sites are typically removed from real data, and they are rare in the simulations, so removing these sites should not affect the results.
+To track this, I stored the number of triallelic sites in the variable `num_multiallelic`
+
+## Rerunning R code
+
+```
+sbatch src/e-run_nonAF_sims_1R-fastruns-20220117.sh
+Submitted batch job 22914512
+```
 
 ## Graphs TO DO:
 Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/20210920_graphs/`

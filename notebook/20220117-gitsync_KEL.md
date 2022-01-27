@@ -198,8 +198,13 @@ awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220117.txt # data
 
 run `g-CheckRunsAreComplete.Rmd`
 
+## Failed runs
+
 ![image](https://user-images.githubusercontent.com/6870125/151313854-d11e3750-5fb7-4f27-a3d7-733945657f5c.png)
 
+![image](https://user-images.githubusercontent.com/6870125/151314109-7c5b7435-252a-464f-a19e-01dad768a74d.png)
+
+![image](https://user-images.githubusercontent.com/6870125/151314190-aa175779-b847-4f47-8ea0-dfa7e6b55edd.png)
 
 
 ## Graphs TO DO:

@@ -174,6 +174,34 @@ sbatch src/e-run_nonAF_sims_1R-fastruns-20220117.sh
 Submitted batch job 22914512
 ```
 
+## First 1000 runs - did they work?
+Numbers should be 999
+```
+ls *_pdf_1pop.pdf | wc -l # number of sims that were analyzed through the population step
+998
+
+ls -l *_2muts.pdf | wc -l # number that analyzed the mutations
+998
+
+ls -l ../*.pcaProject | wc -l # this is the number of sims that were analyzed through the PCA step in the R script
+773
+
+ls -l *_Rout_simSummary.txt | wc -l # this is the number of sims that were analyzed through the final output in the R script
+808
+```
+
+Cat outputs
+```
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220117.txt # header
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220117.txt # data
+```
+
+run `g-CheckRunsAreComplete.Rmd`
+
+![image](https://user-images.githubusercontent.com/6870125/151313854-d11e3750-5fb7-4f27-a3d7-733945657f5c.png)
+
+
+
 ## Graphs TO DO:
 Previous graphs can be found at `/work/lotterhos/MVP-NonClinalAF/run20210920/20210920_graphs/`
 

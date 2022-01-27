@@ -204,7 +204,7 @@ run `g-CheckRunsAreComplete.Rmd`
 
 ![image](https://user-images.githubusercontent.com/6870125/151314109-7c5b7435-252a-464f-a19e-01dad768a74d.png)
 
-![image](https://user-images.githubusercontent.com/6870125/151314190-aa175779-b847-4f47-8ea0-dfa7e6b55edd.png)
+![image](https://user-images.githubusercontent.com/6870125/151314348-8112778e-2c61-4cd2-b525-8abe895ccb8e.png)
 
 
 ## Graphs TO DO:

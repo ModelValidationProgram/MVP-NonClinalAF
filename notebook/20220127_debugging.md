@@ -34,7 +34,66 @@ system call failed: Cannot allocate memory
   - ![image](https://user-images.githubusercontent.com/6870125/151507722-dc485970-1e82-43bb-b21d-a8c86ca1f133.png)
 
 
-Before I rerun R, let's delete former products. This code should remove all output files from the R run.
+## Fixing the m_breaks simulations
+
+### Old code for bottom to top (produced the pattern above):
+```
+if (MIG_breaks ==1){ // Bottom (source) to top (destination)
+						if (destID <= 80 & destID >= 61){
+							sourceID = destID - METAPOP_SIDE_x;
+							destSubpop.setMigrationRates(sourceID, 0.0001);
+						}
+						if (destID <= 50 & destID >= 31){
+							sourceID = destID - METAPOP_SIDE_x;
+							destSubpop.setMigrationRates(sourceID, 0.0001);
+						}
+					}
+```               
+
+
+New code for bottom to top (should only produce 1 break at y=3 and one at y=7):
+```
+				if (MIG_breaks ==1){ // Bottom (source) to top (destination)
+						if (destID <= 80 & destID >= 71){
+							sourceID = destID - METAPOP_SIDE_x;
+							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+						if (destID <= 40 & destID >= 31){
+							sourceID = destID - METAPOP_SIDE_x;
+							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+					}
+```
+
+### Old code for top to bottom (produced the pattern above):
+```
+	if (MIG_breaks ==1){
+						// Top (source) to Bottom (Dest)
+						sourceID = destID + METAPOP_SIDE_x;
+						if (destID <= 40 & destID >= 21){ 
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+						if (destID <= 70 & destID >= 51){ 
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+					}
+```
+
+New code for top to bottom:
+```
+	if (MIG_breaks ==1){
+						// Top (source) to Bottom (Dest)
+						sourceID = destID + METAPOP_SIDE_x;
+						if (destID <= 30 & destID >= 21){ 
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+						if (destID <= 70 & destID >= 61){ 
+						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
+						}
+					}
+```
+
+## Before I rerun R, let's delete former products. This code should remove all output files from the R run.
 ```
 cd /work/lotterhos/MVP-NonClinalAF/sim_output_20220117
 rm *.pdf

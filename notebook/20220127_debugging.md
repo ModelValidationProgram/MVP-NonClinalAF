@@ -3,18 +3,23 @@
 
 See last post for list of sims that need debugging:
 
-- 1231717 this simulation supposedly failed at the mutation plotting step
+### 1231717 this simulation supposedly failed at the mutation plotting step
    -   I think this ran out of memory, but I'm not sure why. 21,000 variants. "system call failed: Cannot allocate memory"
    
-- 1231101 this simulation supposedly failed at the pca step
+### 1231101 this simulation supposedly failed at the pca step
   - 44485 SNP variants. "system call failed: Cannot allocate memory"
   - "highly-polygenic_1-trait__SS-Clines_N-equal_m_breaks\n1231101"
+  -  ![image](https://user-images.githubusercontent.com/6870125/151506794-4bbab5a7-a5f0-4997-aa03-89689317fe36.png)
+  -  ISSUE 1 FOR SLIM: THIS MIGRATION MATRIX NEEDS TO BE FIXED. I ONLY WANT ONE SET OF m-breaks AT EACH LATITUDE
+  -  Explains all the rare variants
   -  
 
 
-- 1231103 this simulation supposedly failed at the output step
+
+### 1231103 this simulation supposedly failed at the output step
   - this simulation only produced 13000 variants for some reason! 
-  - ``` Warning message:
+  - ``` 
+Warning message:
 In max(which(a > b * 1.5)) :
   no non-missing arguments to max; returning -Inf
 Error in seq_len(min(n, nu)) :
@@ -24,7 +29,9 @@ Execution halted
 Warning message:
 system call failed: Cannot allocate memory
 ```
-  - 
+  - "highly-polygenic_1-trait__SS-Clines_N-variable_m-variable\n1231103"
+  ![image](https://user-images.githubusercontent.com/6870125/151507722-dc485970-1e82-43bb-b21d-a8c86ca1f133.png)
+
 
 Before I rerun R, let's delete former products. This code should remove all output files from the R run.
 ```

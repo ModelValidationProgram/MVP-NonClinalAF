@@ -206,11 +206,11 @@ function (void)setUpMigration(void)
 						destSubpop.setMigrationRates(sourceID, sample(var_m_estuary , 1));
 					}
 					if (MIG_breaks ==1){ // Bottom (source) to top (destination)
-						if (destID <= 80 & destID >= 61){
+						if (destID <= 80 & destID >= 71){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
-						if (destID <= 50 & destID >= 31){
+						if (destID <= 40 & destID >= 31){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
@@ -234,10 +234,10 @@ function (void)setUpMigration(void)
 					if (MIG_breaks ==1){
 						// Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
-						if (destID <= 40 & destID >= 21){ 
+						if (destID <= 30 & destID >= 21){ 
 						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
-						if (destID <= 70 & destID >= 51){ 
+						if (destID <= 70 & destID >= 61){ 
 						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 					}
@@ -319,11 +319,11 @@ function (void)setUpMigration(void)
 					}
 					
 					if (MIG_breaks ==1){ // Bottom (source) to top (destination)
-						if (destID <= 80 & destID >= 61){
+						if (destID <= 80 & destID >= 71){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, 0.0001);
 						}
-						if (destID <= 50 & destID >= 31){
+						if (destID <= 40 & destID >= 31){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, 0.0001);
 						}
@@ -345,10 +345,10 @@ function (void)setUpMigration(void)
 					if (MIG_breaks ==1){
 						// Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
-						if (destID <= 40 & destID >= 21){ // bottom to top
+						if (destID <= 30 & destID >= 21){ // bottom to top
 						destSubpop.setMigrationRates(sourceID, 0.0001);
 						}
-						if (destID <= 70 & destID >= 51){ // bottom to top
+						if (destID <= 70 & destID >= 61){ // bottom to top
 						destSubpop.setMigrationRates(sourceID, 0.0001);
 						}
 					}

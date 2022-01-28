@@ -15,16 +15,16 @@ library(dplyr)
 outputs <- "../20210920_graphs/"
 ```
 
-`setwd("~/Documents/GitHub/MVP-NonClinalAF/src")`
-
+`setwd("~/Documents/GitHub/MVP-NonClinalAF")`
+setwd(/work/lotterhos/MVP-NonClinalAF")
 ## Read in data
 
 ```{r cars}
-out.df <- read.table(file = "../summary_20210920.txt", header=TRUE)
+out.df <- read.table(file = "summary_20220117.txt", header=TRUE)
 head(out.df)
 tail(out.df)
 
-load("0b-final_params-20210920.RData")
+load("src/0b-final_params-20220117.RData")
 sims.df <- final
 head(sims.df)
 

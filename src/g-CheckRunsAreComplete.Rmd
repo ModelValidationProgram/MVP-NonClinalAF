@@ -1,0 +1,43 @@
+---
+title: "Check analyses"
+author: "KE Lotterhos"
+date: "1/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/work/lotterhos/MVP-NonClinalAF")
+
+out.df <- read.table(file = "summary_20220117.txt", header=TRUE, nrows=14)
+
+head(out.df)
+tail(out.df)
+
+sim.df1 <- read.table("src/0b-final_params-fastruns-20220117.txt", header=TRUE)
+
+head(sim.df1)
+
+final.df <- merge(sim.df1, out.df, all.x=TRUE)
+head(final.df)
+(vars <- t(final.df[1,]))
+
+sum(is.na(final.df$K))
+
+final.df[is.na(final.df$K), c("seed", "level")]
+```
+
+```{r}
+ran_mutpdf <- data.frame(seed = substr( system("ls sim_output_20220117/*_2muts.pdf", intern = TRUE), 21, 27), ran_mut = TRUE)
+ran_pca <- data.frame(seed = substr( system("ls sim_output_20220117/*pcaProject", intern = TRUE), 21, 27), ran_pca = TRUE)
+ran_simout <- data.frame(seed = substr( system("ls sim_output_20220117/*_Rout_simSummary.txt", intern = TRUE), 21, 27), ran_sim = TRUE)
+
+status.df <- merge(sim.df1, ran_mutpdf, all.x=TRUE)
+status.df <- merge(status.df, ran_pca, all.x=TRUE)
+status.df <- merge(status.df, ran_simout, all.x=TRUE)
+
+status.df <- cbind(status.df, status.df$seed)
+```

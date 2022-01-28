@@ -18,7 +18,8 @@ See last post for list of sims that need debugging:
 
 ### 1231103 this simulation supposedly failed at the output step
   - this simulation only produced 13000 variants for some reason! 
-  - ``` 
+  - 
+``` 
 Warning message:
 In max(which(a > b * 1.5)) :
   no non-missing arguments to max; returning -Inf
@@ -30,7 +31,7 @@ Warning message:
 system call failed: Cannot allocate memory
 ```
   - "highly-polygenic_1-trait__SS-Clines_N-variable_m-variable\n1231103"
-  ![image](https://user-images.githubusercontent.com/6870125/151507722-dc485970-1e82-43bb-b21d-a8c86ca1f133.png)
+  - ![image](https://user-images.githubusercontent.com/6870125/151507722-dc485970-1e82-43bb-b21d-a8c86ca1f133.png)
 
 
 Before I rerun R, let's delete former products. This code should remove all output files from the R run.

@@ -92,6 +92,8 @@ awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220202.txt # header
 awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220202.txt # data
 ```
 
+> TO DO: One simulation didn't finish. Figure out which one that is and fix it.
+
 ### Summary results
 
 Fst and LA for each demography:
@@ -120,3 +122,67 @@ The N-variable, m-variable scenarios still have too high an Fst, so I'll have to
 
 ![image](https://user-images.githubusercontent.com/6870125/152299024-cd904f78-89a2-47e1-ba04-dc94a24cd3bd.png)
 
+I think I should aim for an FST of 0.05, like we did in Lotterhos and Whitlock.
+
+Number of Loci
+```
+                        oligogenic mod.\npolygenic highly\npolygenic
+Pre MAF filter            12.24691       668.07385         3042.2980
+Post filter MAF > 0 .01    7.62037        64.31077          525.5186
+```
+![image](https://user-images.githubusercontent.com/6870125/152300368-344c256c-d8eb-4f61-a273-39f7e168e5b9.png)
+
+Main result is the same
+
+![image](https://user-images.githubusercontent.com/6870125/152301019-f939785a-1439-4ba4-bfdd-4f3ada3e4371.png)
+
+> TO DO: The simulation that has a negative correlation is 1231973. figure out why that is.
+
+![image](https://user-images.githubusercontent.com/6870125/152301332-10b5b347-5e2d-4656-944c-1467bff576a7.png)
+
+![image](https://user-images.githubusercontent.com/6870125/152301485-3ad37b30-bbbb-417e-b30c-d2ab750f730b.png)
+
+
+# Revise Simulation parameters to give more realistic FST
+
+### Edit `0a-setUpSims.Rmd`
+Old simulation parameters in `0a-setUpSims.Rmd`:
+```
+MIG_x = c(0.1, 0.1, 0.49)
+MIG_y = c(0.1, 0.1, 0.05)
+```
+
+New simulation parameters:
+```
+MIG_x = c(0.07, 0.07, 0.49)
+MIG_y = c(0.07, 0.07, 0.07)
+```
+
+(Need to run `0a-setUpSims.Rmd` with SimID 20220201)
+
+### New simulation parameters in `a-PleiotropyDemog_20220101.slim`:
+
+The m-breaks scenario and variable-m scenario:
+
+Old code:
+```
+	var_m_estuary = c(rep(0.01,5),rep(0.1,10),rep(0.25,5));
+	mig_breaks_estuary = 0.01;
+```
+
+```
+	if (demog=="SS"){ // STEPPING STONE DEMOGRAPHY
+  var_m_SS = c(0.005, rep(0.01,5),rep(0.1,10),rep(0.25,5));
+	mig_breaks_SS = 0.01;
+```
+
+New code:
+```
+	var_m_estuary = c(rep(0.05,5),rep(0.1,10),rep(0.25,5));
+	mig_breaks_estuary = 0.01;
+```
+```
+	if (demog=="SS"){ // STEPPING STONE DEMOGRAPHY
+  var_m_SS = c(rep(0.05,5),rep(0.1,10),rep(0.25,5));
+	mig_breaks_SS = 0.01;
+```

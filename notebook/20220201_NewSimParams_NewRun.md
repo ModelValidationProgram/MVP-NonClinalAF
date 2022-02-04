@@ -277,7 +277,7 @@ Error on script line 157, character 51 (inside runtime script block):
 
                destSubpop.setMigrationRates(sourceID, sample(var_m_ss, 1));
                                                              ^^^^^^^^
-							    ```
+```
 							    
 I FOUND THE BUG!! It was a capital letter.
 

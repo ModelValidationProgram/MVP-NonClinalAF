@@ -296,5 +296,16 @@ I'm going to use the same simID, so I don't need to change all the code. I'm bei
 * Reran `0a-setUpSims.Rmd` with new migration rates
 ```
 (base) [lotterhos@login-01 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201.sh
-Submitted batch job 23040196
+Submitted batch job 23041426
 ```
+
+```
+ls -l *_muts.txt | wc -l # this is the number of sims that completed the SliM run
+999
+ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l 
+999
+
+(base) [lotterhos@login-00 src]$ sbatch e-run_nonAF_sims_1R-fastruns-20220201.sh
+Submitted batch job 23053326
+```
+

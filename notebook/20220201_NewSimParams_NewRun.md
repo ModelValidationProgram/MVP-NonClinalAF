@@ -309,3 +309,38 @@ ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l
 Submitted batch job 23053326
 ```
 
+# Failed sims
+``
+1231193_genotypes.pcaProject  1231388_genotypes.pcaProject  1231603_genotypes.pcaProject  1231813_genotypes.pcaProject  1232003_genotypes.pcaProject  1232243_genotypes.pcaProject
+1231198_genotypes.pcaProject  1231403_genotypes.pcaProject  1231613_genotypes.pcaProject  1231823_genotypes.pcaProject  1232008_genotypes.pcaProject
+``
+
+R.error file:
+```
+Warning message:
+Removed 10 rows containing missing values (geom_point).
+Error in sample.int(length(x), size, replace, prob) :
+  cannot take a sample larger than the population when 'replace = FALSE'
+Calls: sample -> sample.int
+Execution halted
+```
+
+R. out file:
+```
+"LFMM finished"
+<RDA output>
+[1] 0.606522
+[1] 0.7042434
+[1] 0.1921053
+[1] 0.8648148
+List of 4
+ $ x   : num [1:2] 0.7 1.9
+ $ y   : num [1:2] 33.3 10.8
+ $ xlab: NULL
+ $ ylab: NULL
+[1] 33.33877 10.83860
+pdf
+  2
+pdf
+  2
+```

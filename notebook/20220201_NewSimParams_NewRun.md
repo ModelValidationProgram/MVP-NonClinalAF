@@ -310,20 +310,14 @@ Submitted batch job 23053326
 ```
 
 # Failed sims
+
+There are at least 65 failed sims.
+
 ``
 1231193_genotypes.pcaProject  1231388_genotypes.pcaProject  1231603_genotypes.pcaProject  1231813_genotypes.pcaProject  1232003_genotypes.pcaProject  1232243_genotypes.pcaProject
 1231198_genotypes.pcaProject  1231403_genotypes.pcaProject  1231613_genotypes.pcaProject  1231823_genotypes.pcaProject  1232008_genotypes.pcaProject
 ``
 
-R.error file:
-```
-Warning message:
-Removed 10 rows containing missing values (geom_point).
-Error in sample.int(length(x), size, replace, prob) :
-  cannot take a sample larger than the population when 'replace = FALSE'
-Calls: sample -> sample.int
-Execution halted
-```
 
 R. out file:
 ```
@@ -343,4 +337,14 @@ pdf
   2
 pdf
   2
+```
+
+R.error file:
+```
+Warning message:
+Removed 10 rows containing missing values (geom_point).
+Error in sample.int(length(x), size, replace, prob) :
+  cannot take a sample larger than the population when 'replace = FALSE'
+Calls: sample -> sample.int
+Execution halted
 ```

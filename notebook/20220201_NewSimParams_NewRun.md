@@ -348,3 +348,29 @@ Error in sample.int(length(x), size, replace, prob) :
 Calls: sample -> sample.int
 Execution halted
 ```
+
+I'm willing to bet that some sims result in less than 3000 loci, and that's a problem.
+
+#### Let's check Fst
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220201.txt # header
+
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220201.txt # data
+
+```
+                                                   Fst        LA
+SS-Clines_N-equal_m-constant                 0.03531793 0.4712589
+SS-Mtn_N-equal_m-constant                    0.03889448 0.4654960
+Est-Clines_N-equal_m-constant                0.07327978 0.4289701
+SS-Clines_N-cline-N-to-S_m-constant          0.08639464 0.4660734
+SS-Mtn_N-cline-N-to-S_m-constant             0.09169559 0.4598002
+Est-Clines_N-cline-N-to-S_m-constant         0.13836340 0.4202269
+SS-Clines_N-cline-center-to-edge_m-constant  0.08632038 0.4659329
+SS-Mtn_N-cline-center-to-edge_m-constant     0.09422532 0.4608467
+Est-Clines_N-cline-center-to-edge_m-constant 0.15824315 0.4229619
+SS-Clines_N-equal_m_breaks                   0.04873994 0.4772067
+SS-Mtn_N-equal_m_breaks                      0.05263310 0.4719693
+Est-Clines_N-equal_m_breaks                         NaN       NaN
+SS-Clines_N-variable_m-variable              0.07102395 0.4363785
+SS-Mtn_N-variable_m-variable                 0.07894541 0.4109113
+Est-Clines_N-variable_m-variable                    NaN       NaN
+```

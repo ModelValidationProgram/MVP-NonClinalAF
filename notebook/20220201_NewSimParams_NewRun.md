@@ -374,3 +374,41 @@ SS-Clines_N-variable_m-variable              0.07102395 0.4363785
 SS-Mtn_N-variable_m-variable                 0.07894541 0.4109113
 Est-Clines_N-variable_m-variable                    NaN       NaN
 ```
+
+Old simulation parameters:
+```
+MIG_x = c(0.05, 0.05, 0.49)
+MIG_y = c(0.05, 0.05, 0.1)
+```
+
+The first thing to notice is that I can not have similar levels of divergence and local adaptation in the SS vs Estuary demographies.
+
+New simulation parameters:
+```
+MIG_x = c(0.03, 0.03, 0.49)
+MIG_y = c(0.03, 0.03, 0.1)
+```
+
+This should bring FST of the SS closer to 0.05.
+
+Yes, I was correct in thinking that the number of loci was quite low in the N-variable m-variable scenario.
+
+This led to errors in the RDA prediction, which needed 5000 loci.
+
+![image](https://user-images.githubusercontent.com/6870125/152754989-0fc555f5-c1df-4b92-8f44-84bd7ea7089c.png)
+
+## To do:
+
+Try a pyslim recaptiation with a larger number of individuals! Right now the "N" for pyslim is 1000, bring it up to 1000.
+
+I'm going to be sloppy and overwrite the very first simulation.
+
+```
+(base) [lotterhos@login-00 sim_output_20220201]$ wc -l 1231094_plusneut_MAF01.recode2.vcf.gz
+45197 1231094_plusneut_MAF01.recode2.vcf.gz
+(base) [lotterhos@login-00 sim_output_20220201]$ wc -l 1231094_Rout_Gmat_sample.txtTRUETRUE
+15351 1231094_Rout_Gmat_sample.txtTRUETRUE
+```
+(base) [lotterhos@login-00 sim_output_20220201]$
+
+

@@ -429,6 +429,7 @@ Number of mutations produced by first run:
 Submitted batch job 23075173
 (base) [lotterhos@login-00 src]$ seff 23075173
 ```
+This was still running after 7 hours.
 
 #### N=200 run
 ```
@@ -436,6 +437,36 @@ Submitted batch job 23075173
 Submitted batch job 23076368
 ```
 
+(base) [lotterhos@login-00 src]$ seff 23076368
+Job ID: 23076368
+Array Job ID: 23076368_2
+Cluster: discovery
+User/Group: lotterhos/users
+State: COMPLETED (exit code 0)
+Cores: 1
+CPU Utilized: 03:07:16
+CPU Efficiency: 99.96% of 03:07:21 core-walltime
+Job Wall-clock time: 03:07:21
+Memory Utilized: 848.70 MB
+Memory Efficiency: 16.58% of 5.00 GB
+
+#### N=200 run
+```
+(base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201-pyslimtest.sh
+Submitted batch job 23084385
+```
+
+
 ## rerun
 - copy previious set of sims to "arcived" with "c" appendix
 - rerun starting with R code to generate parameter list, Slim Code, and R analysis code
+
+In summary, these simulations should bring FST of the SS scenarios to be higher, 
+genetic diversity of all simulations to be higher (increased pyslim N for recap), 
+and FST/diversity for the N-variable/m-variable simulations to be higher (added some lower migration rates)
+
+```
+(base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201.sh
+Submitted batch job 23086467
+```
+

@@ -423,13 +423,18 @@ Number of mutations produced by first run:
 15351 1231094_Rout_Gmat_sample.txtTRUETRUE # the 1,000 subsample individuals
 ```
 
-N=1000 run
+#### N=1000 run
 ```
 (base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201-pyslimtest.sh
 Submitted batch job 23075173
 (base) [lotterhos@login-00 src]$ seff 23075173
 ```
 
+#### N=200 run
+```
+(base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201-pyslimtest.sh
+Submitted batch job 23076368
+```
 
 ## rerun
 - copy previious set of sims to "arcived" with "c" appendix

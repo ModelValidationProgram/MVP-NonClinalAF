@@ -432,4 +432,5 @@ Submitted batch job 23075173
 
 
 ## rerun
+- copy previious set of sims to "arcived" with "c" appendix
 - rerun starting with R code to generate parameter list, Slim Code, and R analysis code

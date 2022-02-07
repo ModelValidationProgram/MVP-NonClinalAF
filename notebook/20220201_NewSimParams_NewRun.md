@@ -430,4 +430,6 @@ Submitted batch job 23075173
 (base) [lotterhos@login-00 src]$ seff 23075173
 ```
 
-## For the SliM and R code
+
+## rerun
+- rerun starting with R code to generate parameter list, Slim Code, and R analysis code

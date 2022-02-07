@@ -309,7 +309,57 @@ ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l
 Submitted batch job 23053326
 ```
 
-# Failed sims
+#### Let's check Fst
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220201.txt # header
+
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220201.txt # data
+
+```
+                                                   Fst        LA
+SS-Clines_N-equal_m-constant                 0.03531793 0.4712589
+SS-Mtn_N-equal_m-constant                    0.03889448 0.4654960
+Est-Clines_N-equal_m-constant                0.07327978 0.4289701
+SS-Clines_N-cline-N-to-S_m-constant          0.08639464 0.4660734
+SS-Mtn_N-cline-N-to-S_m-constant             0.09169559 0.4598002
+Est-Clines_N-cline-N-to-S_m-constant         0.13836340 0.4202269
+SS-Clines_N-cline-center-to-edge_m-constant  0.08632038 0.4659329
+SS-Mtn_N-cline-center-to-edge_m-constant     0.09422532 0.4608467
+Est-Clines_N-cline-center-to-edge_m-constant 0.15824315 0.4229619
+SS-Clines_N-equal_m_breaks                   0.04873994 0.4772067
+SS-Mtn_N-equal_m_breaks                      0.05263310 0.4719693
+Est-Clines_N-equal_m_breaks                         NaN       NaN
+SS-Clines_N-variable_m-variable              0.07102395 0.4363785
+SS-Mtn_N-variable_m-variable                 0.07894541 0.4109113
+Est-Clines_N-variable_m-variable                    NaN       NaN
+```
+
+Old simulation parameters for SS in `0a-setUpSims.Rmd`
+```
+MIG_x = c(0.05, 0.05, 0.49)
+MIG_y = c(0.05, 0.05, 0.1)
+```
+
+The first thing to notice is that I can not have similar levels of divergence and local adaptation in the SS vs Estuary demographies.
+
+New simulation parameters:
+```
+MIG_x = c(0.03, 0.03, 0.49)
+MIG_y = c(0.03, 0.03, 0.07)
+```
+
+This should bring FST of the SS closer to 0.05.
+
+Old simulation parameters for N-variable m-variable:
+```
+  var_m_ss = c(rep(0.01,5),rep(0.1,10),rep(0.25,5));
+```
+
+New simulation params for N-variable m-variable:
+```
+  var_m_ss = c(0.001, rep(0.01,5),rep(0.1,10),rep(0.25,5));
+```
+
+### Failed sims
 
 There are at least 65 failed sims.
 
@@ -351,45 +401,6 @@ Execution halted
 
 I'm willing to bet that some sims result in less than 3000 loci, and that's a problem.
 
-#### Let's check Fst
-awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220201.txt # header
-
-awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220201.txt # data
-
-```
-                                                   Fst        LA
-SS-Clines_N-equal_m-constant                 0.03531793 0.4712589
-SS-Mtn_N-equal_m-constant                    0.03889448 0.4654960
-Est-Clines_N-equal_m-constant                0.07327978 0.4289701
-SS-Clines_N-cline-N-to-S_m-constant          0.08639464 0.4660734
-SS-Mtn_N-cline-N-to-S_m-constant             0.09169559 0.4598002
-Est-Clines_N-cline-N-to-S_m-constant         0.13836340 0.4202269
-SS-Clines_N-cline-center-to-edge_m-constant  0.08632038 0.4659329
-SS-Mtn_N-cline-center-to-edge_m-constant     0.09422532 0.4608467
-Est-Clines_N-cline-center-to-edge_m-constant 0.15824315 0.4229619
-SS-Clines_N-equal_m_breaks                   0.04873994 0.4772067
-SS-Mtn_N-equal_m_breaks                      0.05263310 0.4719693
-Est-Clines_N-equal_m_breaks                         NaN       NaN
-SS-Clines_N-variable_m-variable              0.07102395 0.4363785
-SS-Mtn_N-variable_m-variable                 0.07894541 0.4109113
-Est-Clines_N-variable_m-variable                    NaN       NaN
-```
-
-Old simulation parameters:
-```
-MIG_x = c(0.05, 0.05, 0.49)
-MIG_y = c(0.05, 0.05, 0.1)
-```
-
-The first thing to notice is that I can not have similar levels of divergence and local adaptation in the SS vs Estuary demographies.
-
-New simulation parameters:
-```
-MIG_x = c(0.03, 0.03, 0.49)
-MIG_y = c(0.03, 0.03, 0.1)
-```
-
-This should bring FST of the SS closer to 0.05.
 
 Yes, I was correct in thinking that the number of loci was quite low in the N-variable m-variable scenario.
 
@@ -397,18 +408,26 @@ This led to errors in the RDA prediction, which needed 5000 loci.
 
 ![image](https://user-images.githubusercontent.com/6870125/152754989-0fc555f5-c1df-4b92-8f44-84bd7ea7089c.png)
 
-## To do:
+## To do: Figure out how to "up" genetic diversity
 
 Try a pyslim recaptiation with a larger number of individuals! Right now the "N" for pyslim is 1000, bring it up to 1000.
 
 I'm going to be sloppy and overwrite the very first simulation.
 
+Number of mutations produced by first run:
 ```
 (base) [lotterhos@login-00 sim_output_20220201]$ wc -l 1231094_plusneut_MAF01.recode2.vcf.gz
-45197 1231094_plusneut_MAF01.recode2.vcf.gz
+45197 1231094_plusneut_MAF01.recode2.vcf.gz ## 10,000 individuals
+
 (base) [lotterhos@login-00 sim_output_20220201]$ wc -l 1231094_Rout_Gmat_sample.txtTRUETRUE
-15351 1231094_Rout_Gmat_sample.txtTRUETRUE
+15351 1231094_Rout_Gmat_sample.txtTRUETRUE # the 1,000 subsample individuals
 ```
-(base) [lotterhos@login-00 sim_output_20220201]$
 
+N=1000 run
+```
+(base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201-pyslimtest.sh
+Submitted batch job 23075173
+(base) [lotterhos@login-00 src]$ seff 23075173
+```
 
+## For the SliM and R code

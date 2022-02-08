@@ -450,16 +450,10 @@ Job Wall-clock time: 03:07:21
 Memory Utilized: 848.70 MB
 Memory Efficiency: 16.58% of 5.00 GB
 
-#### N=200 run
-```
-(base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201-pyslimtest.sh
-Submitted batch job 23084385
-```
 
+## The Rerun
 
-## rerun
-- copy previious set of sims to "arcived" with "c" appendix
-- rerun starting with R code to generate parameter list, Slim Code, and R analysis code
+- [x] rerun starting with R code to generate parameter list, Slim Code, and R analysis code
 
 In summary, these simulations should bring FST of the SS scenarios to be higher, 
 genetic diversity of all simulations to be higher (increased pyslim N for recap), 
@@ -469,4 +463,15 @@ and FST/diversity for the N-variable/m-variable simulations to be higher (added 
 (base) [lotterhos@login-00 src]$ sbatch d-run_nonAF_sims_0Slim-fastruns-20220201.sh
 Submitted batch job 23086467
 ```
+
+### Compare number of loci in vcf file for old vs. new
+
+Old sims with N=100 recap: `45197 1231094_plusneut_MAF01.recode2.vcf.gz`
+
+New sims with N=200 recap: `70193 1231094_plusneut_MAF01.recode2.vcf.gz`
+
+Most will be filtered again after sampling.
+
+The newer simulations take a lot longer to run. After 12 hours about 30-40% of 1000 runs are finished.
+
 

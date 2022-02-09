@@ -484,3 +484,9 @@ Submitted batch job 23128766
 wc -l 1231094_Rout_Gmat_sample.txt
 26092 1231094_Rout_Gmat_sample.txt
 ```
+
+This is one of the N-variable m-variable simulations (still low diversity - probably due to too high gene flow):
+```
+(base) [lotterhos@login-01 sim_output_20220201]$ wc -l 1231103_Rout_Gmat_sample.txt
+5538 1231103_Rout_Gmat_sample.txt
+```

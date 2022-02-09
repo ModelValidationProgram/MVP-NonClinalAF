@@ -474,4 +474,13 @@ Most will be filtered again after sampling.
 
 The newer simulations take a lot longer to run. After 12 hours about 30-40% of 1000 runs are finished.
 
+### Run R
+```
+(base) [lotterhos@login-01 src]$ sbatch e-run_nonAF_sims_1R-fastruns-20220201.sh
+Submitted batch job 23128766
+```
 
+```
+wc -l 1231094_Rout_Gmat_sample.txt
+26092 1231094_Rout_Gmat_sample.txt
+```

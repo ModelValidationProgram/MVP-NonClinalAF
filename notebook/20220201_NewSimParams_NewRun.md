@@ -490,3 +490,31 @@ This is one of the N-variable m-variable simulations (still low diversity - prob
 (base) [lotterhos@login-01 sim_output_20220201]$ wc -l 1231103_Rout_Gmat_sample.txt
 5538 1231103_Rout_Gmat_sample.txt
 ```
+
+### Inspecting this round of sims
+```
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220201.txt # header
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220201.txt # data
+```
+
+```
+
+                                                    Fst        LA
+SS-Clines_N-equal_m-constant                 0.05782970 0.4841922
+SS-Mtn_N-equal_m-constant                    0.06339836 0.4862318
+Est-Clines_N-equal_m-constant                0.08777946 0.4297248
+SS-Clines_N-cline-N-to-S_m-constant          0.12456721 0.4798241
+SS-Mtn_N-cline-N-to-S_m-constant             0.13284979 0.4779571
+Est-Clines_N-cline-N-to-S_m-constant         0.15853110 0.4226462
+SS-Clines_N-cline-center-to-edge_m-constant  0.12918562 0.4781890
+SS-Mtn_N-cline-center-to-edge_m-constant     0.13925447 0.4797316
+Est-Clines_N-cline-center-to-edge_m-constant 0.18727872 0.4210846
+SS-Clines_N-equal_m_breaks                   0.06927258 0.4886862
+SS-Mtn_N-equal_m_breaks                      0.07520083 0.4905438
+Est-Clines_N-equal_m_breaks                         NaN       NaN
+SS-Clines_N-variable_m-variable              0.09337713 0.4365570
+SS-Mtn_N-variable_m-variable                 0.10082130 0.4239514
+Est-Clines_N-variable_m-variable                    NaN       NaN
+```
+
+![image](https://user-images.githubusercontent.com/6870125/153347014-f074d45e-1f75-4e34-93bf-870cc46394a1.png)

@@ -518,3 +518,33 @@ Est-Clines_N-variable_m-variable                    NaN       NaN
 ```
 
 ![image](https://user-images.githubusercontent.com/6870125/153347014-f074d45e-1f75-4e34-93bf-870cc46394a1.png)
+
+
+### OK, so now I just need to up the # SNPs for the N-variable m-variable scenario. Too much homogenizing gene flow
+
+This was the *really* old code that gave twice as many SNPs: `var_m_ss = c(rep(0.001,6),0.01,0.1,0.25);` (mean m was 0.04, gave large # SNPs)
+This is the code I'm using now that gives ~2000-4000 SNPs: `var_m_ss = c(0.001, rep(0.01,5),rep(0.1,10),rep(0.25,5));` (mean m was 0.1, gave low # SNPs)
+
+```
+> m2<- c(rep(0.001,3), rep(0.01,10),rep(0.1,5),rep(0.25,1));
+> mean(m2)
+[1] 0.045
+```
+
+This was the number of SNPs with `var_m_ss = c(0.001, rep(0.01,5),rep(0.1,10),rep(0.25,5));`:
+```
+(base) [lotterhos@login-00 MVP-NonClinalAF]$ wc -l sim_output_20220201/1231118_plusneut_MAF01.recode2.vcf.gz
+8547 sim_output_20220201/1231118_plusneut_MAF01.recode2.vcf.gz
+```
+
+With new parameters: m2<- c(rep(0.001,3), rep(0.01,10),rep(0.1,5),rep(0.25,1));
+```
+(base) [lotterhos@login-00 sim_output_20220201]$ wc -l 1231118_plusneut_MAF01.recode2.vcf.gz
+26354 1231118_plusneut_MAF01.recode2.vcf.gz
+```
+
+Rerun R analysis
+```
+(base) [lotterhos@login-00 src]$ sbatch  e-run_nonAF_sims_1R-fastruns-20220201-redo.sh
+Submitted batch job 23151680
+```

@@ -548,3 +548,8 @@ Rerun R analysis
 (base) [lotterhos@login-00 src]$ sbatch  e-run_nonAF_sims_1R-fastruns-20220201-redo.sh
 Submitted batch job 23151680
 ```
+```
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220201.txt # header
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220201.txt # data
+```
+

@@ -6,7 +6,7 @@
 #SBATCH --partition=lotterhos
 #SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=2-1001%70
+#SBATCH --array=2-1000%70
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.err
 

@@ -6,7 +6,7 @@
 #SBATCH --partition=lotterhos
 #SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=2-1001%70
+#SBATCH --array=2-31%70
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.err
 
@@ -27,7 +27,7 @@ outpath="sim_output_20220201/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params-fastruns-20220201.txt"
+params="src/0b-final_params-fastruns-20220201-redo-153.txt"
 
 #### User variables ####
 # N for pyslim

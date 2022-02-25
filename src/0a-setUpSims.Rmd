@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-runID = "20220128"
+runID = "20220201"
 ```
 
 # 15 demographies
@@ -20,8 +20,8 @@ The three categories of demographies were designed to give insights into differe
 
 ```{r demogs}
 (demog_level = factor(c("SS-Clines", "SS-Mtn", "Est-Clines"), levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered=TRUE))
-MIG_x = c(0.01, 0.01, 0.49)
-MIG_y = c(0.01, 0.01, 0.01)
+MIG_x = c(0.03, 0.03, 0.49)
+MIG_y = c(0.03, 0.03, 0.07)
 xcline = c("linear", "V", "linear")
 ycline = c("linear", "linear", "linear")
 demog = c("SS", "SS", "Estuary")
@@ -89,7 +89,7 @@ arch_sub_df
 ```
 
 
-Combine to get all 10 levels of architecture
+Combine to get all 15 levels of architecture
 ```{r}
 b <- expand.grid(arch_level = arch_level, arch_level_sub=arch_level_sub)
 b

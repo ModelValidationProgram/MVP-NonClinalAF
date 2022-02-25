@@ -6,7 +6,7 @@
 #SBATCH --partition=lotterhos
 #SBATCH --mem=15G
 #SBATCH --nodes=1
-#SBATCH --array=2-1000%30
+#SBATCH --array=2-952%30
 #SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.out
 #SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.err
 
@@ -27,7 +27,7 @@ outpath="sim_output_20220201/"
 runID="20220201"
 
 # Parameter file
-params="src/0b-final_params-fastruns-20220201.txt"
+params="src/0b-final_params-fastruns-20220201-b.txt"
 
 
 # Extracting individual variables

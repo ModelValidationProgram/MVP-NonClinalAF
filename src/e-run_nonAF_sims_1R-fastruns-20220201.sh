@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=R-Run-20220128
+#SBATCH --job-name=R-Run-20220201
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --mem=15G
 #SBATCH --nodes=1
 #SBATCH --array=2-1000%30
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220128_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220128_%j.err
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.err
 
 source ~/miniconda3/bin/activate MVP_env_R4.0.3
 
@@ -21,11 +21,13 @@ set -o pipefail
 # Local working path (this should navigate to the MVP repo)
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
+
 # Folder within MVP where you want are your output files
-outpath="sim_output_20220128/"
+outpath="sim_output_20220201/"
+runID="20220201"
 
 # Parameter file
-params="src/0b-final_params-fastruns-20220128.txt"
+params="src/0b-final_params-fastruns-20220201.txt"
 
 
 # Extracting individual variables
@@ -66,8 +68,8 @@ seed=`awk NR==${SLURM_ARRAY_TASK_ID} ${params} | awk '{print $27}'`
 #############
 SECONDS=0 # used to time analyses
 echo "Running R scripts"
-Rscript --vanilla src/c-AnalyzeSimOutput.R ${seed} ${outpath} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
+Rscript --vanilla src/c-AnalyzeSimOutput.R ${seed} ${outpath} ${runID} > ${outpath}${seed}"_R.out" 2> ${outpath}${seed}"_R.error"
 echo "Done with processing first R script. Analysis took $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min"
 
 
-mv ${seed}"_genotypes.pcaProject" {outpath}
+mv ${seed}"_genotypes.pcaProject" ${outpath}

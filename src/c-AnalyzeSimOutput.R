@@ -39,11 +39,12 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 
 args = commandArgs(trailingOnly=TRUE)
 
-#seed = 1231101
-#path = "sim_output_20220117/"
-
+#seed = 1231723
+#path = "sim_output_20220128/"
+# runID=20220201
 seed = args[1]
 path = args[2]
+runID = args[3]
 
 ### load data ####
 vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
@@ -86,7 +87,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                     rep("numeric",6)))
   
   
-  allsims <- load("src/0b-final_params-20220117.RData")
+  allsims <- load(paste0("src/0b-final_params-",runID,".RData"))
   allsims<- final
   thissim <- allsims[grep(seed, allsims$seed),]
   (plotmain <- paste(thissim$level, seed, sep="\n"))
@@ -140,10 +141,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   }
   legend(0,1, c("Temp", "Env2"), lwd=3, col=c("orange", "cornflowerblue"), lty=c(1,2), bty="n")
   
-  plot(LA_df$gen, LA_df$local_adapt, type="l", col="cornflowerblue", main=plotmain, 
+  plot(LA_df$gen, LA_df$local_adapt, type="l", col="blue", main=plotmain, 
        ylab="Amount of local adaptation", xlab="Generation", ylim=c(0,1.2), bty="n")
   
-  plot(LA_df$gen, LA_df$mean_phen1, type="l", col="cornflowerblue", main=plotmain, 
+  plot(LA_df$gen, LA_df$mean_phen1, type="l", col="blue", main=plotmain, 
        ylab="Mean metapopulation phenotype", xlab="Generation", ylim=c(-1,1))
     if (sum(LA_df$cor_sal_ind, na.rm=TRUE)>0){
       points(LA_df$gen, LA_df$mean_phen0, col="orange", type="l", lwd=3, lty=2)
@@ -319,7 +320,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   head(muts_full$VCFrow)
   #Sanity check
-  if(cor(muts_full$VCFrow, muts_full$pos_pyslim)<0.999){print("Error 2: order of mutations wrong");break()} #sanity check
+  #if(cor(muts_full$VCFrow, muts_full$pos_pyslim)<0.999){print("Error 2: order of mutations wrong");break()} #sanity check
   
 
   num_causal_postfilter <- sum(muts_full$causal)
@@ -498,7 +499,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     scale_color_manual(values=c("blue", adjustcolor("grey60", alpha.f=0.8), 
                                 adjustcolor("goldenrod1", alpha.f = 1)),
                        drop=FALSE)
-  p1a<-ggExtra::ggMarginal(p1, type="density",groupColour = TRUE, groupFill = TRUE)
+  p1a<-ggExtra::ggMarginal(p1, type="density",groupColour = TRUE, groupFill = TRUE, bw=0.05, size=3)
 
   
   p<- ggplot(aes(x=Va_sal_prop,y=abs(af_cor_sal),  fill=causal_sal,
@@ -512,7 +513,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     scale_color_manual(values=c("blue", adjustcolor("grey60", alpha.f=0.8), 
                                 adjustcolor("goldenrod1", alpha.f = 1)),
                        drop=FALSE)
-  pqb <- ggExtra::ggMarginal(p, type="density",groupColour = TRUE, groupFill = TRUE)
+  pqb <- ggExtra::ggMarginal(p, type="density",groupColour = TRUE, groupFill = TRUE, bw=0.05, size=3)
   
   grid.arrange(p1a, pqb, nrow=2)
   
@@ -521,7 +522,12 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   rm(geno_full)
   rm(indPhen_df)
   rm(G_full)
+
   ### end show cool patterns of mutations ###
+
+  ## Write G_full_subset to file ####
+  write.csv(G_full_subset, paste0(path,seed,"_Rout_Gmat_sample.txt"), row.names=TRUE, col.names=TRUE)
+    print("wrote G matrix to file")
   ### Correlation stats ####
   Bonf_alpha <- (0.05/(nrow(muts_full)))
   
@@ -612,7 +618,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   write.lfmm(t(G_full_subset), lfmmfile)
   
   pc = pca(lfmmfile, 30, scale = TRUE)
-  
+  print("calculated pca")
   subset_indPhen_df$PC1 <- pc$projections[,1]
   subset_indPhen_df$PC2 <- pc$projections[,2]
   subset_indPhen_df$PC3 <- pc$projections[,3]
@@ -620,16 +626,31 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   plot(tw$percentage)
   a <- tw$percentage[1:20]
   b <- tw$percentage[2:21]
-  K <- max(which(a > b*1.5))
-  K
+  K1 <- max(which(a > b*1.5))
+  K2 <- max(which(a > b*1.4))
+  K3 <- max(which(a > b*1.3))
+  if (!is.infinite(K1)){K=K1}
+  if (is.infinite(K1)){K=K3}
+  if (is.infinite(K)){print("Error K is not definite"); break}
+  print(c("K=",K))
+  print(c("K1=", K1, "K2=", K2, "K3=", K3))
   
   pdf(paste0(path,seed,"_pdf_3pca.pdf"), width=9, height=8)
   
-  plot(pc$sdev[1:15]/sum(pc$sdev), bty="l", ylab="Prop Var of PC axis", main=paste0(plotmain, "; K=", K), cex.main=0.5)
+  propvarpc <- pc$sdev[1:15]/sum(pc$sdev)
+  plot(propvarpc, bty="l", ylab="Prop Var of PC axis", main=paste0(plotmain, "; K=", K), cex.main=0.5)
   
-  ggplot(subset_indPhen_df) + ggtheme + geom_point(aes(x=PC1, y=PC2,size=sal_opt), color="grey20") + geom_point(aes(x=PC1, y=PC2, color=temp_opt), size=2.5) +  scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="Env2") + ggtitle(paste0(plotmain, "; K=", K))
+  ggplot(subset_indPhen_df) + ggtheme + geom_point(aes(x=PC1, y=PC2,size=sal_opt), color="grey20") + 
+    geom_point(aes(x=PC1, y=PC2, color=temp_opt), size=2.5) +  
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + ggtitle(paste0(plotmain, "; K=", K)) + 
+    xlab(paste0("PC1 (", round(propvarpc[1]*100,1),"%)")) +
+    ylab(paste0("PC2 (", round(propvarpc[2]*100,1),"%)"))
+    
   
-  ggplot(subset_indPhen_df) + ggtheme + geom_point(aes(x=PC1, y=PC3,size=sal_opt), color="grey20") + geom_point(aes(x=PC1, y=PC3, color=temp_opt), size=2.5) + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="Env2") + ggtitle(paste0(plotmain,  "; K=", K))
+  ggplot(subset_indPhen_df) + ggtheme + geom_point(aes(x=PC1, y=PC3,size=sal_opt), color="grey20") + geom_point(aes(x=PC1, y=PC3, color=temp_opt), size=2.5) + scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + labs(size="Env2") + ggtitle(paste0(plotmain,  "; K=", K)) + 
+    xlab(paste0("PC1 (", round(propvarpc[1]*100,1),"%)")) +
+    ylab(paste0("PC3 (", round(propvarpc[3]*100,1),"%)"))
   
   
   dev.off()
@@ -664,6 +685,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     geom_hline(aes(yintercept=meanFst), color=adjustcolor("darkred",0.5))
   
   dev.off()
+  
+  print("FST finished")
   
 # LFMM ####
   
@@ -838,6 +861,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     grid.arrange(k, l, s, ssal, r, rsal, nrow=3)
     
     dev.off()
+    
+    print("LFMM finished")
   
     #cor.test(abs(muts_full$structure_cor_G_PC1), muts_full$LEA3.2_lfmm2_mlog10P_tempenv, method="pearson")
     
@@ -1062,22 +1087,22 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   a<- ggplot() + 
     geom_point(data=muts_full, 
                aes(x=pos_pyslim, y = RDA_mlog10P), color=muts_full$colors) +
+    geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     geom_point(data = muts_full[muts_full$causal_temp=="causal",], 
                aes(x=pos_pyslim, y = RDA_mlog10P, color= mutTempEffect, 
                    size=Va_temp_prop), shape=shape_causal) + 
     scale_colour_viridis(option="turbo") + 
     ggtheme +
-    geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     ylim(0, ymax)  + ylab("-log10(P) RDA") + ggtitle(paste0(plotmain," temp")) + xlab("position") + labs(color="MutTempEffect", size="Temp VA prop.")
   
   b<- ggplot() + 
     geom_point(data=muts_full, aes(x=pos_pyslim, y = RDA_mlog10P), color=muts_full$colors) +
+    geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     geom_point(data = muts_full[muts_full$causal_sal=="causal",], 
                aes(x=pos_pyslim, y = RDA_mlog10P, color=mutSalEffect, size=Va_sal_prop), 
                shape=shape_causal) + 
     scale_colour_viridis(option="turbo") + 
     ggtheme +
-    geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=pos_pyslim, y =RDA_mlog10P),pch=23, col="grey", size=3, alpha=0.5) + 
     ylim(0, ymax)  + ylab("-log10(P) RDA") + ggtitle(paste0(plotmain," Env2")) + xlab("position") + labs(color="MutSalEffect", size="Env2 VA prop.")
   
   grid.arrange(a, b, nrow=2)
@@ -1089,7 +1114,14 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
 ### RDA predict phenotype from random loci ####
   nmax <- min(c(20000, num_causal_postfilter+num_neut))
-  nloci <- c(10, 50, 100, 500, nmax)
+  
+  if ((num_causal_postfilter+num_neut)>4999){
+    nloci <- c(10, 50, 100, 500, 5000, nmax)
+  }else{
+    nloci <- c(10, 50, 100, 500, nmax)
+  }
+  
+  
   Random_cor_salpredict_salphen <- rep(NA, length(nloci))
   Random_cor_temppredict_tempphen <- rep(NA, length(nloci))
   

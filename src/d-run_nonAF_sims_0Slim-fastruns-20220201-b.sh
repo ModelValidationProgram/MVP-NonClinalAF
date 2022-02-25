@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=SlimRun20220128
+#SBATCH --job-name=SlimRun20220201
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --mem=5G
 #SBATCH --nodes=1
-#SBATCH --array=2-1000%70
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220128_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220128_%j.err
+#SBATCH --array=2-952%70
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimRun20220201_%j.err
 
 source ~/miniconda3/bin/activate MVP_env
 # This is a CONDA environment I created on my own personal CONDA folder using the environment found in src/env/MVP_env.yml
@@ -23,15 +23,15 @@ set -o pipefail
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
-outpath="sim_output_20220128/"
+outpath="sim_output_20220201/"
 mkdir -p ${outpath} # make outpath directory if it doesn't exist
 
 # Parameter file
-params="src/0b-final_params-fastruns-20220128.txt"
+params="src/0b-final_params-fastruns-20220201-b.txt"
 
 #### User variables ####
 # N for pyslim
-POP=100
+POP=200
 # Minimum allele freq. for vcftools
 MAF=0.01
 
@@ -77,7 +77,7 @@ timestamp_initial=`date`
 echo ${timestamp_initial}
 
 #run slim in background
-slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=\"${outpath}\" -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog_20210914.slim > $outpath${seed}_outfile.txt 2> ${outpath}${seed}_outfile.error.txt    
+slim -d MY_SEED1=${seed} -d MY_RESULTS_PATH1=\"${outpath}\" -d MIG_x1=${MIG_x} -d MIG_y1=${MIG_y} -d demog1=${demog} -d xcline1=${xcline} -d ycline1=${ycline} -d METAPOP_SIDE_x1=${METAPOP_SIDE_x} -d METAPOP_SIDE_y1=${METAPOP_SIDE_y} -d Nequal1=${Nequal} -d isVariableM1=${isVariableM} -d MIG_breaks1=${MIG_breaks} -d MU_base1=${MU_base} -d MU_QTL_proportion1=${MU_QTL_proportion} -d SIGMA_QTN_1a=${SIGMA_QTN_1} -d SIGMA_QTN_2a=${SIGMA_QTN_2} -d SIGMA_K_1a=${SIGMA_K_1} -d SIGMA_K_2a=${SIGMA_K_2} -d N_traits1=${N_traits} -d ispleiotropy1=${ispleiotropy} src/a-PleiotropyDemog_20220201.slim > $outpath${seed}_outfile.txt 2> ${outpath}${seed}_outfile.error.txt    
 
 ## Final timestamp
 echo "Done with SLiM sims"

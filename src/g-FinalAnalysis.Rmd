@@ -12,19 +12,22 @@ library(viridis)
 library(gridExtra)
 library(tidyr)
 library(dplyr)
-outputs <- "../20210920_graphs/"
+#library(tidyverse)
+outputs <- "../20220201_graphs/"
 ```
 
-`setwd("~/Documents/GitHub/MVP-NonClinalAF/src")`
-
+`setwd("~/Documents/GitHub/MVP-NonClinalAF")`
+setwd("/work/lotterhos/MVP-NonClinalAF")
 ## Read in data
 
 ```{r cars}
-out.df <- read.table(file = "../summary_20210920.txt", header=TRUE)
+out.df <- read.table(file = "summary_20220201.txt", header=TRUE)
 head(out.df)
 tail(out.df)
 
-load("0b-final_params-20210920.RData")
+
+
+load("src/0b-final_params-20220201.RData")
 sims.df <- final
 head(sims.df)
 
@@ -32,30 +35,40 @@ final.df <- merge(sims.df, out.df, all.x=TRUE)
 head(final.df)
 (vars <- t(final.df[1,]))
 
+ref <- final.df[,c("seed", "level", "num_causal_postfilter")]
+
 count <- data.frame(notNA=tapply(final.df$K, final.df$level, 
        function(x){sum(!is.na(x))}
        ))
+count
 
 head(final.df[which(is.na(final.df$K)),])
 
 
 levels(final.df$demog_level_sub)
 levels(final.df$arch_level_sub)
-final.df %>% filter(demog_level=="Est-Clines" & 
-                      demog_level_sub=="N-equal_m-constant" & 
-                    arch_level_sub=="2-trait-pleiotropy-equal-S" &
-                      arch_level=="mod-polygenic")
+#final.df %>% filter(demog_level=="Est-Clines" & 
+#                      demog_level_sub=="N-equal_m-constant" & 
+#                    arch_level_sub=="2-trait-pleiotropy-equal-S" &
+#                      arch_level=="mod-polygenic")
 
-1231217
+#1231217
 ```
 
-
+Copy graphs
+```{r}
+for (i in 1:225){
+  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*.pdf graphs_20220201/")
+  system(file)
+}
+```
 
 
 GGtheme
 ```{r}
 
 ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
+
 ```
 
 
@@ -99,6 +112,25 @@ levels(final.df$demog_level_sub) <- c("N equal\nm constant", "N latitude cline\n
 levels(final.df$demog_level_sub)
 ```
 
+## mean FST
+```{r mean FST}
+hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
+
+ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+
+ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
+
+ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
+
+a<-tapply(final.df$meanFst,final.df$demog_name, mean, na.rm=TRUE)
+b<- tapply(final.df$final_LA,final.df$demog_name, mean, na.rm=TRUE)
+  
+cbind(Fst=a,LA=b)
+
+ggplot(final.df, aes(x=as.factor(N_traits), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("meanFst") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
+
+```
+
 ## Degree local adaptation
 ```{r}
 hist(final.df$final_LA, xlim=c(0,1), breaks=seq(0,1,0.05), main="", xlab="Degree of local adaptation")
@@ -112,6 +144,8 @@ hist(final.df$final_LA, xlim=c(0,1), breaks=seq(0,1,0.05), main="", xlab="Degree
   guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 l1
 
+ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+  guides(fill = guide_legend(reverse = FALSE)) + ggtitle("A")
 
       l2<- ggplot(final.df) +
         geom_point(aes(x=subsamp_corr_phen_temp,
@@ -145,7 +179,10 @@ str(numloc_df$arch_level)
 m<- ggplot(numloc_df ) + geom_boxplot(aes(y=num_loci_causal,x = arch_level, fill=filter), color="grey70") + ggtheme + ylim(0,4000) + ylab("Number of causal loci") + xlab("Architecture") + scale_fill_viridis(option="mako", discrete=TRUE)
 m
 
+tapply(numloc_df$num_loci_causal, list(numloc_df$filter, numloc_df$arch_level), mean, na.rm=TRUE)
+
 n <- ggplot(final.df) + geom_violin(aes(y=num_neut, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
+n
 
 tapply(numloc_df$num_loci_causal, list(numloc_df$arch_level, numloc_df$filter), median, na.rm=TRUE)
 
@@ -159,6 +196,8 @@ dev.off()
 
 
 ## Statistical model
+
+TO DO: ADD MODELS FOR DIVERGENCE AND FOR AMOUNT LA
 
 AUCPR ~ trait + demog_level + demog_level_sub + arch_level_sub + arch_level +   final_LA
 
@@ -713,29 +752,28 @@ dev.off()
 ```{r}
 #will be able to do with new outputs
 
-hist(final.df$X....RDA1_temp_cor)
+par(mfrow=c(2,2))
+hist(final.df$RDA_RDAmutpred_cor_tempEffect)
+hist(final.df$RDA_RDAmutpred_cor_salEffect)
+
+hist(final.df$cor_RDA20000_RDloadings_tempPhen)
+hist(final.df$cor_RDA20000_RDloadings_salPhen)
 
 
-plot(final.df$X....RDA1_temp_cor, final.df$RDA_RDA1Loading_cor_tempEffect)
+final.df$seed[which(final.df$RDA_RDAmutpred_cor_tempEffect < 0)]
+final.df$seed[which(final.df$RDA_RDAmutpred_cor_salEffect < 0)]
+final.df$seed[which(final.df$cor_RDA20000_RDloadings_tempPhen < 0)]
 
-hist(final.df$RDA_RDA1Loading_cor_tempEffect)
-
-final.df[which(final.df$RDA_RDA1Loading_cor_tempEffect < -0.9),]
-#1231942
-#1232405
-
-hist(final.df$RDA_RDA2Loading_cor_salEffect)
-final.df[which(final.df$RDA_RDA1Loading_cor_salEffect < -0.9),]
-#1231267
-#1232407
 ```
 
 ## Under what conditions can redundancy analysis predict an individual’s optimal environment, without knowledge of the genetic architecture of adaptation?
 
 ```{r}
 n <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A")
+n
 
 o <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_salPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(Env2 phenotype, RDA predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B")
+o
 
 pdf(paste0(outputs,"RDA-Landscape-hist.pdf"), width=8, height=8)
   grid.arrange(n, o, nrow=2)

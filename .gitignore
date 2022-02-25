@@ -11,5 +11,12 @@ sim_output_150_20210830/*
 *.Rhistory
 simoutput*
 sim_output*
+run20210920*
 graphics_*
+
 old*
+
+*pcaProject
+graphs*
+archived/*
+src/archived/*

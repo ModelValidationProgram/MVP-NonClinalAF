@@ -1,0 +1,66 @@
+---
+title: "Check analyses"
+author: "KE Lotterhos"
+date: "1/26/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/work/lotterhos/MVP-NonClinalAF")
+
+out.df <- read.table(file = "summary_20220202.txt", header=TRUE)
+
+head(out.df)
+tail(out.df)
+
+sim.df1 <- read.table("src/0b-final_params-fastruns-20220201.txt", header=TRUE)
+
+head(sim.df1)
+
+final.df <- merge(sim.df1, out.df, all.x=TRUE)
+head(final.df)
+(vars <- t(final.df[1,]))
+
+sum(is.na(final.df$K))
+
+final.df[is.na(final.df$K), c("seed", "K", "level")]
+```
+
+```{r}
+failed.df <- final.df[(is.na(final.df$K)),]
+```
+
+
+```{r}
+ran_mutpdf <- data.frame(seed = substr( system("ls sim_output_20220128/*_2muts.pdf", intern = TRUE), 21, 27), ran_mut = TRUE)
+head(ran_mutpdf)
+
+ran_pca <- data.frame(seed = substr( system("ls sim_output_20220128/*_pdf_3pca.pdf", intern = TRUE), 21, 27), ran_pca = TRUE)
+head(ran_pca)
+
+ran_rda <- data.frame(seed = substr( system("ls sim_output_20220128/*_pdf_5RDA.pdf", intern = TRUE), 21, 27), ran_rda = TRUE)
+head(ran_rda)
+
+ran_af <- data.frame(seed = substr( system("ls sim_output_20220128/*_pdf_7_afcors.pdf", intern = TRUE), 21, 27), ran_af = TRUE)
+head(ran_af)
+
+ran_simout <- data.frame(seed = substr( system("ls sim_output_20220128/*_Rout_simSummary.txt", intern = TRUE), 21, 27), ran_sim = TRUE)
+head(ran_simout)
+
+status.df <- cbind(seed=sim.df1$seed, 
+                   demog_level=as.character(sim.df1$demog_level), 
+                   demog_level_sub = as.character(sim.df1$demog_level_sub), 
+                  arch= as.character(sim.df1$arch)
+                  )
+status.df <- merge(status.df, ran_mutpdf, all.x=TRUE)
+status.df <- merge(status.df, ran_pca, all.x=TRUE)
+status.df <- merge(status.df, ran_rda, all.x=TRUE)
+status.df <- merge(status.df, ran_af, all.x=TRUE)
+status.df <- merge(status.df, ran_simout, all.x=TRUE)
+
+status.df <- cbind(status.df, status.df$seed)
+```

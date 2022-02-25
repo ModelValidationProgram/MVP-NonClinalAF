@@ -1,11 +1,11 @@
-initialize()
+ initialize()
 {
 	//setSeed(22423308670);
 	//defineConstant("MY_RESULTS_PATH","/Users/lotterhos/Documents/GitHub/MVP-NonClinalAF/sim_outputs/");
 	defineConstant("MY_RESULTS_PATH", MY_RESULTS_PATH1);
 	defineConstant("MY_SEED", MY_SEED1);
 	setSeed(MY_SEED);
-	defineConstant("C_num", 20);							// number of chromosomes
+	defineConstant("C_num", 21);							// number of chromosomes
 	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome
 	//defineConstant("MU_base", 1e-7);						// base mutation rate overall
 	defineConstant("MU_base", MU_base1);
@@ -58,6 +58,9 @@ initialize()
 	}
 	if (Nequal == 1 | Nequal == 2 | Nequal == 3){
 		defineConstant("N", c(10,10,50,50,95,95,145,145,200,200));	
+	}
+	if (Nequal == 3){
+	    defineConstant("N_var", sample(rep(N,10), 100, replace=F));
 	}
 	if (Nequal == 4){
 		//defineConstant("N", c(10,50,95,145,200, 200, 145, 95, 50, 10));	
@@ -153,8 +156,9 @@ function (void)setUpMigration(void)
 	
 	if (demog=="Estuary"){
 
-	var_m_estuary = c(0.001,rep(0.01,10),rep(0.1,10),rep(0.25,5));
-	mig_breaks_estuary = 0.001;
+	var_m_estuary_x = c(0.25, rep(0.49, 5));
+	var_m_estuary_y = c(0.03, rep(0.07,5), 0.25);
+	mig_breaks_estuary = 0.03;
 	
 	for (x in 1:METAPOP_SIDE_x)
 		{
@@ -173,14 +177,13 @@ function (void)setUpMigration(void)
 				}
 				if (isVariableM ==1)
 				{
-					//destSubpop.setMigrationRates(sourceID - 1, sample(c(0.001,0.01,0.1,0.25), 1));
 					sourceID = destID - 1;
-					destSubpop.setMigrationRates(sourceID, sample(var_m_estuary , 1));
+					destSubpop.setMigrationRates(sourceID, sample(var_m_estuary_x , 1));
 				}
 			}
 			if (x < METAPOP_SIDE_x) // right to left
 			{
-				if (isVariableM == 0)
+				if (isVariableM == 0 | isVariableM ==1)
 				{
 					sourceID = destID + 1;
 					destSubpop.setMigrationRates(sourceID, MIG_x);
@@ -188,7 +191,7 @@ function (void)setUpMigration(void)
 				if (isVariableM == 1)
 				{
 					sourceID = destID + 1;
-					destSubpop.setMigrationRates(sourceID, sample(var_m_estuary , 1));
+					destSubpop.setMigrationRates(sourceID, sample(var_m_estuary_x , 1));
 				}
 			}
 			if (x == METAPOP_SIDE_x)
@@ -203,14 +206,14 @@ function (void)setUpMigration(void)
 					if (isVariableM == 1)
 					{ // Bottom (source) to top (destination)
 						sourceID = destID - METAPOP_SIDE_x;
-						destSubpop.setMigrationRates(sourceID, sample(var_m_estuary , 1));
+						destSubpop.setMigrationRates(sourceID, sample(var_m_estuary_y , 1));
 					}
 					if (MIG_breaks ==1){ // Bottom (source) to top (destination)
-						if (destID <= 80 & destID >= 61){
+						if (destID <= 80 & destID >= 71){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
-						if (destID <= 50 & destID >= 31){
+						if (destID <= 40 & destID >= 31){
 							sourceID = destID - METAPOP_SIDE_x;
 							destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
@@ -228,16 +231,16 @@ function (void)setUpMigration(void)
 					if (isVariableM == 1)
 					{ // Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
-						destSubpop.setMigrationRates(sourceID, sample(var_m_estuary , 1));
+						destSubpop.setMigrationRates(sourceID, sample(var_m_estuary_y , 1));
 					}
 					
 					if (MIG_breaks ==1){
 						// Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
-						if (destID <= 40 & destID >= 21){ 
+						if (destID <= 30 & destID >= 21){ 
 						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
-						if (destID <= 70 & destID >= 51){ 
+						if (destID <= 70 & destID >= 61){ 
 						destSubpop.setMigrationRates(sourceID, mig_breaks_estuary);
 						}
 					}
@@ -272,7 +275,9 @@ function (void)setUpMigration(void)
 	
 	if (demog=="SS"){ // STEPPING STONE DEMOGRAPHY
 
-	var_m_ss = c(rep(0.001,6),0.01,0.1,0.25);
+
+    var_m_ss = c(0.01, rep(0.03,8), 0.25);
+	mig_breaks_SS = 0.01;
 	
 	for (x in 1:METAPOP_SIDE_x)
 		for (y in 1:METAPOP_SIDE_y)
@@ -319,13 +324,13 @@ function (void)setUpMigration(void)
 					}
 					
 					if (MIG_breaks ==1){ // Bottom (source) to top (destination)
-						if (destID <= 80 & destID >= 61){
+						if (destID <= 80 & destID >= 71){
 							sourceID = destID - METAPOP_SIDE_x;
-							destSubpop.setMigrationRates(sourceID, 0.0001);
+							destSubpop.setMigrationRates(sourceID, mig_breaks_SS );
 						}
-						if (destID <= 50 & destID >= 31){
+						if (destID <= 40 & destID >= 31){
 							sourceID = destID - METAPOP_SIDE_x;
-							destSubpop.setMigrationRates(sourceID, 0.0001);
+							destSubpop.setMigrationRates(sourceID, mig_breaks_SS );
 						}
 					}
 			}
@@ -345,11 +350,11 @@ function (void)setUpMigration(void)
 					if (MIG_breaks ==1){
 						// Top (source) to Bottom (Dest)
 						sourceID = destID + METAPOP_SIDE_x;
-						if (destID <= 40 & destID >= 21){ // bottom to top
-						destSubpop.setMigrationRates(sourceID, 0.0001);
+						if (destID <= 30 & destID >= 21){ // bottom to top
+						destSubpop.setMigrationRates(sourceID, mig_breaks_SS );
 						}
-						if (destID <= 70 & destID >= 51){ // bottom to top
-						destSubpop.setMigrationRates(sourceID, 0.0001);
+						if (destID <= 70 & destID >= 61){ // bottom to top
+						destSubpop.setMigrationRates(sourceID, mig_breaks_SS );
 						}
 					}
 			}
@@ -417,10 +422,12 @@ function (void)outputMigration(string$ path)
 
 
 1 {
-	for (i in 1:METAPOP_NPOPS){
+    
+	for (i in 1:METAPOP_NPOPS){ //Set up population sizes
 	
 		x = (i-1)%10;
 		y = floor((i-1)/10);
+		
 		if (Nequal == 0){
 			sim.addSubpop(i, N); // equal population size
 		}
@@ -431,7 +438,7 @@ function (void)outputMigration(string$ path)
 			sim.addSubpop(i, N[y]); // N cline y axis if Nequal=2
 		}
 		if (Nequal == 3){
-			sim.addSubpop(i, sample(N,1)); // variable N
+			sim.addSubpop(i, N_var[i-1]); // variable N
 		}
 		if (Nequal ==4){
 			N = 0;

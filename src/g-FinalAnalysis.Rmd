@@ -56,13 +56,14 @@ levels(final.df$arch_level_sub)
 ```
 
 Copy graphs
-```{r}
+```{r, eval=FALSE, echo=FALSE}
 for (i in 1:225){
   file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*.pdf graphs_20220201/")
   system(file)
 }
 ```
 
+Seeds needed for 10x2 demography graph are the first 15 seeds
 
 GGtheme
 ```{r}
@@ -114,13 +115,15 @@ levels(final.df$demog_level_sub)
 
 ## mean FST
 ```{r mean FST}
-hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
+#hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
 
 ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 
-ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
+pdf("FST_Demog.pdf", width=8, height=6)
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
+  dev.off()
 
-ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
+ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,0.5) + ggtitle("C")
 
 a<-tapply(final.df$meanFst,final.df$demog_name, mean, na.rm=TRUE)
 b<- tapply(final.df$final_LA,final.df$demog_name, mean, na.rm=TRUE)

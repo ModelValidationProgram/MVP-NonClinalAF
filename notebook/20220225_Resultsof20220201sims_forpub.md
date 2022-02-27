@@ -1,4 +1,5 @@
 
+Supp Table 5
 ```
                                                Fst        LA
 SS-Clines_N-equal_m-constant                 0.05778861 0.4832536
@@ -33,15 +34,28 @@ Number neutral loci
                    17360.853                     5767.673 
 ```
 
-Percent of variation explained by params
+Percent of variation explained by params - Supp Table 6
 ```
                               name pervarLA pervarFST
 1 arch                                 0.82      0.00 #15 levels
 2 demog_level_sub                      0.00      0.64 #5 levels
-3 demog_level                          0.10      0.17 #3 levels (SS, SS-Mtn, Estuary)
+3 demog_level                          0.10      0.17 #3 levels landscape (SS, SS-Mtn, Estuary)
 4 arch:demog_level_sub                 0.00      0.00
 5 arch:demog_level                     0.06      0.01
 6 demog_level_sub:demog_level          0.00      0.08 
 7 arch:demog_level_sub:demog_level     0.00      0.01
 8 Residuals                            0.01      0.09
+```
+
+What explains variance in percent of loci with significant AF clines - for each trait
+
+```
+          variable temp_AFcors sal_AFcors
+1 arch                    76.4       39.2
+2 demog                    5.7       27.8
+3 demog_level              0.3       11.4
+4 final_LA                 0.1        0.0
+5 arch:demog               3.3        8.2
+6 arch:demog_level         0.3        0.7
+7 Residuals               13.9       12.8
 ```

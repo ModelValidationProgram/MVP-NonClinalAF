@@ -13,7 +13,7 @@ library(gridExtra)
 library(tidyr)
 library(dplyr)
 #library(tidyverse)
-outputs <- "../20220201_graphs/"
+outputs <- "figures/"
 ```
 
 `setwd("~/Documents/GitHub/MVP-NonClinalAF")`
@@ -55,12 +55,26 @@ levels(final.df$arch_level_sub)
 #1231217
 ```
 
-Copy graphs
+Copy graphs - no need to run this every time.
 ```{r, eval=FALSE, echo=FALSE}
-for (i in 1:225){
+#for (i in 1:225){ #unhash to run
   file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*.pdf graphs_20220201/")
   system(file)
 }
+
+#for (i in 1:15){ #unhash to run
+  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*1pop.pdf graphs2_20220201/")
+  system(file)
+}
+
+#system("cp sim_output_20220201/1231217*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
+#system("cp sim_output_20220201/1231142*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
+#system("cp sim_output_20220201/1231442*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
+system("cp sim_output_20220201/1231667*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
+
+#1231892
+#1232117
+#1232342
 ```
 
 Seeds needed for 10x2 demography graph are the first 15 seeds
@@ -71,6 +85,11 @@ GGtheme
 ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
 
 ```
+
+## Color schemes
+`viridis` for SS, SS-Mtn, Estuary
+`mako` for demography sub level (m and N)
+`magma` for arch_level_sub
 
 
 ## order levels
@@ -117,10 +136,10 @@ levels(final.df$demog_level_sub)
 ```{r mean FST}
 #hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
 
-ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 
-pdf("FST_Demog.pdf", width=8, height=6)
-  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
+pdf("figures/FST_Demog.pdf", width=8, height=6)
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
   dev.off()
 
 ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,0.5) + ggtitle("C")
@@ -136,18 +155,18 @@ ggplot(final.df, aes(x=as.factor(N_traits), y=meanFst, fill=demog_level)) + geom
 
 ## Degree local adaptation
 ```{r}
-hist(final.df$final_LA, xlim=c(0,1), breaks=seq(0,1,0.05), main="", xlab="Degree of local adaptation")
+#hist(final.df$final_LA, xlim=c(0,1), breaks=seq(0,1,0.05), main="", xlab="Degree of local adaptation")
 
  #   ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=as.factor(arch_level))) + ggtheme + xlim(0,1) + facet_grid(demog_level~.)
     
   #      ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=as.factor(demog_level_sub))) + ggtheme + xlim(0,1) + facet_grid(demog_level~.)
 
 
-      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
   guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 l1
 
-ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
   guides(fill = guide_legend(reverse = FALSE)) + ggtitle("A")
 
       l2<- ggplot(final.df) +
@@ -155,11 +174,11 @@ ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidt
                        y=subsamp_corr_phen_sal,
                        color=final_LA,shape=demog_level)) + 
         ggtheme +
-      scale_color_viridis(option="plasma", name="Local\nAdaptation", begin=0.5, end=1) + xlim(0.25,1) + ylim(0.25,1) + xlab("Correlation(temp. phenotype, deme temperature)") + ylab("Correlation(Env2 phenotype, deme Env2)") + ggtitle("B")
+      scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + xlim(0.25,1) + ylim(0.25,1) + xlab("Correlation(temp. phenotype, deme temperature)") + ylab("Correlation(Env2 phenotype, deme Env2)") + ggtitle("B")
   l2
       
-pdf(paste0(outputs,"AmountLA.pdf"), width=6, height=8)
-grid.arrange(l1,l2, nrow=2)
+pdf(paste0(outputs,"AmountLA.pdf"), width=8, height=8)
+  grid.arrange(l1,l2, nrow=2)
 dev.off()
 
 ```
@@ -182,28 +201,54 @@ str(numloc_df$arch_level)
 m<- ggplot(numloc_df ) + geom_boxplot(aes(y=num_loci_causal,x = arch_level, fill=filter), color="grey70") + ggtheme + ylim(0,4000) + ylab("Number of causal loci") + xlab("Architecture") + scale_fill_viridis(option="mako", discrete=TRUE)
 m
 
-tapply(numloc_df$num_loci_causal, list(numloc_df$filter, numloc_df$arch_level), mean, na.rm=TRUE)
 
 n <- ggplot(final.df) + geom_violin(aes(y=num_neut, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
 n
-
-tapply(numloc_df$num_loci_causal, list(numloc_df$arch_level, numloc_df$filter), median, na.rm=TRUE)
 
 tapply(final.df$num_neut, list(final.df$demog_level_sub), median, na.rm=TRUE)
 tapply(final.df$num_neut, list(final.df$demog_level_sub), mean, na.rm=TRUE)
 
 pdf(paste0(outputs,"NumLociPrePostfilter.pdf"), width=7, height=8)
-grid.arrange(m, n, nrow=2)
+  grid.arrange(m, n, nrow=2)
 dev.off()
 ```
 
 
-## Statistical model
+## K (Number of populations)
+```{r}
+K_mod <- summary(aov(K~arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
+K_mod
+pervarK <- round(K_mod[[1]][,2]/sum(K_mod[[1]][,2]),2)
+data.frame(name=rownames(K_mod[[1]]),pervarK)
 
-TO DO: ADD MODELS FOR DIVERGENCE AND FOR AMOUNT LA
+pdf(paste0(outputs,"K_by_demog.pdf"), width=8, height=6)
+ggplot(final.df) + geom_histogram(aes(x=K, fill=demog_level), binwidth=1, color="grey") + ggtheme + xlim(0,20) + facet_grid(demog_level_sub~.) + scale_fill_viridis(option="viridis", discrete=TRUE, name="Demography") + xlab("Number of population clusters (K)") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+  guides(fill = guide_legend(reverse = FALSE)) 
+dev.off()
+```
 
-AUCPR ~ trait + demog_level + demog_level_sub + arch_level_sub + arch_level +   final_LA
+## Statistical models
 
+#### MODELS FOR DIVERGENCE AND FOR AMOUNT LA
+```{r}
+levels(final.df$arch)
+levels(final.df$demog_level)
+levels(final.df$demog_level_sub)
+
+LA_mod <- summary(aov(final_LA~arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
+LA_mod
+pervarLA <- round(LA_mod[[1]][,2]/sum(LA_mod[[1]][,2]),2)
+
+
+FST_mod <- summary(aov(meanFst ~ arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
+FST_mod
+pervarFST <- round(FST_mod[[1]][,2]/sum(FST_mod[[1]][,2]),2)
+
+data.frame(name=rownames(FST_mod[[1]]),pervarLA, pervarFST)
+```
+
+
+#### MODELS FOR AF CLINES
 ```{r}
 
 stat_df <- gather(final.df, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
@@ -227,7 +272,11 @@ unique(stat_df$arch)
 # pervar
 
 ## A model with less hierarchy
-modelsum <- summary(aov(cor_TPR ~ trait + demog_name + arch  + trait*demog_name + trait*arch + demog_name*arch +  final_LA, data=stat_df))
+stat_df$trait <- factor(stat_df$trait)
+stat_df$N_traits <- factor(stat_df$N_traits)
+levels(stat_df$trait)
+levels(stat_df$N_traits)
+modelsum <- summary(aov(cor_TPR ~ trait + arch + demog + demog_level +  final_LA + N_traits , data=stat_df))
 modelsum
 
 pervar <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
@@ -236,6 +285,19 @@ pervar$pervar <- round(pervar$SS/sum(pervar$SS)*100, 1)
 
 pervar
 
+final.df$N_traits <- factor(final.df$N_traits)
+levels(final.df$N_traits)
+modelsum <- summary(aov(cor_TPR_temp ~ arch + demog + demog_level + final_LA + arch*demog*demog_level, data=final.df))
+pervar_temp <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
+pervar_temp$pervar <- round(pervar_temp$SS/sum(pervar_temp$SS)*100, 1)
+pervar_temp
+
+modelsum <- summary(aov(cor_TPR_sal ~ arch + demog + demog_level +  final_LA + arch*demog*demog_level, data=final.df))
+pervar_sal <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
+pervar_sal$pervar <- round(pervar_sal$SS/sum(pervar_sal$SS)*100, 1)
+pervar_sal
+
+data.frame(variable = pervar_temp$variable, temp_AFcors = pervar_temp$pervar, sal_AFcors = pervar_sal$pervar)
 ```
 
 # How does demography and genetic architecture contribute to the evolution of phenotypic clines without clines in causal allele frequencies?
@@ -255,13 +317,9 @@ forb$N_traits <- factor(forb$N_traits)
 b<- ggplot(forb, aes(x=N_traits, y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1) + guides(fill=guide_legend(title="Landscape")) + ggtitle("D")
 
 
-#pdf("PropCausalAllelesSigClines.pdf", width)
-#grid.arrange(a,b, nrow=1)
-```
 
 ### Pleiotropy vs no pleiotropy
 
-```{r}
 subdf_arch <- final.df[final.df$N_traits==2,]
 
 unique(final.df$SIGMA_K_1)
@@ -286,12 +344,12 @@ fboth <-   ggplot(pleiotropy.df, aes(x=arch_level, y=cor_TPR, fill=as.factor(isp
 
 
 
-```
+
 
 ## Phenotypic clines vs. af clines
 
-For each trait, I want to plot the (correlation between the trait and environment) vs. (correlation between af and environment)
-```{r}
+### For each trait, I want to plot the (correlation between the trait and environment) vs. (correlation between af and environment)
+
 
 f3 <- ggplot(final.df) + geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") + ggtheme + ylim(0,1) + xlim(0,1)  +  xlab("Correlation(phenotype, deme environment)") + ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Landscape", discrete=TRUE) + scale_shape_manual(values=c(0,23, 16),name="Genic level") + ggtitle("A")
 
@@ -307,13 +365,18 @@ Note that this is a vast overestimate, because many causal loci were filtered ou
 
 ```{r}
 
-a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1)
+pleiotropy.df2 <- gather(subdf_arch, key=trait, value=cor_VA_prop, cor_VA_temp_prop, cor_VA_sal_prop)
 
-b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1)
+fboth2 <-   ggplot(pleiotropy.df2, aes(x=arch_level, y=cor_VA_prop, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("A")
+
+a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
+
+b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1) + ggtitle("C")
 
 
-#pdf("PropCausalAllelesSigClines.pdf", width)
-grid.arrange(a1,b1, nrow=1)
+pdf(paste0(outputs,"WhatDrivesNonClines_VA.pdf"), width=8, height=8)
+  grid.arrange(fboth2, a1,b1, nrow=2, ncol=2, layout_matrix=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
+dev.off()
 ```
 
 ## Demography sub level
@@ -341,10 +404,11 @@ levels(pleiotropy.df$demog_level_sub) <- c("N equal\nm constant", "N latitude cl
 
 ## Sub demograph - magma
 
-d1 <- ggplot(pleiotropy.df, aes(x=as.factor(demog_level_sub), y=cor_TPR, fill=as.factor(demog_level_sub))) + geom_boxplot(color="grey") + ggtheme + xlab("Demography level") + ylab("Proportion of causal loci\nwith significant clines") + scale_fill_viridis(option="magma",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + ggtitle("A")
+d1 <- ggplot(pleiotropy.df, aes(x=as.factor(demog_level_sub), y=cor_TPR, fill=as.factor(demog_level_sub))) + geom_boxplot(color="grey") + ggtheme + xlab("Demography level") + ylab("Proportion of causal loci\nwith significant clines") + scale_fill_viridis(option="mako",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + ggtitle("A")
+d1
 
 ## Strength of selection - mako
-my_col_S <- c(mako(10)[2], mako(10)[8])
+my_col_S <- c(magma(10)[5], magma(10)[8])
 
 s1<- ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(SIGMA_K_2))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_S, labels=c(
   expression(paste("Strong selection ", sigma[K]," = 0.5")), 
@@ -353,9 +417,7 @@ s1<- ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(SIGMA_K
 s1
 
 pdf(paste0(outputs,"WhatDrivesNonClines-subdemog-selection.pdf"), width=6, height=8)
-
-grid.arrange(d1, s1, nrow=2)
-
+  grid.arrange(d1, s1, nrow=2)
 dev.off()
 ```
 
@@ -369,17 +431,73 @@ ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(SIGMA_K_2))) 
 
 ```
 
+
+## Distribution between structure and deme environment
+
+```{r}
+
+s1 <- ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("A") + xlab("abs(Correlation(PC1, temperature))")  + ylab(NULL)
+s1
+
+s2 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("B") + xlab("abs(Correlation(PC2, temperature))") + ylab(NULL)
+s2
+
+s3 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("C") + xlab("abs(Correlation(PC1, Env2))") + ylab(NULL)
+s3
+
+s4 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("D") + xlab("abs(Correlation(PC2, Env2))") + ylab(NULL)
+s4
+
+sum(is.na(final.df$cor_PC1_temp))
+
+sc1<- ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_temp), fill=demog_level_sub, position="stack", ), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("A")
+
+sc2<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_temp), fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("B")
+
+sc3<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_sal), fill=demog_level_sub, position="stack", ), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("C")
+
+# bw = "nrd", kernel = "rectangular", n=2^10, adjust=1/5,
+sc4<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_sal), fill=demog_level_sub, position="stack"), binwidth=0.01,  color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("D")
+
+pdf(paste0(outputs,"StructureEnvCor.pdf"), width=6, height=6)
+  grid.arrange(s1,s2, s3,s4, nrow=2)
+dev.off()
+
+pdf(paste0(outputs,"StructureEnvCor_byDemog.pdf"), width=13, height=6)
+grid.arrange(s1 + facet_grid(~demog_level),
+             s2 + facet_grid(~demog_level),
+             s3 + facet_grid(~demog_level),
+             s4 + facet_grid(~demog_level)
+             )
+dev.off()
+
+pdf(paste0(outputs,"StructureEnvCor_facetDemog.pdf"), width=12, height=16)
+    grid.arrange(sc1,sc2, sc3,sc4, nrow=2)
+dev.off()
+
+```
+
 ## Under what conditions can we reliably identify the alleles with effects on adaptive phenotypes using genetic-environment associations (latent factor mixed models, uncorrected correlations, and redundancy analysis)? 
 
 
 ## Compare methods AUC
 ```{r}
 
+# Missing data for temp - 2 sims
+sum(is.na(final.df$cor_AUCPR_temp_neutSNPs))
+sum(is.na(final.df$LEA3.2_lfmm2_AUCPR_temp_neutSNPs))
+sum(is.na(final.df$RDA_AUCPR_neutSNPs))
+
+# Missing data for sal - 1 case (note missing data is expected when N_traits==1, because salinity not simulated)
+sum(is.na(final.df$cor_AUCPR_sal_neutSNPs & final.df$N_traits==2))
+sum(is.na(final.df$LEA3.2_lfmm2_AUCPR_sal_neutSNPs& final.df$N_traits==2))
+
+
 comparemethods.AUC.temp <- gather(final.df, key=method, value=AUCPR, cor_AUCPR_temp_neutSNPs, LEA3.2_lfmm2_AUCPR_temp_neutSNPs, RDA_AUCPR_neutSNPs)
 
 comparemethods.AUC.sal <- gather(final.df, key=method, value=AUCPR, cor_AUCPR_sal_neutSNPs, LEA3.2_lfmm2_AUCPR_sal_neutSNPs, RDA_AUCPR_neutSNPs)
 
-whichcols <- c("method", "AUCPR", "cor_PC1_temp", "cor_PC1_sal","cor_LFMMU1_temp", "cor_LFMMU1_sal", "cor_LFMMU2_temp", "cor_LFMMU2_sal", "demog_level", "demog_level_sub")
+whichcols <- c("method", "AUCPR", "cor_PC1_temp", "cor_PC1_sal","cor_LFMMU1_temp", "cor_LFMMU1_sal", "cor_LFMMU2_temp", "cor_LFMMU2_sal", "demog_level", "demog_level_sub", "arch_level", "arch_level_sub", "K")
 
 comparemethods.AUC <- rbind(comparemethods.AUC.temp[,whichcols], comparemethods.AUC.sal[whichcols])
 
@@ -388,18 +506,23 @@ methodtype <- unlist(lapply(comparemethods.AUC$method, function(x){strsplit(x, "
 str(methodtype)
 comparemethods.AUC$methodtype <- methodtype
 
+# Get lower and upper bounds of box in boxplot
+#tapply(comparemethods.AUC$AUCPR, as.factor(comparemethods.AUC$methodtype), quantile,p=0.25, na.rm=TRUE)
+#tapply(comparemethods.AUC$AUCPR, as.factor(comparemethods.AUC$methodtype), quantile,p=0.75, na.rm=TRUE)
 
-tapply(comparemethods.AUC$AUCPR, as.factor(comparemethods.AUC$methodtype), quantile,p=0.25, na.rm=TRUE)
-tapply(comparemethods.AUC$AUCPR, as.factor(comparemethods.AUC$methodtype), quantile,p=0.75, na.rm=TRUE)
+# By landscape
+g <- ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + scale_color_viridis(name="Landscape", discrete=TRUE) + guides(fill=guide_legend(title="Landscape"))
 
-
-ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10))
-
-ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR, fill=demog_level_sub)) + geom_boxplot(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10))
-
+pdf(paste0(outputs,"AUC-PR-byLandscape.pdf"), width=5, height=4)
 g
+dev.off()
 
-+ scale_fill_viridis(option="turbo", discrete=TRUE)+ theme(legend.position = "none")
+# as a violin plot (the boxplot is better)
+#ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR, fill=demog_level)) + geom_violin(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10))
+
+
+# By demography - not a huge difference among methods
+#ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR, fill=demog_level_sub)) + geom_boxplot(color="grey") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10))
 ```
 
 
@@ -431,7 +554,7 @@ Fdr2 <- ggplot(comparemethods.FDR[grep("cor",comparemethods.FDR$method),], aes(x
 
 Fdr3 <- ggplot(comparemethods.FDR[grep("RDA",comparemethods.FDR$method),], aes(x=FDR)) + geom_density(color="grey", fill="blue") + ggtheme + xlab("method") + xlab("FDR") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + ggtitle("C) RDA")
 
-pdf(paste0(outputs,"FDRdensityPerMethod.pdf"), width=5, height=5)
+pdf(paste0(outputs,"FDRdensityPerMethod.pdf"), width=5, height=7)
 
 grid.arrange(Fdr1, Fdr2, Fdr3, nrow=3)
 
@@ -439,10 +562,36 @@ dev.off()
 
 ```
 
-# Trying to understand demography effect in lfmm
+# Trying to understand demography effect on lfmm FDR
 ```{r}
 
+l1 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_temp, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (temperature model)")  + theme(legend.position="none") + ylim(0,1)
 
+l2 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_sal, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (Env2 model)")  + theme(legend.position="none") + ylim(0,1)
+
+
+#ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("")
+
+l3 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("Correlation (LFMM U1, deme temperature)")  + theme(legend.position="none") + ylim(0,1)
+
+
+l4 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme  + xlab("Demography") + ylab("Correlation (LFMM U2, deme temperature)")   + theme(legend.position="none") + theme(legend.position="bottom") + ylim(0,1) + guides(fill=guide_legend(title="Landscape"))
+
+
+l5 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("Correlation (LFMM U1, deme Env2)")   + theme(legend.position="none") + ylim(0,1)
+
+l6 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("Correlation (LFMM U2, deme Env2)") + theme(legend.position="bottom") + ylim(0,1)
+
+pdf(paste0(outputs,"FDR_LFMM.pdf"), width=10, height=12)
+
+grid.arrange(l1,l2, l3, l5, l4,l6, ncol=2)
+
+dev.off()
+
+```
+
+Old code for trying to understand demograpy effect in lfmm
+```
 ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_temp), x=demog_level_sub)) + ggtheme
 
 ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_sal), x=demog_level_sub)) + ggtheme 
@@ -482,27 +631,32 @@ CHECK FDR OUTPUTUS for m breaks- NOT MAKING SENSE
 
 
 
-# THIS IS WHAT DRIVES IT!!!
+#ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + ylab("AUC PR") 
 
-ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + ylab("AUC PR") 
-ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + ylab("AUC PR")
+#ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + ylab("AUC PR")
 ```
 
-# LFMM new plots 
+# LFMM - AUCPR vs STRUCTURE
 ```{r}
 
-ggplot(final.df) + geom_point(aes(x=cor_TPR_temp,y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("Proportion of causal temp loci with clines") + ylab("AUC-PR")
+#ggplot(final.df) + geom_point(aes(x=cor_TPR_temp,y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("Proportion of causal temp loci with clines") + ylab("AUC-PR")
 
-ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(pc1,temp)") + ylab("AUC-PR")
+#ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(pc1,temp)") + ylab("AUC-PR")
 
-ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(lfmm u1,temp)") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)
+#ggplot(final.df) + geom_point(aes(x=cor_TPR_sal,y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("Proportion of causal sal loci with clines") + ylab("AUC-PR")
+
+#ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(pc1,sal)") + ylab("AUC-PR")
 
 
-ggplot(final.df) + geom_point(aes(x=cor_TPR_sal,y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("Proportion of causal sal loci with clines") + ylab("AUC-PR")
+k1 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(LFMM U1, Deme Temperature)") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)  +xlim(0,1)
 
-ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(pc1,sal)") + ylab("AUC-PR")
+k2 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(LFMM U1, Deme Env2)") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1) +xlim(0,1)
 
-ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(lfmm u1,sal)") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)
+pdf(paste0(outputs,"LFMM-AUCPRvsStructure.pdf"), width=5, height=8)
+
+grid.arrange(k1,k2, nrow=2)
+
+dev.off()
 ```
 
 ```{r}
@@ -515,36 +669,16 @@ plot(noutliers, numTP + numFP)
 abline(0,1)
 WHAT I CALCULATED IS NOT THE FDR!
 
+  head(final.df)
+  
   NOT GOING TO LINE UP B/C NEUT INCLUDES LINKED LOCI
 fdr <- numFP/(numTP+numFP)
 plot(fdr, final.df$LEA3.2_lfmm2_FDR_neutSNPs_temp)
+abline(0,1)
 hist(fdr)
 #tapply(final.df$LEA3.2_lfmm2_TPR_temp, final.df$demog_level_sub, function(x){sum(!is.na(x))})
 ```
 
-```{r}
-
-ggplot(final.df) + geom_point(aes(x=LEA3.2_lfmm2_FDR_neutSNPs_temp,
- y=LEA3.2_lfmm2_FPR_neutSNPs_temp,
-                                  color=LEA3.2_lfmm2_TPR_temp)) +scale_color_viridis(option="mako")
-
-ggplot(final.df) + geom_point(aes(x=LEA3.2_lfmm2_FDR_neutSNPs_sal,
- y=LEA3.2_lfmm2_FPR_neutSNPs_sal,                            color=LEA3.2_lfmm2_TPR_sal)) +scale_color_viridis(option="mako")
-
-ggplot(final.df[order(final.df$LEA3.2_lfmm2_FPR_neutSNPs_temp),]) + geom_point(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_temp,
-x=LEA3.2_lfmm2_TPR_temp,                                color=LEA3.2_lfmm2_FPR_neutSNPs_temp), alpha=0.5) +scale_color_viridis(option="mako")
-# This shows high FDR comes from low power and low FPR (upper left corner), or high power and high FPR (upper right corner)
-
-
-# Based on number
-ggplot(final.df) + geom_point(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_temp,
-x=LEA3.2_lfmm2_TPR_temp,                                color=LEA3.2_lfmm2_num_neut_sig_temp), alpha=0.5) +scale_color_viridis(option="mako")
-
-Why do some sims have soooo many neutral siginficnt?
-
-
-
-```
 
 LFMM has a bimodal distribution of FDR. At low FDR, pop structure is appropriately accounted for. But at high FDR, is pop structure undercorrected or overcorrected?
 
@@ -552,87 +686,59 @@ LFMM has a bimodal distribution of FDR. At low FDR, pop structure is appropriate
 
 * If overcorrected, then expect high FDR when the correlation between the latent factor and temp env is very high.
 
-# Distribution between structure and deme environment
 
+
+### Stat models LFMM
+
+I don't partciularly trust these models, as some relationships are not linear and likely violate the assumption of the models.
 ```{r}
 
-
-
-s1 <- ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("A") + xlab("abs(Correlation(PC1, temperature))")  + ylab(NULL)
-
-s2 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("B") + xlab("abs(Correlation(PC2, temperature))") + ylab(NULL)
-
-s3 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("C") + xlab("abs(Correlation(PC1, Env2))") + ylab(NULL)
-
-s4 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("D") + xlab("abs(Correlation(PC2, Env2))") + ylab(NULL)
-
-pdf(paste0(outputs,"StructureEnvCor.pdf"), width=6, height=6)
-
-grid.arrange(s1,s2, s3,s4, nrow=2)
-
-dev.off()
-
-pdf(paste0(outputs,"StructureEnvCor_byDemog.pdf"), width=13, height=6)
-
-grid.arrange(s1 + facet_grid(~demog_level),
-             s2 + facet_grid(~demog_level),
-             s3 + facet_grid(~demog_level),
-             s4 + facet_grid(~demog_level)
-             )
-dev.off()
-
-
-```
-
-## LFMM FPR, TPR, FDR
-```{r}
-
-pdf(paste0(outputs,"ErrorRates.pdf"), width=5, height=3.5)
-
-ggplot(final.df[order(final.df$LEA3.2_lfmm2_FDR_neutSNPs_sal),]) + 
-  geom_point(aes(x=LEA3.2_lfmm2_TPR_temp, 
-                 y=LEA3.2_lfmm2_FPR_neutSNPs_temp, 
-                 color=LEA3.2_lfmm2_FDR_neutSNPs_temp)) + 
-  geom_point(aes(x=LEA3.2_lfmm2_TPR_sal, 
-                 y=LEA3.2_lfmm2_FPR_neutSNPs_sal, 
-                 color=LEA3.2_lfmm2_FDR_neutSNPs_sal)) + ggtheme + scale_color_viridis(option="magma", begin=.20, end=.80, name="LFMM False\nDiscovery Rate") +  xlab("LFMM True Positive Rate") + ylab("LFMM False Positive Rate") + scale_y_sqrt() +scale_y_continuous(breaks=c(0.002,0.005, 0.01, 0.02, 0.04,0.08, 0.16, 0.32), trans="sqrt")
-
-dev.off()
-```
-
-
-### Final plots for LFMM
-```{r}
-
+# Temperature models
 summary(lm(final.df$LEA3.2_lfmm2_FDR_neutSNPs_temp~
              abs(final.df$cor_LFMMU1_temp)+
              abs(final.df$cor_LFMMU2_temp)+
              abs(cor_PC1_temp)
              , data=final.df))
-
-summary(lm(final.df$LEA3.2_lfmm2_FDR_neutSNPs_sal~
-             abs(final.df$cor_LFMMU1_sal)+
-             abs(final.df$cor_LFMMU2_sal)+
-             abs(cor_PC1_temp)
-             , data=final.df))
+# FDR increases when the correation between structure and environment increases, but it's bimodal as shown in the graph below
 
 summary(lm(final.df$LEA3.2_lfmm2_TPR_temp~
              abs(final.df$cor_LFMMU1_temp)+
              abs(final.df$cor_LFMMU2_temp)+
              abs(cor_PC1_temp)
              , data=final.df))
+# TPR decreases when the correlation between structure and environment increases
 
 summary(lm(final.df$LEA3.2_lfmm2_FPR_neutSNPs_temp~
              abs(final.df$cor_LFMMU1_temp)+
              abs(final.df$cor_LFMMU2_temp)+
              abs(cor_PC1_temp)
              , data=final.df))
+# FPR increases when the correlation between PC structure and environment increases
+
+
+# Salinity models
+summary(lm(final.df$LEA3.2_lfmm2_FDR_neutSNPs_sal~
+             abs(final.df$cor_LFMMU1_sal)+
+             abs(final.df$cor_LFMMU2_sal)+
+             abs(cor_PC1_sal)
+             , data=final.df))
+# FDR decreases when the correation between structure and environment increases
+
+summary(lm(final.df$LEA3.2_lfmm2_TPR_sal~
+             abs(final.df$cor_LFMMU1_sal)+
+             abs(final.df$cor_LFMMU2_sal)+
+             abs(cor_PC1_sal)
+             , data=final.df))
+# TPR not related to structure
+
 
 summary(lm(final.df$LEA3.2_lfmm2_FPR_neutSNPs_sal~
              abs(final.df$cor_LFMMU1_sal)+
              abs(final.df$cor_LFMMU2_sal)+
-             abs(cor_PC1_temp)
+             abs(cor_PC1_sal)
              , data=final.df))
+# FPR decreases when the correation between structure and environment increases
+
 
 j1 <- ggplot(final.df[order(final.df$K),]) + 
   geom_point(aes(x=abs(cor_LFMMU1_temp), 
@@ -645,94 +751,13 @@ j1 <- ggplot(final.df[order(final.df$K),]) +
   ylab("False discovery rate") + xlab("Correlation\n(latent factor 1, environment)")
 j1
 
-dat <- final.df[which(complete.cases(cbind(final.df$LEA3.2_lfmm2_FDR_neutSNPs_temp,final.df$LEA3.2_lfmm2_FDR_neutSNPs_sal))),]
-dim(final.df)
-dim(dat)
-
-# False discovery rate
-k1 <- ggplot(dat) + 
-  geom_point(aes(x=abs(cor_LFMMU1_temp), 
-                 color=LEA3.2_lfmm2_FDR_neutSNPs_temp, 
-                 y=abs(cor_LFMMU2_temp))) + 
-  geom_point(aes(x=abs(cor_LFMMU1_sal), 
-                 color=LEA3.2_lfmm2_FDR_neutSNPs_sal, 
-                 y=abs(cor_LFMMU2_sal))) + ggtheme +
- scale_color_viridis(option="magma",begin=.20, end=.80, name="False discovery rate", limits=c(0,1)) +
-  ylab("Correlation\n(latent factor 2,environment)") + xlab("Correlation\n(latent factor 1, environment)") +xlim(0,0.8) + ylim(0,0.8) + ggtitle("A")
-k1
-
-# TRUE POSITIVE RATE rate
-j2 <- ggplot(final.df[order(final.df$LEA3.2_lfmm2_TPR_temp,final.df$LEA3.2_lfmm2_TPR_sal, decreasing=TRUE),]) + 
-  geom_point(aes(x=abs(cor_LFMMU1_temp), 
-                 y=LEA3.2_lfmm2_TPR_temp, 
-                 color=abs(cor_LFMMU2_temp), alpha=0.5)) + 
-  geom_point(aes(x=abs(cor_LFMMU1_sal), 
-                 y=LEA3.2_lfmm2_TPR_sal, 
-                 color=abs(cor_LFMMU2_sal), alpha=0.5)) + ggtheme +
- scale_color_viridis(option="mako", begin=.20, end=.80, name="Correlation\n(latent factor 2,\nenvironment)") +
-  ylab("Power") + xlab("Correlation\n(latent factor 1, environment)") +  theme(legend.position = "None") + ggtitle("C")
-j2
-
-#FALSE POSITIVES
-j3 <- ggplot(final.df[order(final.df$K),]) + 
-  geom_point(aes(x=abs(cor_LFMMU1_temp), 
-                 y=LEA3.2_lfmm2_FPR_neutSNPs_temp, 
-                 color=abs(cor_LFMMU2_temp), alpha=0.5)) + 
-  geom_point(aes(x=abs(cor_LFMMU1_sal), 
-                 y=LEA3.2_lfmm2_FPR_neutSNPs_sal, 
-                 color=abs(cor_LFMMU2_sal), alpha=0.5)) + ggtheme +
- scale_color_viridis(option="mako", begin=.20, end=.80, name="Correlation\n(latent factor 2,\nenvironment)") +
-  ylab("False positive rate") + xlab("Correlation\n(latent factor 1, environment)") +  theme(legend.position = "None") + ggtitle("D")  +scale_y_continuous(breaks=c(0.002,0.005, 0.01, 0.02, 0.04,0.08, 0.16, 0.32), trans="sqrt")
-j3
-
-# STRUCTURE
-j4 <- ggplot(final.df[order(final.df$K),]) + 
-  geom_point(aes(x=abs(cor_PC1_temp), 
-                 y=abs(cor_LFMMU1_temp), 
-                 color=abs(cor_LFMMU2_temp)), alpha=0.5) + 
-  geom_point(aes(x=abs(cor_PC1_sal), 
-                 y=abs(cor_LFMMU1_sal), 
-                 color=abs(cor_LFMMU2_sal)), alpha=0.5) + ggtheme +
- scale_color_viridis(option="mako", begin=.20, end=.80, name="Correlation\n(latent factor 2,\nenvironment)") +
-  xlab("Correlation\n(PC 1, environment)") + ylab("Correlation\n(latent factor 1, environment)") + ggtitle("B")
-j4
-  # This plot shows that  correlation between the latent factor and structure increases with correlation between
-# temperature environment and genetic structure
-
-pdf(paste0(outputs,"LFMM.pdf"), width=8, height=8)
-  grid.arrange(k1,j2,  j4, j3, nrow=2, widths=c(1.5,1.1))
-dev.off()
-
 ```
 
-# LFMM ACU PR
-```{r}
-ggplot(dat) + 
-  geom_point(aes(x=abs(cor_LFMMU1_temp), 
-                 color=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, 
-                 y=abs(cor_LFMMU2_temp))) + 
-  geom_point(aes(x=abs(cor_LFMMU1_sal), 
-                 color=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, 
-                 y=abs(cor_LFMMU2_sal))) + ggtheme +
- scale_color_viridis(option="magma",begin=.20, end=.80, name="AUC PR", limits=c(0,1)) +
-  ylab("Correlation\n(latent factor 2,environment)") + xlab("Correlation\n(latent factor 1, environment)") +xlim(0,0.8) + ylim(0,0.8) + ggtitle("A")
-
-ggplot(final.df[order(final.df$K),]) + 
-  geom_point(aes(x=abs(cor_LFMMU1_temp), 
-                 y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, 
-                 color=abs(cor_LFMMU2_temp))) + 
-  geom_point(aes(x=abs(cor_LFMMU1_sal), 
-                 y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, 
-                 color=abs(cor_LFMMU2_sal))) + ggtheme +
- scale_color_viridis(option="mako", begin=.20, end=.80, name="Correlation\n(latent factor 2,\nenvironment)") +
-  ylab("AUC PR") + xlab("Correlation\n(latent factor 1, environment)")
-
-
-
-```
 ## Is there a relationship between phenotypic clines and number of outliers?
 
 Does the proportion of loci with clines to the environment increase when the phenotypic clines increase?
+
+This figure isn't really needed, the one for the main paper is better
 ```{r}
 
 c11 <- ggplot(final.df) + geom_point(aes(x=subsamp_corr_phen_temp,
@@ -745,9 +770,9 @@ c12 <- ggplot(final.df) + geom_point(aes(x=subsamp_corr_phen_sal,
                                   color=demog_level)) +
   xlim(0,1) + ylim(0,1) + ggtheme + xlab("Cor(Env2 phenotype, deme Env2)") + ylab("Proportion of causal Env2\nloci with significant clines")
 
-pdf(paste0(outputs,"PhenCorVsPropClines.pdf"), width=8, height=8)
+#pdf(paste0(outputs,"PhenCorVsPropClines.pdf"), width=8, height=8)
   grid.arrange(c11, c12)
-dev.off()
+#dev.off()
 
 ```
 
@@ -763,23 +788,52 @@ hist(final.df$cor_RDA20000_RDloadings_tempPhen)
 hist(final.df$cor_RDA20000_RDloadings_salPhen)
 
 
-final.df$seed[which(final.df$RDA_RDAmutpred_cor_tempEffect < 0)]
-final.df$seed[which(final.df$RDA_RDAmutpred_cor_salEffect < 0)]
-final.df$seed[which(final.df$cor_RDA20000_RDloadings_tempPhen < 0)]
+b1<- final.df$seed[which(final.df$RDA_RDAmutpred_cor_tempEffect < 0)]
+b2<- final.df$seed[which(final.df$RDA_RDAmutpred_cor_salEffect < 0)]
+b3<- final.df$seed[which(final.df$cor_RDA20000_RDloadings_tempPhen < 0)]
 
+failedsims <- unique(c(b1,b2,b3))
+failedsims
+system("mkdir graphs_badRDA20220201/")
+
+for (i in failedsims){
+  file <- paste0("cp sim_output_20220201/",i,"*.pdf graphs_badRDA20220201/")
+  system(file)
+}
+
+length(failedsims)
+# method failed for 20 sims
+
+# Characteristics of failed sims
+final.df$arch[which(final.df$seed %in% failedsims)]
+final.df$demog_level[which(final.df$seed %in% failedsims)]
+final.df$demog_level_sub[which(final.df$seed %in% failedsims)]
+final.df$N_traits[which(final.df$seed %in% failedsims)]
+final.df$K[which(final.df$seed %in% failedsims)]
+
+# Not sure why it didn't work for these sims
 ```
 
 ## Under what conditions can redundancy analysis predict an individual’s optimal environment, without knowledge of the genetic architecture of adaptation?
 
 ```{r}
-n <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A")
+n <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(temp. phenotype,\nRDA-predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A) Temperature phenotype") + theme(legend.position = "none")
 n
 
-o <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_salPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(Env2 phenotype, RDA predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B")
+o <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_salPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(Env2 phenotype,\nRDA-predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B) Env. 2 phenotype") + theme(legend.position="bottom")
 o
 
-pdf(paste0(outputs,"RDA-Landscape-hist.pdf"), width=8, height=8)
-  grid.arrange(n, o, nrow=2)
+
+g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="mako", discrete=TRUE) + theme(legend.position = "none") + ggtitle("C) Temperature mutation effect")
+g1 
+
+g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="mako", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("D) Env2 mutation effect")
+g2
+
+pdf(paste0(outputs,"RDA-Landscape-hist.pdf"), width=9, height=7)
+  grid.arrange(arrangeGrob(n, o,  nrow=2),
+               arrangeGrob(g1, g2, nrow=2),
+               widths=c(5,5))
 dev.off()
 
 
@@ -787,6 +841,39 @@ dev.off()
 #hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
 ```
 
+Do other factors affect the correlation between mutation loading and mutation effect on phenotype?
+```{r}
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape")) 
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=demog_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape"))
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Pleiotropy\nArchitecture")) 
+
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(0,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape")) 
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=demog_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape"))
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Pleiotropy\nArchitecture")) 
+
+
+```
+
+Well, this is interesting. The accuracy of the mutation loadings on the RDA axis is much lower for the highly polygenic architectures. Which makes sense.
+
+The ironic thing is that the phenotypic prediction from the RDA is still accurate, and it is affected more by demography. This suggests that the RDA prediction is reliable when the pattern of adaptation is correlated with genome-wide patterns of differentation, and not messed up by population structure.
+```{r}
+# STat models
+
+summary(aov(cor_RDA20000_RDloadings_tempPhen~demog_level + demog_level_sub + arch_level, data=final.df))
+summary(aov(cor_RDA20000_RDloadings_salPhen~demog_level + demog_level_sub + arch_level, data=final.df))
+
+summary(aov(RDA_RDAmutpred_cor_tempEffect~demog_level + demog_level_sub + arch_level, data=final.df))
+summary(aov(RDA_RDAmutpred_cor_salEffect~demog_level + demog_level_sub + arch_level, data=final.df))
+```
+
+Some additional RDA plots to show the effect of demography
 ```{r}
 
 rda.df <- gather(final.df, key=trait, value=cor_RDApred_phen, cor_RDA20000_RDloadings_tempPhen, cor_RDA20000_RDloadings_salPhen)
@@ -801,7 +888,18 @@ r3 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=demog_level_sub)) + geom_histo
 
 r4 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=as.factor(SIGMA_K_2))) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + facet_grid(~trait)
 
+pdf(paste0(outputs,"RDA_phen_predict_breakdown.pdf"), height=12, width=10)
 grid.arrange(r0, r1, r2, r3, r4, nrow=5)
+dev.off()
+
+trait.labs <- c("Env2", "Temperature")
+names(trait.labs) <- c("Env2", "Temperature")
+
+r4 <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=as.factor(SIGMA_K_2))) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp phenotype,\nRDA-predicted temp phenotype)") +  guides(fill=guide_legend(title="Stabilizing\nSelection"))
+
+pdf(paste0(outputs,"RDA-predict-strengthselection.pdf"), width=4, height=3)
+  r4
+dev.off()
 ```
 
 ```{r}
@@ -834,13 +932,4 @@ dev.off()
 #hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
 #hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
 ```
-
-TO DO:
-
-Put figures into paper and think about what else I need
-
-Fix population plot output size
-
-Download mod. polygenic outputs
-
 

@@ -5,7 +5,7 @@
 	defineConstant("MY_RESULTS_PATH", MY_RESULTS_PATH1);
 	defineConstant("MY_SEED", MY_SEED1);
 	setSeed(MY_SEED);
-	defineConstant("C_num", 21);							// number of chromosomes
+	defineConstant("C_num", 20);							// number of chromosomes
 	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome
 	//defineConstant("MU_base", 1e-7);						// base mutation rate overall
 	defineConstant("MU_base", MU_base1);
@@ -158,7 +158,7 @@ function (void)setUpMigration(void)
 
 	var_m_estuary_x = c(0.25, rep(0.49, 5));
 	var_m_estuary_y = c(0.03, rep(0.07,5), 0.25);
-	mig_breaks_estuary = 0.03;
+	mig_breaks_estuary = 0.015;
 	
 	for (x in 1:METAPOP_SIDE_x)
 		{
@@ -277,7 +277,7 @@ function (void)setUpMigration(void)
 
 
     var_m_ss = c(0.01, rep(0.03,8), 0.25);
-	mig_breaks_SS = 0.01;
+	mig_breaks_SS = 0.005;
 	
 	for (x in 1:METAPOP_SIDE_x)
 		for (y in 1:METAPOP_SIDE_y)

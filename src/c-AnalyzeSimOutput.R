@@ -39,11 +39,13 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 
 args = commandArgs(trailingOnly=TRUE)
 
+#seed = 1231094
 #seed = 1231098
 #seed = 1231144
 #seed=1232947
-#path = "sim_output_20220201/"
-# runID=20220201
+#seed = 1231102
+#path = "sim_output_20220428/"
+# runID=20220428
 seed = args[1]
 path = args[2]
 runID = args[3]
@@ -276,8 +278,11 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   b <- 3
   while (sum(duplicated(vcf_full@fix[,"INFO"]))>0){
     dups <- which(duplicated(vcf_full@fix[,"INFO"]))
-    vcf_full@fix[dups,"INFO"] <- gsub("_2",paste0("_",b),x = vcf_full@fix[dups,"INFO"])
+    vcf_full@fix[dups,"INFO"] <- gsub(paste0("_",b-1),
+                                      paste0("_",b),
+                                      x = vcf_full@fix[dups,"INFO"])
     b <- b+1
+    if (b==10){print("problem in naming loci"); break}
   }
   
   # Check duplicated locus names
@@ -332,7 +337,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
    if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a: mutations not lined up");break()}
     
     #muts_full$isMAF01 <- FALSE
-    rm_loci <- which(muts_full$a_freq_subset < 0.01)
+    rm_loci <- which(muts_full$a_freq_subset < 0.01 | muts_full$a_freq_subset > 0.99)
     #muts_full$isMAF01[rm_loci] <- rep(TRUE, length=length(rm_loci))
   
     num_multiallelic <- sum((!complete.cases(G_full_subset)))
@@ -646,6 +651,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   write.lfmm(t(G_full_subset), lfmmfile)
   
   pc = pca(lfmmfile, 30, scale = TRUE)
+  saveRDS(pc,paste0(path, seed, "_pca.RDS"))
   print("calculated pca")
   subset_indPhen_df$PC1 <- pc$projections[,1]
   subset_indPhen_df$PC2 <- pc$projections[,2]
@@ -720,6 +726,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   mod_temp <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$temp_opt, K = K)
   
+  saveRDS(mod_temp , paste0(path,seed,"_lfmm2_temp.RDS"))
+  
   pv_temp <- lfmm2.test(object = mod_temp, input = t(G_full_subset),
                         env = subset_indPhen_df$temp_opt,
                         linear = TRUE)
@@ -730,6 +738,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   LEA3.2_lfmm2_mlog10P_tempenv_noutliers <- sum(muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig)
   
   mod_sal <- lfmm2(input = t(G_full_subset), env = subset_indPhen_df$sal_opt, K = K)
+  
+  saveRDS(mod_sal , paste0(path,seed,"_lfmm2_sal.RDS"))
   
   pv_sal <- lfmm2.test(object = mod_sal, input = t(G_full_subset),
                        env = subset_indPhen_df$sal_opt,
@@ -970,8 +980,14 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   rdaout <- rda(t(G_full_subset) ~ sal + temp)
   
+  saveRDS(rdaout, paste0(path,seed,"_RDA.RDS"))
+  
+  
   #rdaout_corr <- rda(t(G_full_subset)~ sal + temp + Condition(subset_indPhen_df$x + subset_indPhen_df$y + subset_indPhen_df$PC1 + subset_indPhen_df$PC2)) #At first I tried adding geography (x,y location) and structure (PC axis) to the RDA, this completely corrected for everything, which led to low performance
   rdaout_corr <- rda(t(G_full_subset)~ sal + temp + Condition(subset_indPhen_df$PC1 + subset_indPhen_df$PC2)) #only structure correction
+  
+  saveRDS(rdaout_corr, paste0(path,seed,"_RDA_structcorr.RDS"))
+  
   
   #str(rdaout)
   scores <- scores(rdaout, choices=1:4)
@@ -1101,9 +1117,17 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   mult <- muts_scale/max(c(abs(sal_arrow_muts), abs(temp_arrow_muts)))
   
+
   arrows <- data.frame(x=rep(0,2), y = rep(0, 2), #start at origin
                        dx = c(sal_arrow_muts[1]*mult, temp_arrow_muts[1]*mult),
                        dy = c(sal_arrow_muts[2]*mult, temp_arrow_muts[2]*mult), name = c("Env2", "Temp"))
+  
+  mult2 <- c(max(abs(muts_full$RDA1_score))*1.3,max(abs(muts_full$RDA2_score))*1.3)/
+    c(max(abs(rdaout$CCA$biplot[,1])), max(abs(rdaout$CCA$biplot[,2])))
+  
+  arrows2 <- data.frame(x=rep(0,2), y = rep(0, 2), #start at origin
+                       dx = c(sal_arrow_muts[1]*mult2[1], temp_arrow_muts[1]*mult2[1]),
+                       dy = c(sal_arrow_muts[2]*mult2[2], temp_arrow_muts[2]*mult2[2]), name = c("Env2", "Temp"))
   
   
   # Mutation effect in RDA space for temp
@@ -1116,6 +1140,20 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                          )+  
     ggtheme +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),
                                   pch=23, col=adjustcolor("black",0.3), size=3) +  
+    xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) + 
+    ggtitle(paste0(plotmain, " mutations - temp")) + 
+    geom_segment(data=arrows2, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="mut Temp effect", size="temp VA prop.")
+  
+  ggplot() +
+    geom_point(data=muts_full, aes(x=RDA1_score, y = RDA2_score), color=adjustcolor("grey80", 0.2)) +
+    geom_point(data = muts_full[muts_full$causal_temp=="causal",], 
+               aes(x=RDA1_score, y = RDA2_score, color=mutTempEffect, size=Va_temp_prop), shape=shape_causal) +
+    scale_colour_viridis(option="turbo", #begin = begin_cs, end=end_cs, 
+                         limits=c(-lims, lims)
+    )+  
+    ggtheme +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig,], aes(x=RDA1_score, y = RDA2_score),
+                          pch=23, col=adjustcolor("black",0.3), size=3) +  
     xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) + 
     ggtitle(paste0(plotmain, " mutations - temp")) + 
     geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
@@ -1135,6 +1173,13 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                        dx = c(sal_arrow_muts_corr[1]*mult_corr, temp_arrow_muts_corr[1]*mult_corr),
                        dy = c(sal_arrow_muts_corr[2]*mult_corr, temp_arrow_muts_corr[2]*mult_corr), name = c("Env2", "Temp"))
   
+  mult2_corr <- c(max(abs(muts_full$RDA1_score_corr))*1.3,max(abs(muts_full$RDA2_score_corr))*1.3)/
+    c(max(abs(rdaout_corr$CCA$biplot[,1])), max(abs(rdaout_corr$CCA$biplot[,2])))
+  
+  arrows2_corr <- data.frame(x=rep(0,2), y = rep(0, 2), #start at origin
+                        dx = c(sal_arrow_muts_corr[1]*mult2_corr[1], temp_arrow_muts_corr[1]*mult2_corr[1]),
+                        dy = c(sal_arrow_muts_corr[2]*mult2_corr[2], temp_arrow_muts_corr[2]*mult2_corr[2]), name = c("Env2", "Temp"))
+  
   
   
   ggplot() +
@@ -1151,6 +1196,21 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     geom_segment(data=arrows_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
     geom_text(data=arrows_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="mut Temp effect", size="temp VA prop.")
   
+  ggplot() +
+    geom_point(data=muts_full, aes(x=RDA1_score_corr, y = RDA2_score_corr), color=adjustcolor("grey80", 0.2)) +
+    geom_point(data = muts_full[muts_full$causal_temp=="causal",], 
+               aes(x=RDA1_score_corr, y = RDA2_score_corr, color=mutTempEffect, size=Va_temp_prop), shape=shape_causal) +
+    scale_colour_viridis(option="turbo", #begin = begin_cs, end=end_cs, 
+                         limits=c(-lims, lims)
+    )+  
+    ggtheme +  geom_point(data = muts_full[muts_full$RDA_mlog10P_sig_corr,], aes(x=RDA1_score_corr, y = RDA2_score_corr),
+                          pch=23, col=adjustcolor("black",0.3), size=3) +  
+    xlab(paste0("RDA 1 (",  RDA1_propvar_corr*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar_corr*100, "%)")) + 
+    ggtitle(paste0(plotmain, " mutations - temp\nCorrected RDA")) + 
+    geom_segment(data=arrows2_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ labs(color="mut Temp effect", size="temp VA prop.")
+  
+  
   ## Mutation effect in RDA space for salinity
   ggplot() + 
     geom_point(data=muts_full, aes(x=RDA1_score, y = RDA2_score), color=adjustcolor("grey80", 0.2)) +
@@ -1163,8 +1223,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                   pch=23, col=adjustcolor("black",0.3), size=3) +  
     xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) + 
     ggtitle(paste0(plotmain, " mutations - Env2")) + 
-    geom_segment(data=arrows, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
-    geom_text(data=arrows, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ 
+    geom_segment(data=arrows2, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ 
     labs(color="mut Env2 effect", size="Env2 VA prop.")
   
   ## Mutation effect in corrected RDA space for salinity
@@ -1179,8 +1239,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                           pch=23, col=adjustcolor("black",0.3), size=3) +  
     xlab(paste0("RDA 1 (",  RDA1_propvar_corr*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar_corr*100, "%)")) + 
     ggtitle(paste0(plotmain, " mutations - Env2\nCorrected RDA")) + 
-    geom_segment(data=arrows_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
-    geom_text(data=arrows_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ 
+    geom_segment(data=arrows2_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")+ 
     labs(color="mut Env2 effect", size="Env2 VA prop.")
   
 ## RDA individual plot ####
@@ -1196,6 +1256,12 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                            dx = c(sal_arrow_muts[1]*mult, temp_arrow_muts[1]*mult),
                            dy = c(sal_arrow_muts[2]*mult, temp_arrow_muts[2]*mult), name = c("Env2", "Temp"))
   
+  mult2_ind<- c(max(abs(subset_indPhen_df$RDA1))*1.3,max(abs(subset_indPhen_df$RDA2))*1.3)/
+    c(max(abs(rdaout$CCA$biplot[,1])), max(abs(rdaout$CCA$biplot[,2])))
+  
+  arrows2_ind <- data.frame(x=rep(0,2), y = rep(0, 2), #start at origin
+                             dx = c(sal_arrow_muts[1]*mult2_ind[1], temp_arrow_muts[1]*mult2_ind[1]),
+                             dy = c(sal_arrow_muts[2]*mult2_ind[2], temp_arrow_muts[2]*mult2_ind[2]), name = c("Env2", "Temp"))
   
   # Individuals in RDA space
   ggplot(subset_indPhen_df) + 
@@ -1207,6 +1273,17 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     ggtitle(paste0(plotmain,"; Individs.; N traits = ", info$Ntraits)) + 
     geom_segment(data=arrows_ind, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
     geom_text(data=arrows_ind, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  
+  ggplot(subset_indPhen_df) + 
+    geom_point(aes(x=RDA1, y = RDA2, size=sal_opt), color="grey20") + 
+    geom_point(aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) + ggtheme + 
+    xlab(paste0("RDA 1 (",  RDA1_propvar*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar*100, "%)")) +
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + 
+    ggtitle(paste0(plotmain,"; Individs.; N traits = ", info$Ntraits)) + 
+    geom_segment(data=arrows2_ind, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2_ind, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  
   
   # Individuals in corrected RDA space
   
@@ -1220,6 +1297,12 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                 dx = c(sal_arrow_muts_corr[1]*mult_corr, temp_arrow_muts_corr[1]*mult_corr),
                                 dy = c(sal_arrow_muts_corr[2]*mult_corr, temp_arrow_muts_corr[2]*mult_corr), name = c("Env2", "Temp"))
   
+  mult2_ind_corr<- c(max(abs(subset_indPhen_df$RDA1_corr))*1.3,max(abs(subset_indPhen_df$RDA2_corr))*1.3)/
+    c(max(abs(rdaout_corr$CCA$biplot[,1])), max(abs(rdaout_corr$CCA$biplot[,2])))
+  
+  arrows2_ind_corr <- data.frame(x=rep(0,2), y = rep(0, 2), #start at origin
+                            dx = c(sal_arrow_muts_corr[1]*mult2_ind_corr[1], temp_arrow_muts_corr[1]*mult2_ind_corr[1]),
+                            dy = c(sal_arrow_muts_corr[2]*mult2_ind_corr[2], temp_arrow_muts_corr[2]*mult2_ind_corr[2]), name = c("Env2", "Temp"))
   
   
   ggplot(subset_indPhen_df) + 
@@ -1231,6 +1314,16 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     ggtitle(paste0(plotmain,"; Individs.; N traits = ", info$Ntraits,"\nRDA corrected")) + 
     geom_segment(data=arrows_ind_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
     geom_text(data=arrows_ind_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
+  
+  ggplot(subset_indPhen_df) + 
+    geom_point(aes(x=RDA1_corr, y = RDA2_corr, size=sal_opt), color="grey20") + 
+    geom_point(aes(x=RDA1_corr, y=RDA2_corr, color=temp_opt), size=2.5) + ggtheme + 
+    xlab(paste0("RDA 1 (",  RDA1_propvar_corr*100, "%)")) + ylab(paste0("RDA 2 (",  RDA2_propvar_corr*100, "%)")) +
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + 
+    ggtitle(paste0(plotmain,"; Individs.; N traits = ", info$Ntraits,"\nRDA corrected")) + 
+    geom_segment(data=arrows2_ind_corr, aes(x=x, y=y, xend=dx, yend=dy),arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(data=arrows2_ind_corr, aes(x=dx, y=dy, label=name), hjust="right", vjust="bottom")
   
   dev.off()
   
@@ -1395,10 +1488,16 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                                   muts_full$RDA2_score*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2] 
     #plot(muts_full$mutTempEffect, muts_full$RDA1_score)
     RDA_RDAmutpred_cor_tempEffect <- cor(muts_full$RDA_mut_temp_pred, muts_full$mutTempEffect, use="complete.obs", method="kendall")
-    RDA_RDAmutpred_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSalEffect, use="complete.obs", method="kendall")
     RDA_absRDAmutpred_cor_tempVa <- cor(abs(muts_full$RDA_mut_temp_pred), muts_full$Va_temp, use="complete.obs", method="kendall")
-    RDA_absRDAmutpred_cor_salVa <- cor(abs(muts_full$RDA_mut_sal_pred), muts_full$Va_sal, use="complete.obs", method="kendall")
-  
+    
+    if (info$Ntraits==1){
+      RDA_RDAmutpred_cor_salEffect <- NA
+      RDA_absRDAmutpred_cor_salVa <- NA
+      }else{
+      RDA_RDAmutpred_cor_salEffect <- cor(muts_full$RDA_mut_sal_pred, muts_full$mutSalEffect, use="complete.obs", method="kendall")
+      RDA_absRDAmutpred_cor_salVa <- cor(abs(muts_full$RDA_mut_sal_pred), muts_full$Va_sal, use="complete.obs", method="kendall")
+      }
+    
   # With structure correction, using the RDA run on all the SNPs (rdaout_corr object)
     # sum(locus_score * eigenvalue * loading_env_RDA_axis)
     # The following works because salinity is always 1st row of biplot and temp is always 2nd row - hard coding
@@ -1407,11 +1506,18 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     muts_full$RDA_mut_sal_pred_structcorr <- muts_full$RDA1_score_corr*eigenvals(rdaout_corr)[1]*summary(rdaout_corr)$biplot[1,1] +
                                               muts_full$RDA2_score_corr*eigenvals(rdaout_corr)[2]*summary(rdaout_corr)$biplot[1,2] 
     #plot(muts_full$mutTempEffect, muts_full$RDA1_score)
+    
     RDA_RDAmutpred_cor_tempEffect_structcorr <- cor(muts_full$RDA_mut_temp_pred_structcorr, muts_full$mutTempEffect, use="complete.obs")
-    RDA_RDAmutpred_cor_salEffect_structcorr <- cor(muts_full$RDA_mut_sal_pred_structcorr, muts_full$mutSalEffect, use="complete.obs")
     RDA_absRDAmutpred_cor_tempVa_structcorr <- cor(abs(muts_full$RDA_mut_temp_pred_structcorr), muts_full$Va_temp, use="complete.obs")
-    RDA_absRDAmutpred_cor_salVa_structcorr <- cor(abs(muts_full$RDA_mut_sal_pred_structcorr), muts_full$Va_sal, use="complete.obs")
-  
+    
+    if (info$Ntraits==1){
+      RDA_RDAmutpred_cor_salEffect_structcorr <- NA
+      RDA_absRDAmutpred_cor_salVa_structcorr <- NA
+    }else{
+      RDA_RDAmutpred_cor_salEffect_structcorr <- cor(muts_full$RDA_mut_sal_pred_structcorr, muts_full$mutSalEffect, use="complete.obs")
+      RDA_absRDAmutpred_cor_salVa_structcorr <- cor(abs(muts_full$RDA_mut_sal_pred_structcorr), muts_full$Va_sal, use="complete.obs")
+    }
+    
   pdf(paste0(path,seed,"_pdf_6zRDA_predict.pdf"), width=7, height=7)
   par(mfrow=c(1,1))
   
@@ -1428,8 +1534,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   plot(scale(muts_full$mutTempEffect), scale(muts_full$RDA_mut_temp_pred), main = paste0(plotmain), cex.main=0.5)
   abline(0,1, col="red")
   
-  plot(scale(muts_full$mutSalEffect), scale(muts_full$RDA_mut_sal_pred), main =  paste0(plotmain), cex.main=0.5)
-  abline(0,1, col="red")
+  if (info$Ntraits>1){
+    plot(scale(muts_full$mutSalEffect), scale(muts_full$RDA_mut_sal_pred), main =  paste0(plotmain), cex.main=0.5)
+    abline(0,1, col="red")
+  }
   
   dev.off()
   

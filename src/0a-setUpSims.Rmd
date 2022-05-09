@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-runID = "20220201"
+runID = "20220428"
 ```
 
 # 15 demographies
@@ -135,12 +135,18 @@ str(final)
 longruns <- which(final$demog_name=="Est-Clines_N-variable_m-variable" | final$demog_name=="Est-Clines_N-equal_m_breaks")
 
 towrite <- final[-longruns,]
+
 write.table(towrite[1:999,], paste0("src/0b-final_params-fastruns-",runID,".txt"), row.names=FALSE)
+nrow(towrite[1:999,])
+
 write.table(towrite[1000:nrow(towrite),], paste0("src/0b-final_params-fastruns-",runID,"-b.txt"), row.names=FALSE)
+nrow(towrite[1000:nrow(towrite),])
+
 nrow(final[longruns,])
 write.table(final[longruns,], paste0("src/0b-final_params-longruns-",runID,".txt"), row.names=FALSE)
 
 save(final, file=paste0("src/0b-final_params-",runID,".RData"))
+write.table(final, paste0("src/0b-final_params-",runID,".txt"))
 
 # head(final[final$N_traits==2,], 20)
 ```

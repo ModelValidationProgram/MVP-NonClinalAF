@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=R-Run-20220201
+#SBATCH --job-name=R-Run-20220428
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --mem=15G
 #SBATCH --nodes=1
 #SBATCH --array=2-1000%30
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220201_%j.err
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220428_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220428_%j.err
 
 source ~/miniconda3/bin/activate MVP_env_R4.0.3
 
@@ -17,17 +17,24 @@ set -u
 set -o pipefail
 
 #### User modified values ####
+# for 0b-final_params-fastruns-20220428.txt --array=2-1000%30
+# for 0b-final_params-fastruns-20220428-b.txt #SBATCH --array=2-952%30
+# for 0b-final_params-longruns-20220428.txt #SBATCH --array=2-301%30 #should be 301
 
 # Local working path (this should navigate to the MVP repo)
 mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 
 # Folder within MVP where you want are your output files
-outpath="sim_output_20220201/"
-runID="20220201"
+outpath="sim_output_20220428/"
+runID="20220428"
 
 # Parameter file
-params="src/0b-final_params-fastruns-20220201.txt"
+params="src/0b-final_params-fastruns-20220428.txt"
+## Notes:
+## For first set of fast runs, params="src/0b-final_params-fastruns-20220428.txt"
+## For second set of fast runs, params="src/0b-final_params-fastruns-20220428-b.txt"
+## For long runs, params="src/0b-final_params-longruns-20220428.txt"
 
 
 # Extracting individual variables

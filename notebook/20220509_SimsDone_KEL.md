@@ -2,5 +2,5 @@
 
 The simulations are done, and at first glance it appears that everything finished.
 
-I spent the morning updating the metadata for all the files.
+I spent the morning updating the metadata for all the files. I synced all the files from one simulation to github to see if it would work.
 

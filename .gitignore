@@ -10,6 +10,7 @@ sim_output_150_20210830/*
 *.DS_store
 *.Rhistory
 simoutput*
+.RData
 sim_output*
 run20210920*
 graphics_*

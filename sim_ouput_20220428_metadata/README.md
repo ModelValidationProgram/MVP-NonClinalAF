@@ -75,17 +75,18 @@ and then filtering MAF > 0.01). See Metadata for details
 * `1231094_pca.RDS` R object saved from the `pca()` function with `lfmm2`
 
 ## Figures related to processing sims in R
-* 1231094_pdf_1pop.pdf
-* 1231094_pdf_1pop_mig.pdf
-* 1231094_pdf_2muts.pdf
-* 1231094_pdf_3bStructureCorrs.pdf
-* 1231094_pdf_3pca.pdf
-* 1231094_pdf_4manhattan_LFMM.pdf
-* 1231094_pdf_5RDA.pdf
-* 1231094_pdf_6manhattan_RDA.pdf
-* 1231094_pdf_6zRDA_predict.pdf
-* 1231094_pdf_7_afcors.pdf
-* 1231094_pdf_8manhattan_cor.pdf
-* 1231094_pdf_8manhattan_fst.pdf
-* 1231094_pdf_8phen-env_af-env.pdf
-* 1231094_pdf_heatmaps.pdf
+* `1231094_pdf_1pop.pdf` plots at the population level, fitness for each population
+* `1231094_pdf_1pop_mig.pdf` migration patterns for the simulation
+* `1231094_pdf_2muts.pdf` plots of individual mutation effect sizes
+* `1231094_pdf_3bStructureCorrs.pdf` plots of how structure (PC axes) are related to environment or to LFMM structure estimates
+* `1231094_pdf_3pca.pdf` principal components plots
+* `1231094_pdf_4manhattan_LFMM.pdf` Manhattan plot for outliers from LFMM
+* `1231094_pdf_5RDA.pdf` RDA plots for individuals or for mutations, with and without structure correction. Sometimes the same plot is twice but with different arrow scaling, I had trouble figuring out how to scale the arrows at first.
+* `1231094_pdf_6manhattan_RDA.pdf` Manhattan plots for RDA outliers
+* `1231094_pdf_6zRDA_predict.pdf` Accuracy of RDA prediction, with and without structure correction and for each trait
+* `1231094_pdf_7_afcors.pdf` This plot shows the effect of pooling samples with the same environment together to calculate correlations between allele frequency and environment. Even very low correlations become artificially inflated.
+* `1231094_pdf_8manhattan_cor.pdf` Manhattan plot for Kendall's rho cor(allele frequency, environment)
+* `1231094_pdf_8manhattan_fst.pdf` Manhattan plot for FST calculated by OutFLANK (Weir and Cockerham)
+* `1231094_pdf_8phen-env_af-env.pdf` visualization of phenotypic clines and allele frequency patterns for each simulated trait
+* `1231094_pdf_heatmaps.pdf` genotype heatmaps for different subsamples of indivduals - subsampled by their environment or by their location on the landscape.
+	* Individuals are in rows and causal loci are in columns. Yellow is 2 copies of the ancestral allele (0 effect on phenotype), Orange is heterozygote, and red is 2 copies of the derived allele (with a phenotypic effect)

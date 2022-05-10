@@ -13,7 +13,7 @@ library(gridExtra)
 library(tidyr)
 library(dplyr)
 #library(tidyverse)
-outputs <- "figures/"
+outputs <- "figures_20220428/"
 ```
 
 `setwd("~/Documents/GitHub/MVP-NonClinalAF")`
@@ -21,13 +21,13 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 ## Read in data
 
 ```{r cars}
-out.df <- read.table(file = "summary_20220201.txt", header=TRUE)
+out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
 head(out.df)
 tail(out.df)
 
 
 
-load("src/0b-final_params-20220201.RData")
+load("src/0b-final_params-20220428.RData")
 sims.df <- final
 head(sims.df)
 
@@ -42,7 +42,7 @@ count <- data.frame(notNA=tapply(final.df$K, final.df$level,
        ))
 count
 
-head(final.df[which(is.na(final.df$K)),])
+sum(is.na(final.df$K))
 
 
 levels(final.df$demog_level_sub)
@@ -124,11 +124,13 @@ levels(final.df$arch_level_sub) <- c("1 trait", "2 traits\nno pleiotropy\nequal 
 
 final.df$demog_level <- factor(final.df$demog_level, levels=c("SS-Clines", "SS-Mtn", "Est-Clines"), ordered=TRUE)
 
-final.df$demog_level_sub<- factor(final.df$demog_level_sub, levels=c("N-equal_m-constant", "N-cline-N-to-S_m-constant", "N-cline-center-to-edge_m-constant", "N-equal_m_breaks", "N-variable_m-variable"))
+final.df$demog_level_sub<- factor(final.df$demog_level_sub, levels=c("N-equal_m-constant", "N-equal_m_breaks", "N-cline-N-to-S_m-constant", "N-cline-center-to-edge_m-constant",  "N-variable_m-variable"), ordered=TRUE)
 
 final.df$demog_level_sub <- as.factor(final.df$demog_level_sub)
 
-levels(final.df$demog_level_sub) <- c("N equal\nm constant", "N latitude cline\nm constant", "N central cline\nm constant", "N equal\nm breaks", "N variable\nm variable")
+levels(final.df$demog_level_sub)
+
+levels(final.df$demog_level_sub) <- c("N equal\nm constant", "N equal\nm breaks", "N latitude cline\nm constant", "N central cline\nm constant",  "N variable\nm variable") #warning, make sure in same order as previous code
 levels(final.df$demog_level_sub)
 ```
 
@@ -136,10 +138,20 @@ levels(final.df$demog_level_sub)
 ```{r mean FST}
 #hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
 
-ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+sum(is.na(final.df$meanFst))
+min(final.df$meanFst)
+max(final.df$meanFst)
+sum(is.na(final.df$arch_level_sub))
+sum(is.na(final.df$demog_level))
 
-pdf("figures/FST_Demog.pdf", width=8, height=6)
-  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
+tapply(final.df$meanFst, list(final.df$demog_level, final.df$demog_level_sub), mean)
+
+ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+
+#I'm not sure where the missing values come from.
+
+pdf(paste0(outputs,"FST_Demog.pdf"), width=8, height=6)
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") 
   dev.off()
 
 ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,0.5) + ggtitle("C")
@@ -176,7 +188,11 @@ ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidt
         ggtheme +
       scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + xlim(0.25,1) + ylim(0.25,1) + xlab("Correlation(temp. phenotype, deme temperature)") + ylab("Correlation(Env2 phenotype, deme Env2)") + ggtitle("B")
   l2
-      
+  
+  sum(is.na(final.df$subsamp_corr_phen_temp))
+  sum(is.na(final.df$subsamp_corr_phen_sal))
+      # in this case, the removed points have an NA because the "sal" trait was not adaptive if 450 simulations
+  
 pdf(paste0(outputs,"AmountLA.pdf"), width=8, height=8)
   grid.arrange(l1,l2, nrow=2)
 dev.off()
@@ -201,12 +217,14 @@ str(numloc_df$arch_level)
 m<- ggplot(numloc_df ) + geom_boxplot(aes(y=num_loci_causal,x = arch_level, fill=filter), color="grey70") + ggtheme + ylim(0,4000) + ylab("Number of causal loci") + xlab("Architecture") + scale_fill_viridis(option="mako", discrete=TRUE)
 m
 
+sum(is.na(final.df$num_neut_prefilter))
+sum(is.na(final.df$num_neut_postfilter))
 
-n <- ggplot(final.df) + geom_violin(aes(y=num_neut, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
+n <- ggplot(final.df) + geom_violin(aes(y=num_neut_postfilter, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci\nafter sampling and MAF filter") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
 n
 
-tapply(final.df$num_neut, list(final.df$demog_level_sub), median, na.rm=TRUE)
-tapply(final.df$num_neut, list(final.df$demog_level_sub), mean, na.rm=TRUE)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), median, na.rm=TRUE)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), mean, na.rm=TRUE)
 
 pdf(paste0(outputs,"NumLociPrePostfilter.pdf"), width=7, height=8)
   grid.arrange(m, n, nrow=2)
@@ -238,7 +256,6 @@ levels(final.df$demog_level_sub)
 LA_mod <- summary(aov(final_LA~arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
 LA_mod
 pervarLA <- round(LA_mod[[1]][,2]/sum(LA_mod[[1]][,2]),2)
-
 
 FST_mod <- summary(aov(meanFst ~ arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
 FST_mod
@@ -367,7 +384,7 @@ Note that this is a vast overestimate, because many causal loci were filtered ou
 
 pleiotropy.df2 <- gather(subdf_arch, key=trait, value=cor_VA_prop, cor_VA_temp_prop, cor_VA_sal_prop)
 
-fboth2 <-   ggplot(pleiotropy.df2, aes(x=arch_level, y=cor_VA_prop, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("A")
+fboth2 <-   ggplot(pleiotropy.df2, aes(x=arch_level, y=cor_VA_prop, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of explainable VA \n explained by loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("A")
 
 a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
 
@@ -397,7 +414,7 @@ unique(final.df$demog_level_sub)
 
 
 pleiotropy.df$demog_level_sub <- as.factor(pleiotropy.df$demog_level_sub)
-levels(pleiotropy.df$demog_level_sub) <- c("N equal\nm constant", "N latitude cline\nm constant", "N central cline\nm constant", "N equal\nm breaks", "N variable\nm variable")
+levels(pleiotropy.df$demog_level_sub) <- c("N equal\nm constant", "N equal\nm breaks", "N latitude cline\nm constant", "N central cline\nm constant",  "N variable\nm variable") #warning, make sure in correct order
 
 
 

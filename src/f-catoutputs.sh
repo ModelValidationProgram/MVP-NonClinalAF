@@ -1,4 +1,4 @@
-cd ../sim_output_20220117/ #update folder
+cd ../sim_output_20220428/ #update folder
 
 ls -l *_muts.txt | wc -l # this is the number of sims that completed the SliM run
 

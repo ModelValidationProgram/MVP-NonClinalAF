@@ -809,6 +809,58 @@ dev.off()
 
 ## Under what conditions can redundancy analysis predict an individual’s optimal environment, without knowledge of the genetic architecture of adaptation?
 
+
+Visualize the effect of genetic architecture on phenotype prediction
+```{r}
+forhist <- gather(final.df, key=env, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen)
+
+g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental phenotype)") 
+g4
+
+
+
+```
+
+
+Accuracy of RDA prediction maxed out by cor (phenotype, Env)
+
+```{r}
+#Scatterplot
+
+levels(final.df$demog_level_sub)
+  
+n1 <- ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   geom_point(aes(x=subsamp_corr_phen_temp,
+                   y=RDA_cor_RDA20000temppredict_tempPhen, color=demog_level,
+	                   shape=demog_level_sub), bg="red",alpha=0.3) + ylim(0,1) + xlim(0,1) +
+     ggtheme + geom_abline(slope=1, color="grey") + 
+  scale_shape_manual(values = c(0, 1, 10, 11, 21), name="Demography") + guides(color=guide_legend(title="Landscape")) +
+  xlab("Evolved phenotypic cline\nCor(Temp. phenotype, Deme Temp.)") +
+  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)") + ggtitle("C) Accuracy of RDA prediction\n     (Temp. trait)")
+  
+n1 
+
+n2<-  ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   geom_point(aes(x=subsamp_corr_phen_sal,
+                   y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level,
+	                   shape=demog_level_sub), alpha=0.3, bg="red") + ylim(0,1) + xlim(0,1) + 
+     ggtheme + geom_abline(slope=1, color="grey") + 
+  scale_shape_manual(values = c(0, 1, 10, 11, 21), name="Demography") + guides(color=guide_legend(title="Landscape")) +
+  xlab("Evolved phenotypic cline\nCor(Env2 phenotype, Deme Env2)") +
+  ylab("Prediction accuracy\nCor(RDA prediction,\nEnv2 phenotype)")  +
+  ggtitle("D) Accuracy of RDA prediction\n     (Env2 trait)")
+n2  
+
+pdf(paste0(outputs,"RDA-Demog-scatter.pdf"), width=12, height=8)
+
+  grid.arrange(g4,  n1, g4, n2, ncol=2)
+dev.off()
+
+
+#hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+#hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
+```
+
+# Effect of structure correction
+
 ```{r}
 
 RDA_indpredict <- gather(final.df, key=structcorr, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000temppredict_tempPhen_structcorr)
@@ -839,54 +891,6 @@ pdf(paste0(outputs,"RDA-Predict-Phen-struct.pdf"), width=5, height=7)
 dev.off()
 ```
 
-Visualize the effect of genetic architecture on phenotype prediction
-```{r}
-forhist <- gather(final.df, key=env, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen)
-
-g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental phenotype)") 
-g4
-
-pdf(paste0(outputs,"RDA-Predict-Phen-struct.pdf"), width=5, height=7)
-  grid.arrange(n, o)
-dev.off()
-
-```
-
-
-Accuracy of RDA prediction maxed out by cor (phenotyp, Env)
-
-```{r}
-#Scatterplot
-  
-n1 <- ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   geom_point(aes(x=subsamp_corr_phen_temp,
-                   y=RDA_cor_RDA20000temppredict_tempPhen, color=demog_level,
-	                   shape=demog_level_sub), bg="red",alpha=0.3) + ylim(0,1) + xlim(0,1) +
-     ggtheme + geom_abline(slope=1, color="grey") + 
-  scale_shape_manual(values = c(7, 10, 12, 21, 22), name="Demography") + guides(color=guide_legend(title="Landscape")) +
-  xlab("Evolved phenotype cline\nCor(Temp. phenotype, Deme Temp.)") +
-  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)")
-  
-n1 
-
-n2<-  ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   geom_point(aes(x=subsamp_corr_phen_sal,
-                   y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level,
-	                   shape=demog_level_sub), alpha=0.3, bg="red") + ylim(0,1) + xlim(0,1) + 
-     ggtheme + geom_abline(slope=1, color="grey") + 
-  scale_shape_manual(values = c(7, 10, 12, 21, 22), name="Demography") + guides(color=guide_legend(title="Landscape")) +
-  xlab("Evolved phenotype cline\nCor(Env2 phenotype, Deme Env2)") +
-  ylab("Prediction accuracy\nCor(RDA prediction,\nEnv2 phenotype)")
-n2  
-
-pdf(paste0(outputs,"RDA-Demog-scatter.pdf"), width=6, height=7)
-
-  grid.arrange(n1, n2, nrow=2)
-dev.off()
-
-
-#hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
-#hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
-```
-
 Understand how correlation with PC affects structure correction
 ```{r}
 
@@ -908,7 +912,7 @@ p1
 #####################
 ## Env 2 trait
 #####################
-plot(abs(final.df$cor_PC1_sal), final.df$RDA_cor_RDA20000salpredict_salPhen_structcorr - final.df$RDA_cor_RDA20000salpredict_salPhen)
+
 ## What drives the change in performance with structure correction?
 final.df$change_sal <- final.df$RDA_cor_RDA20000salpredict_salPhen_structcorr - final.df$RDA_cor_RDA20000salpredict_salPhen
 summary(aov(final.df$change_sal~final.df$cor_PC1_sal+ final.df$cor_PC2_sal + 
@@ -919,20 +923,18 @@ p2 <- ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_sal), y=change_sal, color=
   geom_smooth(aes(x=abs(cor_PC1_sal),y=change_sal, color=demog_level, fill=demog_level), alpha=0.2, method="loess", span=1) + scale_fill_discrete(guide="none")
 p2
 
-grid.arrange(p1, p2)
+pdf(paste0(outputs,"RDA-Predict-Traits-CovariateStructure.pdf"), width=6, height=7)
+  grid.arrange(p1, p2)
+dev.off()
 #hist(final.df$cor_RDA20000_RDloadings_tempPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
 #hist(final.df$cor_RDA20000_RDloadings_salPhen, xlim=c(0,1), breaks=seq(0,1,0.05))
 ```
 
-
-
 Well, this is interesting. The accuracy of the mutation loadings on the RDA axis is much lower for the highly polygenic architectures. Which makes sense.
 
-The ironic thing is that the phenotypic prediction from the RDA is still accurate, and it is affected more by the degree that the phenotype is correlated with the environment, which is driven by demography in the simulation. 
+The ironic thing is that the phenotypic prediction from the RDA is still accurate, and it is affected more by the degree that the phenotype is correlated with the environment.
 
-
-
-
+### Statistical models
 ```{r}
 # STat models
 
@@ -965,22 +967,22 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
 # The seed with the most improvement from structcorr for temp
   i1 <- which(final.df$RDA_RDAmutpred_cor_tempEffect_structcorr - final.df$RDA_RDAmutpred_cor_tempEffect == max(final.df$RDA_RDAmutpred_cor_tempEffect_structcorr - final.df$RDA_RDAmutpred_cor_tempEffect))
   
-  final.df$seed[i1]
+  paste(final.df$level[i1], final.df$seed[i1])
 
-# The seed with the least improvement from structcorr for sal
+# The seed with the least improvement from structcorr for temp
   i2 <- which(final.df$RDA_RDAmutpred_cor_tempEffect_structcorr - final.df$RDA_RDAmutpred_cor_tempEffect == min(final.df$RDA_RDAmutpred_cor_tempEffect_structcorr - final.df$RDA_RDAmutpred_cor_tempEffect))
   
-  final.df$seed[i2]
+  paste(final.df$level[i2],final.df$seed[i2])
   
 # The seed with the most improvement from structcorr for sal
   i3 <- which(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_cor_salEffect == max(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_cor_salEffect, na.rm=TRUE))
   
-  final.df$seed[i3]
+  paste(final.df$level[i3],final.df$seed[i3])
   
 # The seed with the least improvement from structcorr for sal
     i4 <- which(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_cor_salEffect == min(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_cor_salEffect, na.rm=TRUE))
   
-  final.df$seed[i4]
+    paste(final.df$level[i4],final.df$seed[i4])
 
 # Seeds from Estuary sim, mod poly with high performance
   levels(final.df$demog_level)
@@ -990,21 +992,37 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
 
   i5 <- final.df %>% 
     filter(demog_level=="Est-Clines", arch_level== "mod.\npolygenic", ispleiotropy==1, arch_level_sub== "2 traits\npleiotropy\nequal S") %>% 
-    arrange(desc(RDA_RDAmutpred_cor_salEffect), desc(RDA_RDAmutpred_cor_tempEffect)) %>%
-    head(10) %>% 
+    arrange(desc(RDA_cor_RDA20000temppredict_tempPhen), desc(RDA_cor_RDA20000salpredict_salPhen)) %>%
+    head(4) %>% 
     select(level,seed,RDA_RDAmutpred_cor_salEffect, RDA_RDAmutpred_cor_tempEffect,
            RDA_cor_RDA20000salpredict_salPhen, RDA_cor_RDA20000temppredict_tempPhen)
   i5  
 
-  # Seeds from Estuary sim, mod poly with LOW performance
+  # Seeds from mod poly with LOW performance
   i6 <- final.df %>% 
-    filter(demog_level=="Est-Clines", arch_level== "mod.\npolygenic") %>% 
-    arrange((RDA_RDAmutpred_cor_tempEffect), (RDA_RDAmutpred_cor_salEffect)) %>%
-    head(10) %>% 
+    filter(arch_level== "mod.\npolygenic",) %>% 
+    arrange((RDA_cor_RDA20000temppredict_tempPhen), (RDA_cor_RDA20000salpredict_salPhen)) %>%
+    head(2) %>% 
     select(level,seed,RDA_RDAmutpred_cor_salEffect, RDA_RDAmutpred_cor_tempEffect,
            RDA_cor_RDA20000salpredict_salPhen, RDA_cor_RDA20000temppredict_tempPhen)
   
   i6
+  
+  # Seed for improvement in Env2 trait prediction but worse temp trait prediction after structure correction
+  
+  i7 <- final.df %>% 
+    filter(arch_level== "mod.\npolygenic",) %>% 
+    arrange(desc(RDA_cor_RDA20000salpredict_salPhen_structcorr-RDA_cor_RDA20000salpredict_salPhen),(RDA_cor_RDA20000temppredict_tempPhen_structcorr-RDA_cor_RDA20000temppredict_tempPhen) ) %>%
+    head(2) %>% 
+    select(level,seed,RDA_RDAmutpred_cor_salEffect, RDA_RDAmutpred_cor_tempEffect,
+           RDA_cor_RDA20000salpredict_salPhen, RDA_cor_RDA20000salpredict_salPhen_structcorr, 
+           RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000temppredict_tempPhen_structcorr)
+  i7
+  
+  (All_example_seeds <- sort(c(final.df$seed[i1], final.df$seed[i2], final.df$seed[i3],
+                         final.df$seed[i4], i5$seed, i6$seed, i7$seed)))
+  
+  
 ```
 
 

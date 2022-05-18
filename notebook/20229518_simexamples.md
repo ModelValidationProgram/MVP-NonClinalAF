@@ -35,5 +35,5 @@ Good seed to use for manuscript figures
 
 ## "oliogenic_1-trait__SS-Mtn_N-variable_m-variable 1231933"
 
-
+It's still terrible after structure correction... not worth looking at again
 

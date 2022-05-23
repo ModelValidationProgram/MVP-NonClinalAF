@@ -12,6 +12,7 @@ library(viridis)
 library(gridExtra)
 library(tidyr)
 library(dplyr)
+library(plyr)
 #library(tidyverse)
 outputs <- "figures_20220428/"
 ```
@@ -64,6 +65,7 @@ This optional code is for copying figures for one replicate of each of the 225 l
 
 # Seeds needed for 10x2 demography graph are the first 15 seeds
 #for (i in 1:15){ #unhash to run
+
 #  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*1pop.pdf graphs2_20220201/")
 #  system(file)
 #}
@@ -449,7 +451,7 @@ ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(SIGMA_K_2))) 
 
 sum(is.na(final.df$cor_PC1_temp))
 
-sc1<- ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_temp), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("A")
+sc1<- ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_temp), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("A")
 sc1
 
 sc2<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_temp), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("B")
@@ -461,9 +463,8 @@ sc3
 sc4<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_sal), fill=demog_level_sub, position="stack"), binwidth=0.05,  color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("D")
 sc4
 
-
-pdf(paste0(outputs,"StructureEnvCor_facetDemog.pdf"), width=7, height=10)
-    grid.arrange(sc1, sc3, nrow=2)
+pdf(paste0(outputs,"StructureEnvCor_facetDemog.pdf"), width=12, height=10)
+    grid.arrange(sc1, sc3, nrow=1)
 dev.off()
 
 ```
@@ -516,7 +517,7 @@ levels(comparemethods.AUC$methodtype)
 table(comparemethods.AUC$methodtype)
 
 # By landscape
-g <- ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR)) + geom_boxplot(color="grey",  fill="cornflowerblue") + ggtheme + xlab("method") + ylab("AUC-PR")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + scale_color_viridis(name="Landscape", discrete=TRUE) + guides(fill=guide_legend(title="Landscape"))
+g <- ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR)) + geom_boxplot(color="grey",  fill="cornflowerblue") + ggtheme + xlab("method") + ylab("AUC-PR\n(worse method <<--->> better method)")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + scale_color_viridis(name="Landscape", discrete=TRUE) + guides(fill=guide_legend(title="Landscape")) +ggtitle("A")
 g
 
 
@@ -559,10 +560,10 @@ comparemethods.FDR$methodtype <- revalue(comparemethods.FDR$methodtype,
 
 table(comparemethods.FDR$methodtype)  
 
-g2<- ggplot(comparemethods.FDR, aes(x=as.factor(methodtype), y=FDR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("FDR") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10))
+g2<- ggplot(comparemethods.FDR, aes(x=as.factor(methodtype), y=FDR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("FDR\n(better method <<--->> worse method)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("B")
 g2
 
-pdf(paste0(outputs,"AUC-PR_FDR.pdf"), width=5, height=5)
+pdf(paste0(outputs,"AUC-PR_FDR.pdf"), width=5, height=8)
 grid.arrange(g+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
              g2, 
              layout_matrix=matrix(c(1,1,2,2,2), nrow=5))
@@ -667,10 +668,10 @@ final.df$seed[which(final.df$RDA_cor_RDA20000salppredict_salPhen < 0)]
 ## Can redundancy analysis identify mutations with pleiotropic effects?
 ```{r}
 
-g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
+g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
 g1 
 
-g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
+g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
 g2
 
   grid.arrange(g1, g2,
@@ -681,10 +682,10 @@ g2
 Same analysis as above, but with structure correction
 
 ```{r}
-g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
+g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
 g1 
 
-g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
+g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
 g2
 
 grid.arrange(g1, g2,
@@ -698,7 +699,7 @@ Combine the two plots into one, since they show the same pattern:
 ```{r}
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_RDAmutpred_cor_tempEffect, RDA_RDAmutpred_cor_salEffect)
 
-g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (mutation effect size)") 
+g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (QTN effect size)") 
 g3
 
 ```
@@ -715,7 +716,7 @@ RDA_mutpredict$structcorr <- factor(RDA_mutpredict$structcorr)
 RDA_mutpredict$structcorr <- revalue(RDA_mutpredict$structcorr,c( "RDA_RDAmutpred_cor_tempEffect" = "No (RDA)",                                                           "RDA_RDAmutpred_cor_tempEffect_structcorr" = "Yes (pRDA)"))
 levels(RDA_mutpredict$structcorr)
 
-n <- ggplot(RDA_mutpredict, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\n(worse <<----->> better)") + ggtitle("D) Temp. mutation effect size")  + guides(fill=guide_legend(title="Structure\nCorrection?")) + 
+n <- ggplot(RDA_mutpredict, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\n(worse <<----->> better)") + ggtitle("D) QTN effect size on Temp.")  + guides(fill=guide_legend(title="Structure\nCorrection?")) + 
   theme(axis.text.x=element_blank()) + xlab("")
 # Cor(Mutation effect on Temp.,\nRDA-predicted Temp. effect)
 n
@@ -729,7 +730,7 @@ RDA_mutpredict_sal$structcorr <- factor(RDA_mutpredict_sal$structcorr)
 RDA_mutpredict_sal$structcorr <- revalue(RDA_mutpredict_sal$structcorr,c( "RDA_RDAmutpred_cor_salEffect" = "No (RDA)",                                                           "RDA_RDAmutpred_cor_salEffect_structcorr" = "Yes (pRDA)"))
 levels(RDA_indpredict$structcorr)
 
-o <- ggplot(RDA_mutpredict_sal, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme + ylim(-1,1) +  ylab("Accuracy of RDA prediction \n(worse <<----->> better)") + ggtitle("E) Env2 mutation effect size")  + guides(fill=guide_legend(title="Structure\nCorrection?"))  + xlab("Landscape")
+o <- ggplot(RDA_mutpredict_sal, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme + ylim(-1,1) +  ylab("Accuracy of RDA prediction \n(worse <<----->> better)") + ggtitle("E) QTN effect size on Env2")  + guides(fill=guide_legend(title="Structure\nCorrection?"))  + xlab("Landscape")
 # "Cor(Mutation effect on Env2,\nRDA-predicted Env2 effect)"
 o
 
@@ -788,7 +789,7 @@ Visualize the effect of genetic architecture on phenotype prediction
 ```{r}
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen)
 
-g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental phenotype)") 
+g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental trait, no structure correction)") 
 g4
 
 
@@ -809,7 +810,7 @@ n1 <- ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   ge
      ggtheme + geom_abline(slope=1, color="grey") + 
   scale_shape_manual(values = c(0, 1, 10, 11, 21), name="Demography") + guides(color=guide_legend(title="Landscape")) +
   xlab("Evolved phenotypic cline\nCor(Temp. phenotype, Deme Temp.)") +
-  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)") + ggtitle("C) Accuracy of RDA prediction\n     (Temp. trait)")
+  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)") + ggtitle("C) Accuracy of RDA prediction\n     (Temp. trait, no structure correction)")
   
 n1 
 
@@ -820,12 +821,11 @@ n2<-  ggplot(final.df[order(final.df$demog_level_sub, decreasing=TRUE),]) +   ge
   scale_shape_manual(values = c(0, 1, 10, 11, 21), name="Demography") + guides(color=guide_legend(title="Landscape")) +
   xlab("Evolved phenotypic cline\nCor(Env2 phenotype, Deme Env2)") +
   ylab("Prediction accuracy\nCor(RDA prediction,\nEnv2 phenotype)")  +
-  ggtitle("D) Accuracy of RDA prediction\n     (Env2 trait)")
+  ggtitle("D) Accuracy of RDA prediction\n     (Env2 trait, no structure correction)")
 n2  
 
-pdf(paste0(outputs,"RDA-Demog-scatter.pdf"), width=12, height=8)
-
-  grid.arrange(g4,  n1, g4, n2, ncol=2)
+pdf(paste0(outputs,"RDA-Demog-scatter.pdf"), width=6, height=10)
+  grid.arrange(g4,  n1,  n2, ncol=1)
 dev.off()
 
 
@@ -996,6 +996,10 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
   (All_example_seeds <- sort(c(final.df$seed[i1], final.df$seed[i2], final.df$seed[i3],
                          final.df$seed[i4], i5$seed, i6$seed, i7$seed)))
   
+  for (i in All_example_seeds){ #unhash to run
+    file <- paste0("cp sim_output_20220428/",i,"*.pdf examples_20220428/")
+    system(file)
+  }
   
 ```
 

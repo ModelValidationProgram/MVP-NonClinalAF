@@ -17,10 +17,10 @@ outputs <- "figures_20220428/"
 ```
 
 `setwd("~/Documents/GitHub/MVP-NonClinalAF")`
-setwd("/work/lotterhos/MVP-NonClinalAF")
+`setwd("/work/lotterhos/MVP-NonClinalAF")`
 ## Read in data
 
-```{r cars}
+```{r read data}
 out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
 head(out.df)
 tail(out.df)
@@ -37,50 +37,42 @@ head(final.df)
 
 ref <- final.df[,c("seed", "level", "num_causal_postfilter")]
 
+### Make sure 10 reps of each simulation
 count <- data.frame(notNA=tapply(final.df$K, final.df$level, 
        function(x){sum(!is.na(x))}
        ))
 count
 
+### Make sure no NAs in population structure
 sum(is.na(final.df$K))
 
 
+# Check the levels
 levels(final.df$demog_level_sub)
 levels(final.df$arch_level_sub)
-#final.df %>% filter(demog_level=="Est-Clines" & 
-#                      demog_level_sub=="N-equal_m-constant" & 
-#                    arch_level_sub=="2-trait-pleiotropy-equal-S" &
-#                      arch_level=="mod-polygenic")
 
-#1231217
 ```
 
-Copy graphs - no need to run this every time.
+Copy graphs
+
+This optional code is for copying figures for one replicate of each of the 225 levels.
 ```{r, eval=FALSE, echo=FALSE}
 #for (i in 1:225){ #unhash to run
-  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*.pdf graphs_20220201/")
-  system(file)
-}
+#  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*.pdf graphs_20220201/")
+#  system(file)
+#}
 
+# Seeds needed for 10x2 demography graph are the first 15 seeds
 #for (i in 1:15){ #unhash to run
-  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*1pop.pdf graphs2_20220201/")
-  system(file)
-}
-
-#system("cp sim_output_20220201/1231217*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
-#system("cp sim_output_20220201/1231142*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
-#system("cp sim_output_20220201/1231442*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
-system("cp sim_output_20220201/1231667*.pdf graphs_1231217_estuary_pleiotropy_modpoly")
-
-#1231892
-#1232117
-#1232342
+#  file <- paste0("cp sim_output_20220201/",final.df$seed[i],"*1pop.pdf graphs2_20220201/")
+#  system(file)
+#}
 ```
 
-Seeds needed for 10x2 demography graph are the first 15 seeds
 
-GGtheme
-```{r}
+
+GGtheme for all figures
+```{r ggtheme}
 
 ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
 
@@ -92,8 +84,8 @@ ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.min
 `magma` for arch_level_sub
 `cividis` for arch_level
 
-## order levels
-```{r}
+## Reorder levels
+```{r reorder levels}
 str(final.df$arch_level)
 levels(final.df$arch_level)
 final.df$arch_level <- factor(final.df$arch_level, levels=c( "oliogenic", "mod-polygenic", "highly-polygenic"), ordered=TRUE)
@@ -134,74 +126,75 @@ levels(final.df$demog_level_sub) <- c("N equal\nm constant", "N equal\nm breaks"
 levels(final.df$demog_level_sub)
 ```
 
-## mean FST
+## Plot mean FST
 ```{r mean FST}
-#hist(final.df$meanFst, xlim=c(0,1), breaks=seq(0,1,0.01), main="", xlab="Fst")
 
+### Check for missing data
 sum(is.na(final.df$meanFst))
-min(final.df$meanFst)
-max(final.df$meanFst)
+summary(final.df$meanFst)
 sum(is.na(final.df$arch_level_sub))
 sum(is.na(final.df$demog_level))
 
+### Table of mean FST for different levels - no evidence of missing data
 tapply(final.df$meanFst, list(final.df$demog_level, final.df$demog_level_sub), mean)
+tapply(final.df$meanFst, list(final.df$demog_level, final.df$demog_level_sub), length)
 
-ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+tapply(final.df$meanFst, list(final.df$demog_level, final.df$arch_level_sub), mean)
+tapply(final.df$meanFst, list(final.df$demog_level, final.df$arch_level_sub), length)
 
-#I'm not sure where the missing values come from.
+### Distribution of FST as a funciton of architecture
+f <- ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.5)) +  facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+f
 
 pdf(paste0(outputs,"FST_Demog.pdf"), width=8, height=6)
-  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") 
+### Distribution of FST as a funciton of demography
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.5))  + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") 
   dev.off()
 
-ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("overall FST") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,0.5) + ggtitle("C")
+ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Demography") + ylab("overall FST") + scale_color_viridis(discrete=TRUE)  + ylim(0,0.5) + scale_fill_viridis(discrete=TRUE, name="Landscape")
 
-a<-tapply(final.df$meanFst,final.df$demog_name, mean, na.rm=TRUE)
-b<- tapply(final.df$final_LA,final.df$demog_name, mean, na.rm=TRUE)
+a<-tapply(final.df$meanFst,final.df$demog_name, mean)
+b<- tapply(final.df$final_LA,final.df$demog_name, mean)
   
 cbind(Fst=a,LA=b)
-
-ggplot(final.df, aes(x=as.factor(N_traits), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("meanFst") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
-
 ```
 
 ## Degree local adaptation
-```{r}
-#hist(final.df$final_LA, xlim=c(0,1), breaks=seq(0,1,0.05), main="", xlab="Degree of local adaptation")
 
- #   ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=as.factor(arch_level))) + ggtheme + xlim(0,1) + facet_grid(demog_level~.)
-    
-  #      ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=as.factor(demog_level_sub))) + ggtheme + xlim(0,1) + facet_grid(demog_level~.)
+Visualize the degree of local adapation
+```{r LA}
 
+summary(final.df$final_LA)
 
-      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.6)) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
   guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 l1
 
-ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.75) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.6)) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
   guides(fill = guide_legend(reverse = FALSE)) + ggtitle("A")
 
-      l2<- ggplot(final.df) +
+l2<- ggplot(final.df) +
         geom_point(aes(x=subsamp_corr_phen_temp,
                        y=subsamp_corr_phen_sal,
                        color=final_LA,shape=demog_level)) + 
         ggtheme +
-      scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + xlim(0.25,1) + ylim(0.25,1) + xlab("Correlation(temp. phenotype, deme temperature)") + ylab("Correlation(Env2 phenotype, deme Env2)") + ggtitle("B")
+      scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + coord_cartesian(xlim = c(0.25,1)) + ylim(0.25,1) + xlab("Cor(temp. phenotype, deme temperature)") + ylab("Cor(Env2 phenotype, deme Env2)") + ggtitle("B") +labs(shape="Landscape")
   l2
+   # in this case, the removed points have an NA because the "sal" trait was not adaptive in 450 simulations:
   
   sum(is.na(final.df$subsamp_corr_phen_temp))
   sum(is.na(final.df$subsamp_corr_phen_sal))
-      # in this case, the removed points have an NA because the "sal" trait was not adaptive if 450 simulations
   
-pdf(paste0(outputs,"AmountLA.pdf"), width=8, height=8)
+pdf(paste0(outputs,"AmountLA.pdf"), width=7, height=8)
   grid.arrange(l1,l2, nrow=2)
 dev.off()
 
 ```
 
 ## Number of loci
-```{r}
+```{r plot num loci}
 
+# Create a dataframe for plotting
 numloc_df <- gather(final.df, key=filter, value=num_loci_causal, num_causal_prefilter, num_causal_postfilter)
 
 numloc_df$filter <- factor(numloc_df$filter, levels = c("num_causal_prefilter", "num_causal_postfilter"), ordered=TRUE)
@@ -214,17 +207,20 @@ tapply( numloc_df$num_loci_causal, list(numloc_df$filter,numloc_df$arch_level), 
 
 str(numloc_df$arch_level)
 
+# Plot QTN loci
 m<- ggplot(numloc_df ) + geom_boxplot(aes(y=num_loci_causal,x = arch_level, fill=filter), color="grey70") + ggtheme + ylim(0,4000) + ylab("Number of causal loci") + xlab("Architecture") + scale_fill_viridis(option="mako", discrete=TRUE)
 m
 
+# Check no missing data
 sum(is.na(final.df$num_neut_prefilter))
 sum(is.na(final.df$num_neut_postfilter))
 
+# Plot neutral loci
 n <- ggplot(final.df) + geom_violin(aes(y=num_neut_postfilter, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci\nafter sampling and MAF filter") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
 n
 
-tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), median, na.rm=TRUE)
-tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), mean, na.rm=TRUE)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), median)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), mean)
 
 pdf(paste0(outputs,"NumLociPrePostfilter.pdf"), width=7, height=8)
   grid.arrange(m, n, nrow=2)
@@ -233,86 +229,89 @@ dev.off()
 
 
 ## K (Number of populations)
-```{r}
+```{r plot K}
+
+# What determines K?
 K_mod <- summary(aov(K~arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
 K_mod
+
+# Percent of variance (SS) explained by each
 pervarK <- round(K_mod[[1]][,2]/sum(K_mod[[1]][,2]),2)
 data.frame(name=rownames(K_mod[[1]]),pervarK)
+  # mostly determined by demography
 
-pdf(paste0(outputs,"K_by_demog.pdf"), width=8, height=6)
-ggplot(final.df) + geom_histogram(aes(x=K, fill=demog_level), binwidth=1, color="grey") + ggtheme + xlim(0,20) + facet_grid(demog_level_sub~.) + scale_fill_viridis(option="viridis", discrete=TRUE, name="Demography") + xlab("Number of population clusters (K)") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+summary(final.df$K)
+
+pdf(paste0(outputs,"K_by_demog.pdf"), width=6, height=6)
+  ggplot(final.df) + geom_histogram(aes(x=K, fill=demog_level), binwidth=1, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 11)) + facet_grid(demog_level_sub~.) + scale_fill_viridis(option="viridis", discrete=TRUE, name="Demography") + xlab("Number of population clusters (K)") + ylab("Number of simulations")  + theme(legend.position="bottom") +
   guides(fill = guide_legend(reverse = FALSE)) 
 dev.off()
 ```
 
 ## Statistical models
 
-#### MODELS FOR DIVERGENCE AND FOR AMOUNT LA
-```{r}
+#### MODELS FOR DIVERGENCE (FST) AND FOR AMOUNT Local adaptation (LA)
+```{r stat model LA and FST}
 levels(final.df$arch)
 levels(final.df$demog_level)
 levels(final.df$demog_level_sub)
 
+## ANOVA for degree LA
 LA_mod <- summary(aov(final_LA~arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
 LA_mod
+## Perent of SS for each explanatory variable
 pervarLA <- round(LA_mod[[1]][,2]/sum(LA_mod[[1]][,2]),2)
 
+## ANOVA for FST
 FST_mod <- summary(aov(meanFst ~ arch + demog_level_sub + demog_level + arch*demog_level_sub*demog_level, data=final.df))
 FST_mod
+## Perent of SS for each explanatory variable
 pervarFST <- round(FST_mod[[1]][,2]/sum(FST_mod[[1]][,2]),2)
 
 data.frame(name=rownames(FST_mod[[1]]),pervarLA, pervarFST)
 ```
 
 
-#### MODELS FOR AF CLINES
-```{r}
+#### MODELS FOR allele frequency (AF) clines
+```{r stat model proportion of AF clines}
 
+# Create a dataframe for analysis with both traits
 stat_df <- gather(final.df, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
 tail(stat_df)
 
+# Check the levels in the new dataframe
 unique(stat_df$demog_level)
 unique(stat_df$demog_level_sub)
 unique(stat_df$demog_name)
 unique(stat_df$arch_level_sub)
 unique(stat_df$arch)
 
-## A model with more hierarchy
-# modelsum <- summary(aov(cor_TPR ~ trait + demog_level + demog_level_sub + arch_level_sub + arch_level + final_LA + trait*demog_level + trait*arch_level_sub, data=stat_df))
-# 
-# modelsum
-# 
-# pervar <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
-# 
-# pervar$pervar <- pervar$SS/sum(pervar$SS)*100
-# 
-# pervar
 
-## A model with less hierarchy
-stat_df$trait <- factor(stat_df$trait)
-stat_df$N_traits <- factor(stat_df$N_traits)
-levels(stat_df$trait)
-levels(stat_df$N_traits)
-modelsum <- summary(aov(cor_TPR ~ trait + arch + demog + demog_level +  final_LA + N_traits , data=stat_df))
-modelsum
+## Statistical model with both traits
+  stat_df$trait <- factor(stat_df$trait)
+  levels(stat_df$trait)
+  levels(stat_df$N_traits)
+  
+  modelsum <- summary(aov(cor_TPR ~ trait + arch + demog + demog_level +  final_LA + arch*trait*demog, data=stat_df))
+  modelsum
+  
+  ### Percent of variation (SS) explained by each explanatory variable
+    pervar <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
+    pervar$pervar <- round(pervar$SS/sum(pervar$SS)*100, 1)
+    pervar
 
-pervar <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
 
-pervar$pervar <- round(pervar$SS/sum(pervar$SS)*100, 1)
+## Statistical model with only temperature trait
+  modelsum <- summary(aov(cor_TPR_temp ~ arch + demog + demog_level + final_LA + arch*demog*demog_level, data=final.df))
+  pervar_temp <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
+  pervar_temp$pervar <- round(pervar_temp$SS/sum(pervar_temp$SS)*100, 1)
+  pervar_temp
 
-pervar
-
-final.df$N_traits <- factor(final.df$N_traits)
-levels(final.df$N_traits)
-modelsum <- summary(aov(cor_TPR_temp ~ arch + demog + demog_level + final_LA + arch*demog*demog_level, data=final.df))
-pervar_temp <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
-pervar_temp$pervar <- round(pervar_temp$SS/sum(pervar_temp$SS)*100, 1)
-pervar_temp
-
-modelsum <- summary(aov(cor_TPR_sal ~ arch + demog + demog_level +  final_LA + arch*demog*demog_level, data=final.df))
-pervar_sal <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
-pervar_sal$pervar <- round(pervar_sal$SS/sum(pervar_sal$SS)*100, 1)
-pervar_sal
+  ## Statistical model with only salinity trait
+  modelsum <- summary(aov(cor_TPR_sal ~ arch + demog + demog_level +  final_LA + arch*demog*demog_level, data=final.df))
+  pervar_sal <- data.frame(variable = rownames(modelsum[[1]]), SS = modelsum[[1]][,2])
+  pervar_sal$pervar <- round(pervar_sal$SS/sum(pervar_sal$SS)*100, 1)
+  pervar_sal
 
 data.frame(variable = pervar_temp$variable, temp_AFcors = pervar_temp$pervar, sal_AFcors = pervar_sal$pervar)
 ```
@@ -320,47 +319,40 @@ data.frame(variable = pervar_temp$variable, temp_AFcors = pervar_temp$pervar, sa
 # How does demography and genetic architecture contribute to the evolution of phenotypic clines without clines in causal allele frequencies?
 
 ## Number of loci with correlations - demog
-```{r}
-#boxplot(final.df$cor_TPR_temp~final.df$demog_level, ylim=c(0,1))
+```{r proportion of allele frequency clines}
 
-
-
-
+# Plote temperatue clines as a function of number of traits and landscape
 a<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_TPR_temp, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
+a
 
-
+# Plot Env2 clines as a function of landscape (only 2 trait simulations)
 forb <- final.df[final.df$N_traits==2,]
 forb$N_traits <- factor(forb$N_traits)
 b<- ggplot(forb, aes(x=N_traits, y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1) + guides(fill=guide_legend(title="Landscape")) + ggtitle("D")
+b
 
 
+### Pleiotropy vs no pleiotropy - only relevant for sims with 2 traits
+  subdf_arch <- final.df[final.df$N_traits==2,]
+  unique(final.df$SIGMA_K_1)
+  unique(subdf_arch$SIGMA_K_2)
+  subdf_arch$SIGMA_K_2 <- as.factor(subdf_arch$SIGMA_K_2)
+  my_col_arch <- c(viridis(10)[3], viridis(10)[7])
+  
+  # temp only
+  f1 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
+  f1
 
-### Pleiotropy vs no pleiotropy
+  # env2 only
+  f2 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
+  f2
 
-subdf_arch <- final.df[final.df$N_traits==2,]
-
-unique(final.df$SIGMA_K_1)
-unique(subdf_arch$SIGMA_K_2)
-subdf_arch$SIGMA_K_2 <- as.factor(subdf_arch$SIGMA_K_2)
-
-my_col_arch <- c(viridis(10)[3], viridis(10)[7])
-
-f1 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
-f1
-
-f2 <-   ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
-f2
-
-# Combine data together for a single plot f1/f2
-#unique(subdf_arch$SIGMA_K_2)
-
+# Combine data together from f1 and f2 for a single plot
+# because they both show the same pattern
 pleiotropy.df <- gather(subdf_arch, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
 
 fboth <-   ggplot(pleiotropy.df, aes(x=arch_level, y=cor_TPR, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal \n loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("B")
-
-
-
-
+fboth
 
 
 ## Phenotypic clines vs. af clines
@@ -368,27 +360,38 @@ fboth <-   ggplot(pleiotropy.df, aes(x=arch_level, y=cor_TPR, fill=as.factor(isp
 ### For each trait, I want to plot the (correlation between the trait and environment) vs. (correlation between af and environment)
 
 
-f3 <- ggplot(final.df) + geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") + ggtheme + ylim(0,1) + xlim(0,1)  +  xlab("Correlation(phenotype, deme environment)") + ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Landscape", discrete=TRUE) + scale_shape_manual(values=c(0,23, 16),name="Genic level") + ggtitle("A")
+f3 <- ggplot(final.df) + 
+  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") + 
+  ggtheme + ylim(0,1) + xlim(0,1)  +  
+  xlab("Correlation(phenotype, deme environment)") + 
+  ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Landscape", discrete=TRUE) + scale_shape_manual(values=c(0,23, 16),name="Genic level") + ggtitle("A")
+f3
+# 450 missing values expected (simulations without the Env2 trait)
 
 pdf(paste0(outputs,"WhatDrivesNonClines.pdf"), width=6, height=8)
-grid.arrange(f3, fboth,a,b, nrow=3, ncol=2, layout_matrix=matrix(c(1,1,2,2,3,4), nrow=3, byrow=TRUE))
+  grid.arrange(f3, fboth,a,b, nrow=3, ncol=2, layout_matrix=matrix(c(1,1,2,2,3,4), nrow=3, byrow=TRUE))
+# 450 missing values expected (simulations without the Env2 trait)
 dev.off()
 
 ```
 
 ## Percent of Va explained by clinal loci
 
-Note that this is a vast overestimate, because many causal loci were filtered out. So it's worth thinking about how to present this.
+Same plots as above, but for the percent of the additive genetic variance (Va). If clinal loci explain a major proportion of Va, then it could be argued that QTN loci that do not have clinal patterns are not as "important" to discover.
 
-```{r}
+```{r plot proportion of VA explained by clinal loci}
 
+# Reorganize data for plotting
 pleiotropy.df2 <- gather(subdf_arch, key=trait, value=cor_VA_prop, cor_VA_temp_prop, cor_VA_sal_prop)
 
 fboth2 <-   ggplot(pleiotropy.df2, aes(x=arch_level, y=cor_VA_prop, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of explainable VA \n explained by loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("A")
+fboth2
 
 a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
+a1
 
-b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + ylim(0,1) + ggtitle("C")
+b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE, name="Landscape") + ylim(0,1) + ggtitle("C") + guides(fill=guide_legend(title="Landscape"))
+b1
 
 
 pdf(paste0(outputs,"WhatDrivesNonClines_VA.pdf"), width=8, height=8)
@@ -397,34 +400,25 @@ dev.off()
 ```
 
 ## Demography sub level
-```{r}
+```{r plot prop. clines as a function of demography}
 
 unique(final.df$demog)
 unique(final.df$demog_level)
 unique(final.df$demog_level_sub)
 
 
-
-#g<- ggplot(final.df, aes(x=as.factor(demog_level_sub), y=cor_TPR_temp, fill=as.factor(demog_level_sub))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_viridis(option="magma",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_blank())
-#g
-
-#h <- ggplot(final.df, aes(x=as.factor(demog_level_sub), y=cor_TPR_sal, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Demography sublevel") + ylab("Proportion of causal Env2 \n loci with significant clines") + scale_color_viridis(option="magma",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=1, size = 10))
-#grid.arrange(g,h, nrow=7, ncol=1, layout_matrix=matrix(c(1,1,2,2,2,2,2), nrow=7))
-
-
-
 pleiotropy.df$demog_level_sub <- as.factor(pleiotropy.df$demog_level_sub)
-levels(pleiotropy.df$demog_level_sub) <- c("N equal\nm constant", "N equal\nm breaks", "N latitude cline\nm constant", "N central cline\nm constant",  "N variable\nm variable") #warning, make sure in correct order
+levels(pleiotropy.df$demog_level_sub) <- c("N equal\nm constant", "N equal\nm breaks", "N latitude cline\nm constant", "N central cline\nm constant",  "N variable\nm variable") # make sure in correct order
 
 
 
 
-## Sub demograph - magma
+## Sub demograph - mako color
 
-d1 <- ggplot(pleiotropy.df, aes(x=as.factor(demog_level_sub), y=cor_TPR, fill=as.factor(demog_level_sub))) + geom_boxplot(color="grey") + ggtheme + xlab("Demography level") + ylab("Proportion of causal loci\nwith significant clines") + scale_fill_viridis(option="mako",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + ggtitle("A")
+d1 <- ggplot(pleiotropy.df, aes(x=as.factor(demog_level_sub), y=cor_TPR, fill=as.factor(demog_level_sub))) + geom_boxplot(color="grey") + ggtheme + xlab("Demography") + ylab("Proportion of causal loci\nwith significant clines") + scale_fill_viridis(option="mako",discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + ggtitle("A")
 d1
 
-## Strength of selection - mako
+## Strength of selection - magma color
 my_col_S <- c(magma(10)[5], magma(10)[8])
 
 s1<- ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_temp, fill=as.factor(SIGMA_K_2))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal temp. \n loci with significant clines") + scale_fill_manual( values=my_col_S, labels=c(
@@ -440,8 +434,8 @@ dev.off()
 
 
 
-Changing strength of selection on trait 1 doesn't effect clines in trait 2
-```{r}
+Does hanging strength of selection on trait 1 (temp)  affect the number of allee frequency clines that evolve in trait 2 (env2)? Graph suggests no.
+```{r selection strength in opposite trait}
  #+ theme(legend.title=element_text("2-trait\narchitectures"))
 
 ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(SIGMA_K_2))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of causal sal. \n loci with significant clines") + scale_fill_manual( values=my_col_S, labels=c("Strong selection on other trait (sigma_K=0.5)", "Weak selection on other trait (sigma_K=4)"), name="2-trait architectures")  + ylim(0,1) #+ theme(legend.title=element_text("2-trait\narchitectures"))
@@ -449,47 +443,27 @@ ggplot(subdf_arch, aes(x=arch_level, y=cor_TPR_sal, fill=as.factor(SIGMA_K_2))) 
 ```
 
 
-## Distribution between structure and deme environment
+## Distribution of the correlation between structure and deme environment
 
-```{r}
-
-s1 <- ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("A") + xlab("abs(Correlation(PC1, temperature))")  + ylab(NULL)
-s1
-
-s2 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_temp), y=..scaled..), fill="cornflowerblue") + ggtheme + ggtitle("B") + xlab("abs(Correlation(PC2, temperature))") + ylab(NULL)
-s2
-
-s3 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC1_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("C") + xlab("abs(Correlation(PC1, Env2))") + ylab(NULL)
-s3
-
-s4 <-ggplot(final.df) + geom_density(aes(x=abs(cor_PC2_sal), y=..scaled..), fill="chartreuse3") + ggtheme + ggtitle("D") + xlab("abs(Correlation(PC2, Env2))") + ylab(NULL)
-s4
+```{r correlation between structure and deme environment}
 
 sum(is.na(final.df$cor_PC1_temp))
 
-sc1<- ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_temp), fill=demog_level_sub, position="stack", ), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("A")
+sc1<- ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_temp), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("A")
+sc1
 
-sc2<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_temp), fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("B")
+sc2<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_temp), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme temp)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("B")
+sc2
 
-sc3<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_sal), fill=demog_level_sub, position="stack", ), binwidth=0.01, color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC1, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("C")
+sc3<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC1_sal), fill=demog_level_sub), binwidth=0.05, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography") + xlab("|Cor(PC1, deme sal)|") + ylab("Number of simulations")  + ggtitle("B") + theme(legend.position="bottom")
+sc3
 
-# bw = "nrd", kernel = "rectangular", n=2^10, adjust=1/5,
-sc4<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_sal), fill=demog_level_sub, position="stack"), binwidth=0.01,  color="grey") + ggtheme + xlim(0,1) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="none") + ggtitle("D")
+sc4<-ggplot(final.df) + geom_histogram(aes(x=abs(cor_PC2_sal), fill=demog_level_sub, position="stack"), binwidth=0.05,  color="grey") + ggtheme + coord_cartesian(xlim = c(0, 1)) + facet_grid(demog_level~., scales = "free_y") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("|Cor(PC2, deme sal)|") + ylab("Number of simulations")  + theme(legend.position="bottom") + ggtitle("D")
+sc4
 
-pdf(paste0(outputs,"StructureEnvCor.pdf"), width=6, height=6)
-  grid.arrange(s1,s2, s3,s4, nrow=2)
-dev.off()
 
-pdf(paste0(outputs,"StructureEnvCor_byDemog.pdf"), width=13, height=6)
-grid.arrange(s1 + facet_grid(~demog_level),
-             s2 + facet_grid(~demog_level),
-             s3 + facet_grid(~demog_level),
-             s4 + facet_grid(~demog_level)
-             )
-dev.off()
-
-pdf(paste0(outputs,"StructureEnvCor_facetDemog.pdf"), width=12, height=16)
-    grid.arrange(sc1,sc2, sc3,sc4, nrow=2)
+pdf(paste0(outputs,"StructureEnvCor_facetDemog.pdf"), width=7, height=10)
+    grid.arrange(sc1, sc3, nrow=2)
 dev.off()
 
 ```

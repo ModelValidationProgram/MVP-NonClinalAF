@@ -1,0 +1,125 @@
+---
+title: "g-FinalAnalysis-extracode.Rmd"
+author: "KE Lotterhos"
+date: "5/23/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```
+
+## other ways to visualize effect of structure on LFMM
+## run after chucks on LFMM FDR
+```{r other LFMM visualizations}
+final.df$cor
+ggplot(final.df) + geom_point(aes(x=abs(cor_PC1_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("cor(LFMM U1, Structure as PC1)") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_PC1_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)  +xlim(0,1) 
+
+final.df$Totalsig <- log10(Totalsig+1)
+
+ggplot(final.df) + geom_point(aes(x=Totalsig,y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("Log10(Total number of outliers)") + ylab("AUC-PR") + geom_smooth(aes(x=Totalsig,y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)  
+
+
+ggplot(final.df) + geom_point(aes(y=Totalsig,x=abs(cor_LFMMU1_temp), color=demog_level_sub, shape=demog_level_sub)) + ggtheme + ylab("Log10(Total number of outliers)") + xlab("cor(LFMMU1, deme Temp.)") + geom_smooth(aes(y=Totalsig,x=abs(cor_LFMMU1_temp), color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) 
+
+ggplot(final.df) + geom_point(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp),x=abs(cor_PC1_LFMMU1_temp), color=demog_level_sub, shape=demog_level_sub)) + ggtheme + ylab("Log10(Total number of FP outliers)") + xlab("cor(LFMMU1 temp model, structure as PC1)") + geom_smooth(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp),x=abs(cor_PC1_LFMMU1_temp), color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) 
+
+ggplot(final.df) + geom_point(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp+0.0000001),x=abs(cor_LFMMU1_temp), color=demog_level_sub, shape=demog_level_sub)) + ggtheme + ylab("Log10(Total number of FP outliers)") + geom_smooth(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp+0.0000001),x=abs(cor_LFMMU1_temp), color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) 
+
+ggplot(final.df) + geom_point(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp+0.0000001),x=abs(cor_PC1_LFMMU1_temp), color=demog_level_sub, shape=demog_level_sub)) + ggtheme + ylab("Log10(Total number of FP outliers)")  + geom_smooth(aes(y=log10(LEA3.2_lfmm2_FPR_neutSNPs_temp+0.0000001),x=abs(cor_PC1_LFMMU1_temp), color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1)  
+```
+```
+
+
+Do other factors affect the correlation between mutation loading and mutation effect on phenotype?
+```{r}
+TO DO: Dig into mutation effect some more and make sure Im not missing anything
+FIX COLORS IN THESE PLOTS
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape")) 
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=demog_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape"))
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Pleiotropy\nArchitecture")) 
+
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape")) 
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=demog_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Landscape"))
+
+ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level_sub)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(mutation effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Pleiotropy\nArchitecture")) 
+
+
+```
+
+#correlation between position on landscape and environment
+final.df$pos_env_corr <- final.df$demog_level
+
+final.df$level[1]
+popEst <- read.table(paste0("sim_output_20220428/",final.df$seed[1], "_popInfo.txt"), header=TRUE)
+cor(popEst$opt0, popEst$x) #Env2
+cor(popEst$opt1, popEst$y) #temp
+
+final.df$level[11]
+popSSMtn <- read.table(paste0("sim_output_20220428/",final.df$seed[11], "_popInfo.txt"), header=TRUE)
+cor(popSSMtn$opt0, popSSMtn$x) #Env2
+cor(popSSMtn$opt1, popSSMtn$y) #temp
+
+
+
+
+
+Some additional RDA plots to show the effect of demography
+```{r}
+
+
+
+n <- ggplot(final.df, aes(x=RDA_cor_RDA20000temppredict_tempPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(temp. phenotype,\nRDA-predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A) Temperature phenotype") + theme(legend.position = "none")
+n
+
+n2 <- ggplot(final.df, aes(x=RDA_cor_RDA20000temppredict_tempPhen_structcorr, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(temp. phenotype,\nRDA-predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A) Temperature phenotype") + theme(legend.position = "none")
+n2
+
+
+
+o <- ggplot(final.df, aes(x=RDA_cor_RDA20000salpredict_salPhen, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(Env2 phenotype,\nRDA-predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B) Env. 2 phenotype") + theme(legend.position="bottom")
+o
+
+o2 <- ggplot(final.df, aes(x=RDA_cor_RDA20000salpredict_salPhen_structcorr, fill=demog_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(Env2 phenotype,\nRDA-predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B) Env. 2 phenotype") + theme(legend.position="bottom")
+o2
+
+
+
+ggplot(final.df, aes(x=RDA_cor_RDA20000temppredict_tempPhen, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(temp. phenotype,\nRDA-predicted temp. phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("A) Temperature phenotype") + theme(legend.position = "none") + scale_fill_viridis(option="cividis", discrete=TRUE)
+
+ggplot(final.df, aes(x=RDA_cor_RDA20000salpredict_salPhen, fill=arch_level)) + geom_histogram(color="grey40") + ggtheme + xlim(-1,1) + xlab("Cor(Env2 phenotype,\nRDA-predicted Env2 phenotype)") + guides(fill=guide_legend(title="Landscape")) + ggtitle("B) Env. 2 phenotype") + theme(legend.position="bottom") + scale_fill_viridis(option="cividis", discrete=TRUE)
+
+rda.df <- gather(final.df, key=trait, value=cor_RDApred_phen, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen)
+
+r0 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=demog_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor( phenotype, RDA predicted phenotype)") + facet_grid(~trait)
+
+r1 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=arch_level)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor( phenotype, RDA predicted phenotype)") + facet_grid(~trait)
+
+r2 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=as.factor(ispleiotropy))) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + facet_grid(~trait)
+
+r3 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=demog_level_sub)) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + facet_grid(~trait)
+
+r4 <- ggplot(rda.df, aes(x=cor_RDApred_phen, fill=as.factor(SIGMA_K_2))) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp. phenotype, RDA predicted temp. phenotype)") + facet_grid(~trait)
+
+pdf(paste0(outputs,"RDA_phen_predict_breakdown.pdf"), height=12, width=10)
+grid.arrange(r0, r1, r2, r3, r4, nrow=5)
+dev.off()
+
+trait.labs <- c("Env2", "Temperature")
+names(trait.labs) <- c("Env2", "Temperature")
+
+r4 <- ggplot(final.df, aes(x=cor_RDA20000_RDloadings_tempPhen, fill=as.factor(SIGMA_K_2))) + geom_histogram(color="grey30") + ggtheme + xlim(0,1) + xlab("Cor(temp phenotype,\nRDA-predicted temp phenotype)") +  guides(fill=guide_legend(title="Stabilizing\nSelection"))
+r4
+
+pdf(paste0(outputs,"RDA-predict-strengthselection.pdf"), width=4, height=3)
+  r4
+dev.off()
+```
+

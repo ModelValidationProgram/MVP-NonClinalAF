@@ -1061,9 +1061,74 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
 ```
 
 
+# RDA predictions as a function of the number of loci and structure correction
+```{r}
+rdapred <- read.table("summary_20220428_RDApredictions.txt", header=TRUE)
+head(rdapred)
+
+rdapred_df <- merge(rdapred, final.df, by="seed", all.x=TRUE)
+head(rdapred_df)
+rdapred_df$SIGMA_K_2 <- as.factor(as.character(rdapred_df$SIGMA_K_2))
+
+rdapred_df1 <-  filter(rdapred_df, nloci %in% c(10,50,500,5000,20000))
+
+r1<- ggplot(rdapred_df1 ) +
+  geom_line( aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen, group=seed, color=SIGMA_K_2), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\nTemperature trait\n worse <<--->> better")  + theme(legend.position = "none") + ggtitle("A) Temperature trait")  + stat_summary(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen, color=SIGMA_K_2),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r1
+
+r2 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen_structcorr, group=seed, color=SIGMA_K_2), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1)+ ylab("Accuracy of structure-\ncorrected RDA prediction\nTemperature trait\n worse <<--->> better") + ggtitle("B) Temperature trait with structure correction")+ guides(color=guide_legend(title="Strength of\nstabilizing\nselection"))   + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1)) + stat_summary(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen_structcorr, color=SIGMA_K_2),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + scale_color_hue(labels=c(expression(paste("Strong ", sigma[K]," = 0.5")), 
+  expression(paste("Weak ", sigma[K]," = 4.0"))))
+r2
 
 
 
+r3 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen, group=seed, color=as.factor(demog_level)), alpha=0.1,  linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\nEnv2 trait\n worse <<--->> better")  + theme(legend.position = "none") + ggtitle("C) Env2 trait") + stat_summary(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen, color=as.factor(demog_level)),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r3
+  
+r4 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen_structcorr, group=seed, color=as.factor(demog_level)), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of structure-\ncorrected RDA prediction\nEnv2 trait\n worse <<--->> better") + ggtitle("D) Env2 trait with structure correction")  + guides(color=guide_legend(title="Landscape")) + stat_summary(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen_structcorr, color=as.factor(demog_level)),  size=2,geom="line", fun="mean") + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r4
+
+pdf(paste0(outputs,"RDApredictionFunctionOfnLoci.pdf"), width=12, height=8)  
+grid.arrange(r1,r2, r3, r4, nrow=2, layout_matrix=matrix(c(1,1,1,1,2,2,2,2,2
+                                                           ,3,3,3,3,4,4,4,4,4),
+                                                         nrow=2, byrow=TRUE)
+             )
+dev.off()
+# removed rows expected based on single-trait simulations
+
+
+
+```
+
+
+Accuracy of RDA trait prediction as a function of the number of QTN loci in the simulation and strength of selection on the trait. The strength of selection on the trait also determines the strength of selection on the QTN loci in the architecture, how strongly they respond to selection, and the amount of LD around them when they sweep to high frequency in a deme or set of demes.
+
+```{r}
+head(rdapred_df1[,40:50])
+final.df$SIGMA_K_2 <- as.factor(final.df$SIGMA_K_2)
+levels(final.df$demog_level_sub)
+
+# Remove the demography that had the worse performance in Env2
+# so as not to bias the loess smoother
+
+final.df1 <- final.df %>% filter(demog_level_sub != "N variable\nm variable")
+
+rr1 <- ggplot(final.df1) + geom_point(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000temppredict_tempPhen, color=SIGMA_K_2), alpha=0.4) + 
+  geom_smooth(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000temppredict_tempPhen, color=SIGMA_K_2), method="loess", span=10) + scale_x_log10() + ylim(0,1) + ggtheme + ylab("Accuracy of RDA prediction\nTemperature trait\nworse <<--->> better") + guides(color=guide_legend(title="Strength of\nstabilizing\nselection")) + xlab("Number of evolved QTN loci") + ggtitle("A) Accuracy for Temp. trait") + scale_color_hue(labels=c(expression(paste("Strong ", sigma[K]," = 0.5")), 
+  expression(paste("Weak ", sigma[K]," = 4.0"))))
+rr1
+
+rr2 <- ggplot(final.df1) + geom_point(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level), alpha=0.4) + 
+  geom_smooth(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level), method="loess", span=20) + scale_x_log10() + ylim(0,1) + ggtheme + ylab("Accuracy of RDA prediction\nEnv2 trait\nworse <<--->> better") + guides(color=guide_legend(title="Landscape")) + xlab("Number of evolved QTN loci") + ggtitle("B) Accuracy for Env2 trait (always strong selection)") #missing values expected for Env2 trait because not under selection in all sims
+rr2
+
+pdf(paste0(outputs,"RDAtraitpred_vs_nQTN.pdf"), width=10, height=5)
+grid.arrange(rr1, rr2, nrow=1)
+dev.off()
+```
 
 
 

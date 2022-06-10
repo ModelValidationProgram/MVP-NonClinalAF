@@ -1,4 +1,4 @@
-"nloci" "Random_cor_RDAtemppredict_tempphen" "Random_cor_RDAsalpredict_salphen" "Random_cor_RDAtemppredict_tempphen_structcorr" "Random_cor_RDAsalpredict_salphen_structcorr" seed
+"R" "nloci" "Random_cor_RDAtemppredict_tempphen" "Random_cor_RDAsalpredict_salphen" "Random_cor_RDAtemppredict_tempphen_structcorr" "Random_cor_RDAsalpredict_salphen_structcorr" seed
 "1" 10 0.576914676909004 NA 0.00967367367367367 NA 1231094
 "2" 50 0.754318318318318 NA 0.00257057057057057 NA 1231094
 "3" 100 0.796652652652653 NA 0.000904904904904905 NA 1231094

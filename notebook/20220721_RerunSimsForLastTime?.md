@@ -20,7 +20,7 @@ Using the same RunID because only minor bug fixes, and less chance of introducin
 
 ```
 cd /work/lotterhos/MVP-NonClinalAF/src
-sbatch d-run_nonAF_sims_0Slim-fastruns-20220428.sh
+sbatch d-run_nonAF_sims_0Slim-fastruns-20220428.sh #Submitted batch job 29260794
 squeue -p lotterhos
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh
 sbatch d-run_nonAF_sims_0Slim-longruns-20220428.sh

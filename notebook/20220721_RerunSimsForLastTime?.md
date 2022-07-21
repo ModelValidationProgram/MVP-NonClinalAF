@@ -19,6 +19,7 @@ git push
 Using the same RunID because only minor bug fixes, and less chance of introducing new bugs by changing the run ID
 
 ```
+cd /work/lotterhos/MVP-NonClinalAF/src
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428.sh
 squeue -p lotterhos
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh

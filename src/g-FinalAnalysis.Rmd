@@ -501,12 +501,22 @@ comparemethods.AUC$methodtype <- factor(comparemethods.AUC$method)
 
 comparemethods.AUC$methodtype <- 
   revalue(comparemethods.AUC$methodtype,
-          c("cor_AUCPR_sal_neutSNPs"="Cor(p, Env2)", 
+          c(
             "cor_AUCPR_temp_neutSNPs"= "Cor(p, Temp.)",  
-            "LEA3.2_lfmm2_AUCPR_sal_neutSNPs" = "LFMM - Env2",
             "LEA3.2_lfmm2_AUCPR_temp_neutSNPs" = "LFMM - Temp",
+            "cor_AUCPR_sal_neutSNPs"="Cor(p, Env2)", 
+            "LEA3.2_lfmm2_AUCPR_sal_neutSNPs" = "LFMM - Env2",
             "RDA_AUCPR_neutSNPs"  = "RDA",        
              "RDA_AUCPR_neutSNPs_corr" = "pRDA (with\nstructure correction)"  ))
+
+comparemethods.AUC$methodtype <- factor(comparemethods.AUC$methodtype,
+                                        levels = c("Cor(p, Temp.)",
+                                                   "LFMM - Temp",
+                                                   "Cor(p, Env2)",
+                                                   "LFMM - Env2",
+                                                   "RDA",
+                                                    "pRDA (with\nstructure correction)"),
+                                        ordered=TRUE)
 
 # Sanity checks  
 levels(comparemethods.AUC$methodtype)
@@ -515,10 +525,10 @@ table(comparemethods.AUC$methodtype)
 summary(comparemethods.AUC$AUCPR)
 
 # Across all simulations, AUCPR
-g <- ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR)) + geom_boxplot(color="grey",  fill="cornflowerblue") + ggtheme + xlab("method") + ylab("AUC-PR\n(worse method <<--->> better method)")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + scale_color_viridis(name="Landscape", discrete=TRUE) + guides(fill=guide_legend(title="Landscape")) +ggtitle("A")
+g <- ggplot(comparemethods.AUC, aes(x=as.factor(methodtype), y=AUCPR)) + geom_boxplot(color="grey",  fill="cornflowerblue") + ggtheme + xlab("method") + ylab("AUC-PR\n(worse <<--->> better)")   + theme( axis.text.x=element_text(angle=90,vjust=0.5, hjust=1, size = 10)) + scale_color_viridis(name="Landscape", discrete=TRUE) + guides(fill=guide_legend(title="Landscape")) +ggtitle("A")
 g
 # tried a violin plot, but the boxplot is better
-# 900 NAs are expected for the Env2 models
+# 450 NAs are expected for the Env2 models
 tapply(comparemethods.AUC$AUCPR,comparemethods.AUC$methodtype, function(x){sum(is.na(x))})
 
 ```
@@ -599,77 +609,134 @@ comparemethods.FDR$methodtype <- revalue(comparemethods.FDR$methodtype,
                                            "RDA_FDR_neutSNPs"  = "RDA"   ,        
                                            "RDA_FDR_neutSNPs_corr" = "pRDA (with\nstructure correction)"  ))
 
+comparemethods.FDR$methodtype <- factor(comparemethods.FDR$methodtype,
+                                        levels = c("Cor(p, Temp.)",
+                                                   "LFMM - Temp. (with\nstructure correction)",
+                                                   "Cor(p, Env2)",
+                                                   "LFMM - Env2 (with\nstructure correction)",
+                                                   "RDA",
+                                                    "pRDA (with\nstructure correction)"),
+                                        ordered=TRUE)
+
 table(comparemethods.FDR$methodtype)  
 
 tapply(comparemethods.FDR$FDR,comparemethods.AUC$methodtype, function(x){sum(is.na(x))})
 
-g2<- ggplot(comparemethods.FDR, aes(x=as.factor(methodtype), y=FDR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("FDR\n(better method <<--->> worse method)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("B")
+g2<- ggplot(comparemethods.FDR, aes(x=as.factor(methodtype), y=FDR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("FDR\n(better <<--->> worse)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("B")
 g2
 
-pdf(paste0(outputs,"AUC-PR_FDR.pdf"), width=5, height=8)
-grid.arrange(g+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
-             g2, 
-             layout_matrix=matrix(c(1,1,2,2,2), nrow=5))
-dev.off()
+# There are more NAs because FDR has NAs for cases with no true positives (no power)
 ```
 
 
-# Trying to understand demography effect on lfmm FDR
-
-These plots are not perfect, because they do not include the simulations that have NA for the FDR because there was no power to detect an effect.
+## Compare methods POWER
+Ideally, we would like power to be the same after correcting for pop structure as before we correct.
 ```{r}
-final.df$LEA
-l1 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_temp, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (temperature model)")  + theme(legend.position="none") + ylim(0,1)
-l1
+
+#Check for NAs in temperature models
+  sum(is.na(final.df$cor_TPR_temp))
+  sum(is.na(final.df$LEA3.2_lfmm2_TPR_temp))
+    # A lot of NAs here
+  # check that the NAs come from cases with 0 positive tests
+  Totalsig <- final.df$LEA3.2_lfmm2_num_causal_sig_temp +final.df$LEA3.2_lfmm2_num_neut_sig_temp 
+
+  tapply(is.na(final.df$LEA3.2_lfmm2_TPR_temp), 
+         list(final.df$demog_level, final.df$demog_level_sub), sum)
+      ## NAs are evenly spread across the demographies, but slightly higher in the SS scenarios
+    tapply(is.na(final.df$LEA3.2_lfmm2_TPR_temp), 
+         list(final.df$demog_level), sum)
+        tapply(is.na(final.df$LEA3.2_lfmm2_TPR_temp), 
+         list(final.df$demog_level_sub), sum)
+
+    
+# Check for NAs in salinity model
+  sum(is.na(final.df$cor_TPR_sal)) #450 expected
+  sum(is.na(final.df$LEA3.2_lfmm2_TPR_sal))
+  
+
+#Check for NAs in RDA model
+  sum(is.na(final.df$RDA_TPR))
+  sum(is.na(final.df$RDA_TPR))
 
 
-l2 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_sal, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (Env2 model)")  + theme(legend.position="none") + ylim(0,1)
-l2
+# reorganize data for plotting
+comparemethods.TPR <- gather(final.df, key=method, value=TPR, cor_TPR_temp, LEA3.2_lfmm2_TPR_temp, RDA_TPR, RDA_TPR_corr, cor_TPR_sal, LEA3.2_lfmm2_TPR_sal)
 
-#ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("")
+comparemethods.TPR <- comparemethods.TPR[order(comparemethods.TPR$seed),]
+tail(comparemethods.TPR)
 
-l3 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U1, Temp)|")  + theme(legend.position="bottom") + ylim(0,1)
-l3
+comparemethods.TPR$methodtype <- factor(comparemethods.TPR$method)
 
-l4 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme  + xlab("Demography") + ylab("Correlation (LFMM U2, deme temperature)")   + theme(legend.position="none") + theme(legend.position="bottom") + ylim(0,1) + guides(fill=guide_legend(title="Landscape"))
-l4
+levels(comparemethods.TPR$methodtype)
 
-l5 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U1, Env2)|")   + theme(legend.position="bottom") + ylim(0,1)
-l5
+comparemethods.TPR$methodtype <- revalue(comparemethods.TPR$methodtype,
+                                         c("cor_TPR_sal"="Cor(p, Env2)", 
+                                           "cor_TPR_temp"= "Cor(p, Temp.)",  
+                                           "LEA3.2_lfmm2_TPR_sal" = "LFMM - Env2 (with\nstructure correction)",
+                                           "LEA3.2_lfmm2_TPR_temp" = "LFMM - Temp. (with\nstructure correction)",
+                                           "RDA_TPR"  = "RDA"   ,        
+                                           "RDA_TPR_corr" = "pRDA (with\nstructure correction)"  ))
 
-l6 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U2, Env2)|") + theme(legend.position="bottom") + ylim(0,1)
-l6
+comparemethods.TPR$methodtype <- factor(comparemethods.TPR$methodtype,
+                                        levels = c("Cor(p, Temp.)",
+                                                   "LFMM - Temp. (with\nstructure correction)",
+                                                   "Cor(p, Env2)",
+                                                   "LFMM - Env2 (with\nstructure correction)",
+                                                   "RDA",
+                                                    "pRDA (with\nstructure correction)"),
+                                        ordered=TRUE)
 
-pdf(paste0(outputs,"FDR_LFMM.pdf"), width=10, height=8)
+table(comparemethods.TPR$methodtype)  
 
-grid.arrange(l1,l2, l3, l5, ncol=2)
+g3<- ggplot(comparemethods.TPR, aes(x=as.factor(methodtype), y=TPR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("TPR\n(worse <<--->> better)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("C")
+g3
 
+pdf(paste0(outputs,"AUC-PR_FDR_TPR.pdf"), width=5, height=11)
+grid.arrange(g+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
+             g2+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
+             g3,
+             layout_matrix=matrix(c(1,1,1,2,2,2,3,3,3,3,3), nrow=11))
 dev.off()
-
 ```
 
+# LFMM - TPR vs STRUCTURE
 
-# LFMM - AUCPR vs STRUCTURE
+* If overcorrected, then expect power to decrease as the correlation between the latent factor and env
+```{r LFMM TPR vs STRUCTURE}
 
-* If undercorrected, then expect low AUC when the correlation between the latent factor and temp env is very low. 
+### THIS IS THE GRAPH
+# Fix colors for arch_level_sub, 
+# rename legend and make it taller, 
+# reorder the legend levels
+# For the 2nd legend, there is no "1 trait sims"
 
-* If overcorrected, then expect low AUC when the correlation between the latent factor and temp env is very high.
-```{r LFMM AUCPR vs STRUCTURE}
+k1p <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_TPR_temp, color=arch_level_sub, shape=arch_level_sub)) + ggtheme + 
+  xlab("|Cor(LFMM U1, Deme Temperature)|") + 
+  ylab("TPR (LFMM Temp. Model)") +  
+  scale_fill_viridis(option="magma", discrete=TRUE) +  
+  scale_color_viridis(option="magma", discrete=TRUE, begin=0, end=0.9) + 
+  geom_smooth(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_TPR_temp, color=arch_level_sub), alpha=0.2, method="lm", size=0.5) + ggtitle("A) Temp model") +
+  ylim(0,1)  +xlim(0,1) + facet_wrap(~arch_level) + theme(legend.position = "none")
+k1p # was not easy to change the color scheme here + scale_fill_viridis(option="mako", discrete=TRUE)
 
+k2p <- ggplot(final.df) + 
+  geom_point(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_TPR_sal, color=arch_level_sub, shape=arch_level_sub)) + ggtheme + 
+  xlab("|Cor(LFMM U1, Deme Env2)|") + ylab("TPR (LFMM Env2 Model)") +
+  geom_smooth(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_TPR_sal, color=arch_level_sub), alpha=0.2, method="lm", size=0.5) + 
+  ylim(0,1) +xlim(0,1) + ggtitle("B) Env2 model") +
+  scale_fill_viridis(option="magma", discrete=TRUE) + 
+  scale_color_viridis(option="magma", discrete=TRUE, begin=0, end=0.9)  + 
+  facet_wrap(~arch_level) + theme(legend.position = "bottom") 
+k2p
 
-k1 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("|Cor(LFMM U1, Deme Temperature)|") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1)  +xlim(0,1) 
-k1 # was not easy to change the color scheme here + scale_fill_viridis(option="mako", discrete=TRUE)
+pdf(paste0(outputs,"LFMM-TPRvsStructure.pdf"), width=8, height=8)
 
-k2 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("|Cor(LFMM U1, Deme Env2)|") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1) +xlim(0,1) + scale_fill_viridis(option="mako", discrete=TRUE)
-k2
-
-pdf(paste0(outputs,"LFMM-AUCPRvsStructure.pdf"), width=5, height=8)
-
-grid.arrange(k1,k2, nrow=2)
+grid.arrange(k1p,k2p, nrow=2)
 # 450 missing values expected here
 
 dev.off()
 ```
+
 
 ## RDA checks
 
@@ -1061,9 +1128,74 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
 ```
 
 
+# RDA predictions as a function of the number of loci and structure correction
+```{r}
+rdapred <- read.table("summary_20220428_RDApredictions.txt", header=TRUE)
+head(rdapred)
+
+rdapred_df <- merge(rdapred, final.df, by="seed", all.x=TRUE)
+head(rdapred_df)
+rdapred_df$SIGMA_K_2 <- as.factor(as.character(rdapred_df$SIGMA_K_2))
+
+rdapred_df1 <-  filter(rdapred_df, nloci %in% c(10,50,500,5000,20000))
+
+r1<- ggplot(rdapred_df1 ) +
+  geom_line( aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen, group=seed, color=SIGMA_K_2), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\nTemperature trait\n worse <<--->> better")  + theme(legend.position = "none") + ggtitle("A) Temperature trait")  + stat_summary(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen, color=SIGMA_K_2),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r1
+
+r2 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen_structcorr, group=seed, color=SIGMA_K_2), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1)+ ylab("Accuracy of structure-\ncorrected RDA prediction\nTemperature trait\n worse <<--->> better") + ggtitle("B) Temperature trait with structure correction")+ guides(color=guide_legend(title="Strength of\nstabilizing\nselection"))   + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1)) + stat_summary(aes(x=nloci, y=Random_cor_RDAtemppredict_tempphen_structcorr, color=SIGMA_K_2),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + scale_color_hue(labels=c(expression(paste("Strong ", sigma[K]," = 0.5")), 
+  expression(paste("Weak ", sigma[K]," = 4.0"))))
+r2
 
 
 
+r3 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen, group=seed, color=as.factor(demog_level)), alpha=0.1,  linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of RDA prediction\nEnv2 trait\n worse <<--->> better")  + theme(legend.position = "none") + ggtitle("C) Env2 trait") + stat_summary(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen, color=as.factor(demog_level)),  size=2,geom="line", fun="mean")  + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r3
+  
+r4 <- ggplot(rdapred_df1) + 
+  geom_line(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen_structcorr, group=seed, color=as.factor(demog_level)), alpha=0.1, linetype="dashed") + facet_wrap(~arch_level) + ggtheme + ylim(-1,1) + ylab("Accuracy of structure-\ncorrected RDA prediction\nEnv2 trait\n worse <<--->> better") + ggtitle("D) Env2 trait with structure correction")  + guides(color=guide_legend(title="Landscape")) + stat_summary(aes(x=nloci, y=Random_cor_RDAsalpredict_salphen_structcorr, color=as.factor(demog_level)),  size=2,geom="line", fun="mean") + xlab("Number of random loci from genome") + theme(axis.text.x = element_text(angle = 60, vjust=1, hjust=1))
+r4
+
+pdf(paste0(outputs,"RDApredictionFunctionOfnLoci.pdf"), width=12, height=8)  
+grid.arrange(r1,r2, r3, r4, nrow=2, layout_matrix=matrix(c(1,1,1,1,2,2,2,2,2
+                                                           ,3,3,3,3,4,4,4,4,4),
+                                                         nrow=2, byrow=TRUE)
+             )
+dev.off()
+# removed rows expected based on single-trait simulations
+
+
+
+```
+
+
+Accuracy of RDA trait prediction as a function of the number of QTN loci in the simulation and strength of selection on the trait. The strength of selection on the trait also determines the strength of selection on the QTN loci in the architecture, how strongly they respond to selection, and the amount of LD around them when they sweep to high frequency in a deme or set of demes.
+
+```{r}
+head(rdapred_df1[,40:50])
+final.df$SIGMA_K_2 <- as.factor(final.df$SIGMA_K_2)
+levels(final.df$demog_level_sub)
+
+# Remove the demography that had the worse performance in Env2
+# so as not to bias the loess smoother
+
+final.df1 <- final.df %>% filter(demog_level_sub != "N variable\nm variable")
+
+rr1 <- ggplot(final.df1) + geom_point(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000temppredict_tempPhen, color=SIGMA_K_2), alpha=0.4) + 
+  geom_smooth(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000temppredict_tempPhen, color=SIGMA_K_2), method="loess", span=10) + scale_x_log10() + ylim(0,1) + ggtheme + ylab("Accuracy of RDA prediction\nTemperature trait\nworse <<--->> better") + guides(color=guide_legend(title="Strength of\nstabilizing\nselection")) + xlab("Number of evolved QTN loci") + ggtitle("A) Accuracy for Temp. trait") + scale_color_hue(labels=c(expression(paste("Strong ", sigma[K]," = 0.5")), 
+  expression(paste("Weak ", sigma[K]," = 4.0"))))
+rr1
+
+rr2 <- ggplot(final.df1) + geom_point(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level), alpha=0.4) + 
+  geom_smooth(aes(x=num_causal_postfilter, y=RDA_cor_RDA20000salpredict_salPhen, color=demog_level), method="loess", span=20) + scale_x_log10() + ylim(0,1) + ggtheme + ylab("Accuracy of RDA prediction\nEnv2 trait\nworse <<--->> better") + guides(color=guide_legend(title="Landscape")) + xlab("Number of evolved QTN loci") + ggtitle("B) Accuracy for Env2 trait (always strong selection)") #missing values expected for Env2 trait because not under selection in all sims
+rr2
+
+pdf(paste0(outputs,"RDAtraitpred_vs_nQTN.pdf"), width=10, height=5)
+grid.arrange(rr1, rr2, nrow=1)
+dev.off()
+```
 
 
 

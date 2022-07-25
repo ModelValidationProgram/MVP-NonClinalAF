@@ -22,7 +22,7 @@ Using the same RunID because only minor bug fixes, and less chance of introducin
 cd /work/lotterhos/MVP-NonClinalAF/src
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428.sh #Submitted batch job 29260794
 squeue -p lotterhos
-sbatch d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh
+sbatch d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh 
 sbatch d-run_nonAF_sims_0Slim-longruns-20220428.sh #batch job  29366383
 ```
 
@@ -43,7 +43,7 @@ ls -l *_plusneut_MAF01.recode2.vcf.gz | wc -l #2250!
 ```
 sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 29399132
 
-sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh
+sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job 29460812
 
 sbatch e-run_nonAF_sims_1R-longruns-20220428.sh
 ```

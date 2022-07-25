@@ -363,7 +363,7 @@ fboth
 
 
 f3 <- ggplot(final.df) + 
-  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") + 
+  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp), alpha=0.3, col="grey20") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal), alpha=0.3, col="grey20") + 
   ggtheme + ylim(0,1) + xlim(0,1)  +  
   xlab("Correlation(phenotype, deme environment)") + 
   ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Landscape", discrete=TRUE) + scale_shape_manual(values=c(0,23, 16),name="Genic level") + ggtitle("A")
@@ -691,7 +691,7 @@ table(comparemethods.TPR$methodtype)
 g3<- ggplot(comparemethods.TPR, aes(x=as.factor(methodtype), y=TPR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("TPR\n(worse <<--->> better)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("C")
 g3
 
-pdf(paste0(outputs,"AUC-PR_FDR_TPR.pdf"), width=5, height=11)
+pdf(paste0(outputs,"AUC-PR_FDR_TPR.pdf"), width=5, height=9)
 grid.arrange(g+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
              g2+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
              g3,

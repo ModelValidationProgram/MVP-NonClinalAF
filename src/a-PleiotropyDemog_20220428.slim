@@ -79,11 +79,11 @@
 	defineConstant("METAPOP_SIDE_x", METAPOP_SIDE_x1);
 	defineConstant("METAPOP_SIDE_y", METAPOP_SIDE_y1);
 
-	//defineConstant("SIGMA_K_1", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 1
-	defineConstant("SIGMA_K_1", SIGMA_K_1a);	
+	//defineConstant("SIGMA_K_0", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 0
+	defineConstant("SIGMA_K_0", SIGMA_K_1a);	            // Trait 0 adapts to x cline
 
-	//defineConstant("SIGMA_K_2", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 2
-	defineConstant("SIGMA_K_2", SIGMA_K_2a);	
+	//defineConstant("SIGMA_K_1", 0.5);						// smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection for trait 1
+	defineConstant("SIGMA_K_1", SIGMA_K_2a);	            // Trait 1 adapts to y cline (temp)
 
 	defineConstant("SIGMA_K_Cov", 0);						// covariance in stabilizing selection
 	
@@ -491,10 +491,10 @@ function (void)outputMigration(string$ path)
 	
 	
 	// write information to file
-	info_head = "seed MIG_x MIG_y mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y SIGMA_K_1 SIGMA_K_2 SIGMA_K_Cov SIGMA_QTN_1 SIGMA_QTN_2 SIGMA_QTN_Cov demog Ntraits ispleiotropy iscontrol Nequal isVariableM MIG_breaks";
+	info_head = "seed MIG_x MIG_y mu r BURNIN_1 BURNIN_2 TOTAL_GEN METAPOP_SIDE_x METAPOP_SIDE_y SIGMA_K_0 SIGMA_K_1 SIGMA_K_Cov SIGMA_QTN_1 SIGMA_QTN_2 SIGMA_QTN_Cov demog Ntraits ispleiotropy iscontrol Nequal isVariableM MIG_breaks";
 
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info_head, append=F);
-	info=paste(getSeed() ,MIG_x, MIG_y, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, SIGMA_K_1, SIGMA_K_2, SIGMA_K_Cov, SIGMA_QTN_1, SIGMA_QTN_2, SIGMA_QTN_Cov, demog, N_traits, ispleiotropy, iscontrol, Nequal, isVariableM, MIG_breaks);
+	info=paste(getSeed() ,MIG_x, MIG_y, sim.chromosome.mutationRates,R,BURNIN_1, BURNIN_2, TOTAL_GEN, METAPOP_SIDE_x, METAPOP_SIDE_y, SIGMA_K_0, SIGMA_K_1, SIGMA_K_Cov, SIGMA_QTN_1, SIGMA_QTN_2, SIGMA_QTN_Cov, demog, N_traits, ispleiotropy, iscontrol, Nequal, isVariableM, MIG_breaks);
 	writeFile(paste(c(MY_RESULTS_PATH, getSeed(), "_info.txt"), sep=""), info, append=T);
 	
 	// write local adaptation file
@@ -550,8 +550,8 @@ late() {
 		{
 			opt0 = opt0 * ((sim.generation - BURNIN_1) / (BURNIN_2 - BURNIN_1));
 			opt1 = opt1 * ((sim.generation - BURNIN_1) / (BURNIN_2 - BURNIN_1));
+			fitness_var_0 = SIGMA_K_0 * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
 			fitness_var_1 = SIGMA_K_1 * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
-			fitness_var_2 = SIGMA_K_2 * ((sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1)) + SIGMA_STAT * (1.0 - (sim.generation- BURNIN_1) / (BURNIN_2 - BURNIN_1));
 		}
 		opts = c(opt0, opt1);
 		subpop.setValue("scaled_opt0", opt0); // x cline
@@ -560,12 +560,12 @@ late() {
 		// calculate the fitness covariance matrix, sigma, normalization factor
 		if (sim.generation >= BURNIN_2)
 		
-		fitness_var_1 = SIGMA_K_1; // x trait / opt0 (sorry)
-		fitness_var_2 = SIGMA_K_2; // y trait / opt1 (sorry)
+		fitness_var_0 = SIGMA_K_0; // x trait / opt0 
+		fitness_var_1 = SIGMA_K_1; // y trait / opt1
 		if (N_traits == 2)
 		{
 			fitness_cov = SIGMA_K_Cov;
-			fitness_varcov = matrix(c(fitness_var_1, fitness_cov, fitness_cov, fitness_var_2), nrow=2);
+			fitness_varcov = matrix(c(fitness_var_0, fitness_cov, fitness_cov, fitness_var_1), nrow=2);
 			fitness_norm = dmvnorm(c(0.0, 0.0), c(0.0, 0.0), fitness_varcov);
 		subpop.setValue("fitness_varcov", fitness_varcov);
 		subpop.setValue("fitness_norm", fitness_norm);
@@ -591,7 +591,7 @@ late() {
 			fits = dmvnorm(cbind(inds.getValue("phenotype0"), inds.getValue("phenotype1")), opts, fitness_varcov) / fitness_norm; // x trait, y trait
 		}
 		if (N_traits == 1){
-			fits = dnorm(asFloat(inds.getValue("phenotype1")), asFloat(opts[1]), fitness_var_2)/fitness_norm; // y trait, y opt, 2nd trait fitness cov
+			fits = dnorm(asFloat(inds.getValue("phenotype1")), asFloat(opts[1]), fitness_var_1)/fitness_norm; // y trait, y opt, 2nd trait fitness cov
 		}
 		if (iscontrol == 1){
 			fits = rep(1, length(inds));
@@ -644,7 +644,7 @@ late() {
 				
 				if (N_traits == 1)
 				{
-					fitnesses = dnorm(asFloat(phenotype1), asFloat(opt1), SIGMA_K_2)/fitness_norm; // y trait
+					fitnesses = dnorm(asFloat(phenotype1), asFloat(opt1), SIGMA_K_1)/fitness_norm; // y trait
 				}
 
 				fitness_matrix_pop[test_index,source_index] = mean(fitnesses);

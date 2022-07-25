@@ -45,12 +45,25 @@ args = commandArgs(trailingOnly=TRUE)
 #seed=1232947
 #seed = 1231102
 #path = "sim_output_20220428/"
-# runID=20220428
+#runID=20220428
 seed = args[1]
 path = args[2]
 runID = args[3]
 
 ### load data ####
+
+info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
+                   colClasses = c("character", 
+                                  rep("numeric",15),
+                                  "character",
+                                  rep("numeric",6)))
+info
+
+allsims <- load(paste0("src/0b-final_params-",runID,".RData"))
+allsims<- final
+thissim <- allsims[grep(seed, allsims$seed),]
+(plotmain <- paste(thissim$level, seed, sep="\n"))
+
 vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
 
 vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
@@ -82,18 +95,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   muts_df$va_temp_full_prop <- muts_df$va_temp_full/va_temp_total
   muts_df$va_sal_full_prop <- muts_df$va_sal_full/va_sal_total
-  
-  info <- read.table(paste0(path,seed,"_info.txt"), header=TRUE, 
-                     colClasses = c("character", 
-                                    rep("numeric",15),
-                                    "character",
-                                    rep("numeric",6)))
+
   
   
-  allsims <- load(paste0("src/0b-final_params-",runID,".RData"))
-  allsims<- final
-  thissim <- allsims[grep(seed, allsims$seed),]
-  (plotmain <- paste(thissim$level, seed, sep="\n"))
+
 
 #### plot subpops and migration ####
   #allsim
@@ -560,6 +565,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   ## Write G_full_subset to file ####
   write.table(G_full_subset, paste0(path,seed,"_Rout_Gmat_sample.txt"), row.names=TRUE, col.names=TRUE)
     print("wrote G matrix to file")
+    
+    dim(G_full_subset)
+    dim(muts_full)
   
   ### Correlation stats ####
   Bonf_alpha <- (0.05/(nrow(muts_full)))
@@ -578,8 +586,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   num_notCausal_sig_temp_corr <- sum(muts_full$af_cor_temp_P[!muts_full$causal_temp=="causal"]<Bonf_alpha)# number of non-causal (neutral and neutral-linked) loci that have significant  Kendall's correlations with temperature after Bonferroni correction
   num_notCausal_sig_sal_corr <- sum(muts_full$af_cor_sal_P[!muts_full$causal_sal=="causal"]<Bonf_alpha)# number of non-causal (neutral and neutral-linked) loci that have significant Kendall's correlations with salinity after Bonferroni correction
   
-  num_neut_sig_temp_corr <- sum(muts_full$af_cor_temp_P[!muts_full$causal_temp=="neutral"]<Bonf_alpha)# number of neutral (unlinked to causal) loci that have significant  Kendall's correlations with temperature after Bonferroni correction
-  num_neut_sig_sal_corr <- sum(muts_full$af_cor_sal_P[!muts_full$causal_sal=="neutral"]<Bonf_alpha)# number of neutral (unlinked to causal) loci that have significant Kendall's correlations with salinity after Bonferroni correction
+  num_neut_sig_temp_corr <- sum(muts_full$af_cor_temp_P[muts_full$causal_temp=="neutral"]<Bonf_alpha)# number of neutral (unlinked to causal) loci that have significant  Kendall's correlations with temperature after Bonferroni correction
+  num_neut_sig_sal_corr <- sum(muts_full$af_cor_sal_P[muts_full$causal_sal=="neutral"]<Bonf_alpha)# number of neutral (unlinked to causal) loci that have significant Kendall's correlations with salinity after Bonferroni correction
   
   cor_VA_temp_prop <- sum(muts_full$Va_temp_prop[which(muts_full$causal_temp=="causal" & (muts_full$af_cor_temp_P< Bonf_alpha) )]) 
   cor_VA_sal_prop <- sum(muts_full$Va_sal_prop[which(muts_full$causal_sal=="causal" & (muts_full$af_cor_sal_P< Bonf_alpha) )]) 
@@ -1327,7 +1335,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   dev.off()
   
-#### RDA manahattan ####
+#### RDA manhattan ####
   ymax = max(c(muts_full$RDA_mlog10P, 10))
   pdf(paste0(path,seed,"_pdf_6manhattan_RDA.pdf"), width=15, height=15)
   
@@ -1859,7 +1867,7 @@ out_full <- data.frame(seed=as.character(seed),
                       LEA3.2_lfmm2_num_causal_sig_temp, #` number of causal loci on the temp trait, significant in the lfmm temp model (qvalue <0.05)
                       LEA3.2_lfmm2_num_neut_sig_temp, #` number of neutral loci false positives (only neutral loci not affected by selection), significant in the lfmm temp model (qvalue <0.05)
                       LEA3.2_lfmm2_num_causal_sig_sal, #` number of causal loci on the salinity trait, significant in the lfmm salinity model (qvalue <0.05)
-                      LEA3.2_lfmm2_num_causal_sig_temp,
+                      LEA3.2_lfmm2_num_neut_sig_sal,
                       LEA3.2_lfmm2_FPR_neutSNPs_temp, #` false positive rate of lfmm temperature model
                       LEA3.2_lfmm2_FPR_neutSNPs_sal, #` false positive rate of lfmm salinity model
                 

@@ -45,7 +45,7 @@ sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 29399132
 
 sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job 29460812
 
-sbatch e-run_nonAF_sims_1R-longruns-20220428.sh
+sbatch e-run_nonAF_sims_1R-longruns-20220428.sh #Submitted batch job 29484119
 ```
 
 ## Check R runs are finished

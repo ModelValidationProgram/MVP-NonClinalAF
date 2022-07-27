@@ -1,6 +1,6 @@
 ```{r}
 setwd("/work/lotterhos/MVP-NonClinalAF")
-figures_folder <- "figures_20220428/"
+figures_folder <- "figures_20220428_20220726/"
 LA <- read.table("LAcalc.txt", header=TRUE)
 nrow(LA)
 head(LA)

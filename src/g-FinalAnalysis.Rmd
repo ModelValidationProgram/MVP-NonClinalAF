@@ -379,10 +379,17 @@ final.df$ispleiotropy <- factor(final.df$ispleiotropy)
 head(final.df$ispleiotropy)
 
 f3 <- ggplot(final.df) + 
+
+  TO DO FIX THIS
   geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=arch_level#,shape=ispleiotropy
                  ), alpha=0.6, fill="grey", shape=0) +  
   geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=arch_level#, shape=ispleiotropy
                  ), alpha=0.6, fill="grey", shape=0) + 
+
+  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp), alpha=0.3, col="grey20") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal), alpha=0.3, col="grey20") + 
+
+    
+    
   ggtheme + ylim(0,1) + xlim(0,1)  +  
   xlab("Correlation(phenotype, deme environment)") + 
   ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Genic level", discrete=TRUE, option="rocket", begin=0, end=0.8) + #scale_shape_manual(values=c(0,19),name="Pleiotropy") + 
@@ -718,7 +725,7 @@ table(comparemethods.TPR$methodtype)
 g3<- ggplot(comparemethods.TPR, aes(x=as.factor(methodtype), y=TPR)) + geom_boxplot(color="grey", fill="cornflowerblue") + ggtheme + xlab("method") + ylab("TPR\n(worse <<--->> better)") + scale_fill_viridis(option="turbo", discrete=TRUE) + theme(legend.position = "none") + theme( axis.text.x=element_text(angle=60, vjust=1, hjust=1, size = 10)) + ggtitle("C")
 g3
 
-pdf(paste0(outputs,"AUC-PR_FDR_TPR.pdf"), width=5, height=11)
+pdf(paste0(outputs,"AUC-PR_FDR_TPR.pdf"), width=5, height=9)
 grid.arrange(g+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
              g2+ theme( axis.text.x = element_blank(), axis.title.x=element_blank()),
              g3,

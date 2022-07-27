@@ -11,6 +11,51 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```
 
+# Trying to understand demography effect on lfmm FDR
+
+These plots are not perfect, because they do not include the simulations that have NA for the FDR because there was no power to detect an effect.
+```{r}
+final.df$LEA
+l1 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_FDR_neutSNPs_temp, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (temperature model)")  + theme(legend.position="none") + ylim(0,1)
+l1
+
+
+l2 <- ggplot(final.df) + geom_boxplot(aes(y=LEA3.2_lfmm2_TPR_sal, x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("FDR for LFMM (Env2 model)")  + theme(legend.position="none") + ylim(0,1)
+l2
+
+#ggplot(final.df) + geom_violin(aes(y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, x=demog_level_sub, fill=demog_level)) + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("")
+
+l3 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U1, Temp)|")  + theme(legend.position="bottom") + ylim(0,1)
+l3
+
+l4 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_temp), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme  + xlab("Demography") + ylab("Correlation (LFMM U2, deme temperature)")   + theme(legend.position="none") + theme(legend.position="bottom") + ylim(0,1) + guides(fill=guide_legend(title="Landscape"))
+l4
+
+l5 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU1_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U1, Env2)|")   + theme(legend.position="bottom") + ylim(0,1)
+l5
+
+l6 <- ggplot(final.df) + geom_boxplot(aes(y=abs(cor_LFMMU2_sal), x=demog_level_sub, fill=demog_level), color="grey") + ggtheme + guides(fill=guide_legend(title="Landscape")) + xlab("Demography") + ylab("|Cor(LFMM U2, Env2)|") + theme(legend.position="bottom") + ylim(0,1)
+l6
+
+pdf(paste0(outputs,"FDR_LFMM.pdf"), width=10, height=8)
+
+grid.arrange(l1,l2, l3, l5, ncol=2)
+
+dev.off()
+
+
+# cor_LFMMU1_temp
+k1 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=arch_level, shape=arch_level)) + ggtheme + xlab("|Cor(LFMM U1, Deme Temperature)|") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_temp),y=LEA3.2_lfmm2_AUCPR_temp_neutSNPs, color=arch_level), alpha=0.2, method="loess", span=1) + ylim(0,1)  +xlim(0,1) 
+k1 # was not easy to change the color scheme here + scale_fill_viridis(option="mako", discrete=TRUE)
+#final.df$LEA3.2_lfmm2_TPR_temp
+#final.df$cor_PC1_LFMMU1_temp
+#cor_PC1_temp
+
+k2 <- ggplot(final.df) + geom_point(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, shape=demog_level_sub)) + ggtheme + xlab("|Cor(LFMM U1, Deme Env2)|") + ylab("AUC-PR") + geom_smooth(aes(x=abs(cor_LFMMU1_sal),y=LEA3.2_lfmm2_AUCPR_sal_neutSNPs, color=demog_level_sub, fill=demog_level_sub), alpha=0.2, method="loess", span=1) + ylim(0,1) +xlim(0,1) + scale_fill_viridis(option="mako", discrete=TRUE)
+
+
+```
+
 ## other ways to visualize effect of structure on LFMM
 ## run after chucks on LFMM FDR
 ```{r other LFMM visualizations}

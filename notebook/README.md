@@ -1,6 +1,17 @@
+## Sync files to git
+```
+git status
+git add <added files in commit stages>
+git commit
+git pull
+git push
+```
+
+
 ## Run a set of simulations with RunID 20220428
 
 ```
+cd /work/lotterhos/MVP-NonClinalAF/src
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428.sh
 squeue -p lotterhos
 sbatch d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh

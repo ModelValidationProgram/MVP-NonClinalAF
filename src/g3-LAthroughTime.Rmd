@@ -1,0 +1,62 @@
+---
+title: "LA through time"
+author: "KE Lotterhos"
+date: "7/26/2022"
+output: html_document
+---
+
+```{r}
+setwd("/work/lotterhos/MVP-NonClinalAF")
+figures_folder <- "figures_20220428/"
+LA_time <- read.table("summary_LAthroughtime_20220428.txt", header=TRUE)
+nrow(LA_time)
+head(LA_time, 50)
+
+out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
+head(out.df)
+tail(out.df)
+
+load("src/0b-final_params-20220428.RData")
+sims.df <- final
+head(sims.df)
+
+final.df <- merge(sims.df, out.df, all.x=TRUE)
+head(final.df)
+nrow(final.df)
+
+
+final.df3 <- merge(LA_time, final.df, all.x=TRUE)
+nrow(final.df3)
+rm(final.df)
+rm(final)
+```
+
+
+GGtheme
+```{r}
+
+ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
+
+final.df3$arch_level <- factor(final.df3$arch_level, levels=c( "oliogenic", "mod-polygenic", "highly-polygenic"), ordered=TRUE)
+
+levels(final.df3$arch_level) <- c("oligogenic", "mod.\npolygenic", "highly\npolygenic")
+str(final.df3$arch_level) 
+
+final.df3$arch_level_sub <-
+  factor(final.df3$arch_level_sub,
+  levels=c("1-trait", "2-trait-no-pleiotropy-equal-S",
+           "2-trait-pleiotropy-equal-S",
+           "2-trait-no-pleiotropy-unequal-S",
+           "2-trait-pleiotropy-unequal-S"), ordered=TRUE)
+```
+
+```{r}
+pdf(paste0(figures_folder,"LA_through_time.pdf"), height=10, width=8)
+
+ggplot(final.df3) + geom_line(aes(x=gen, y=local_adapt, group=seed, color=demog_level), alpha=0.5) + facet_grid(arch_level_sub~.) + ggtheme + ylab("Degree of Local Adaptation") + xlab("Generation") +
+ # theme(legend.position="none") +
+  scale_color_viridis(option="viridis", discrete=TRUE, begin=0, end=1) +
+  guides(color=guide_legend(title="Landscape"))
+
+dev.off()
+```

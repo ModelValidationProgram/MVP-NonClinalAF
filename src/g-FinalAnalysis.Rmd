@@ -84,7 +84,7 @@ ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.min
 `viridis` for SS, SS-Mtn, Estuary
 `mako` for demography sub level (m and N)
 `magma` for arch_level_sub
-`cividis` for arch_level
+`rocket` for arch_level
 
 ## Reorder levels
 ```{r reorder levels}
@@ -97,6 +97,10 @@ str(final.df$arch_level)
 
 
 levels(final.df$arch_level_sub)
+
+final.df$ispleiotropy <- factor(final.df$ispleiotropy)
+levels(final.df$ispleiotropy) <- c("No pleiotropy", "Pleiotropy")
+head(final.df$ispleiotropy)
 
 final.df$arch_level_sub <-
   factor(final.df$arch_level_sub,
@@ -145,20 +149,27 @@ tapply(final.df$meanFst, list(final.df$demog_level, final.df$arch_level_sub), me
 tapply(final.df$meanFst, list(final.df$demog_level, final.df$arch_level_sub), length)
 
 ### Distribution of FST as a funciton of architecture
-f <- ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.5)) +  facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+f <- ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + 
+  coord_cartesian(xlim = c(0.0, 0.5)) +   # does not give an error for bins with missing values
+  #xlim(0,0.5) + #gives an error for bins with missing values
+  facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") +  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
 f
 
 pdf(paste0(outputs,"FST_Demog.pdf"), width=8, height=6)
 ### Distribution of FST as a funciton of demography
-  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.5))  + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") 
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub), binwidth=0.01, color="grey", na.rm=TRUE) + ggtheme + coord_cartesian(xlim = c(0, 0.5), ylim=c(0,160))  + facet_grid(demog_level~., scales="free") + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") + geom_hline(yintercept=0, color="white", size=1)  + geom_hline(yintercept=0, color="grey10", size=0.1)
   dev.off()
 
+  ggplot(final.df) + geom_histogram(aes(x=meanFst, fill=demog_level_sub, position="stack"), binwidth=0.01, color="grey") + ggtheme + xlim(0,0.5) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Fst") + ylab("Number of simulations")  + theme(legend.position="bottom") 
+  
 ggplot(final.df, aes(x=as.factor(demog_level_sub), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Demography") + ylab("overall FST") + scale_color_viridis(discrete=TRUE)  + ylim(0,0.5) + scale_fill_viridis(discrete=TRUE, name="Landscape")
 
-a<-tapply(final.df$meanFst,final.df$demog_name, mean)
-b<- tapply(final.df$final_LA,final.df$demog_name, mean)
+a<-tapply(final.df$meanFst,final.df$demog_name, mean,  na.rm=TRUE)
+b<- tapply(final.df$final_LA,final.df$demog_name, mean,  na.rm=TRUE)
   
 cbind(Fst=a,LA=b)
+
+ggplot(final.df, aes(x=as.factor(N_traits), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("meanFst") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) 
 ```
 
 ## Degree local adaptation
@@ -168,21 +179,22 @@ Visualize the degree of local adapation
 
 summary(final.df$final_LA)
 
-      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.6)) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
-  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")
+      l1 <- ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=arch_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.75)) + facet_grid(demog_level~.) + scale_fill_viridis(option="magma", discrete=TRUE, name="Pleiotropy level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
+  guides(fill = guide_legend(reverse = TRUE)) + ggtitle("A")  + geom_hline(yintercept=0, color="white", size=1)  + geom_hline(yintercept=0, color="grey10", size=0.1)
 l1
 
 ggplot(final.df) + geom_histogram(aes(x=final_LA, fill=demog_level_sub), binwidth=0.01, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 0.6)) + facet_grid(demog_level~.) + scale_fill_viridis(option="mako", discrete=TRUE, name="Demography level") + xlab("Amount of local adaptation") + ylab("Number of simulations")  + theme(legend.position="bottom") +
-  guides(fill = guide_legend(reverse = FALSE)) + ggtitle("A")
+  guides(fill = guide_legend(reverse = FALSE)) + ggtitle("A")  + geom_hline(yintercept=0, color="white", size=1)  + geom_hline(yintercept=0, color="grey10", size=0.1)
 
 l2<- ggplot(final.df) +
         geom_point(aes(x=subsamp_corr_phen_temp,
                        y=subsamp_corr_phen_sal,
                        color=final_LA,shape=demog_level)) + 
         ggtheme +
-      scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + coord_cartesian(xlim = c(0.25,1)) + ylim(0.25,1) + xlab("Cor(temp. phenotype, deme temperature)") + ylab("Cor(Env2 phenotype, deme Env2)") + ggtitle("B") +labs(shape="Landscape")
+      scale_color_viridis(option="mako", name="Local\nAdaptation", begin=0.2, end=1) + coord_cartesian(xlim = c(0.25,1)) + ylim(0.25,1) + xlab("Cor(temp. phenotype, deme temperature)") + ylab("Cor(Env2 phenotype, deme Env2)") + ggtitle("B") +labs(shape="Landscape")  + geom_hline(yintercept=0, color="white", size=1)  + geom_hline(yintercept=0, color="grey10", size=0.1)
   l2
    # in this case, the removed points have an NA because the "sal" trait was not adaptive in 450 simulations:
+  # ggplot(final.df, aes(x=as.factor(N_traits), y=meanFst, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("meanFst") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none") + ylim(0,1) + ggtitle("C")
   
   sum(is.na(final.df$subsamp_corr_phen_temp))
   sum(is.na(final.df$subsamp_corr_phen_sal))
@@ -221,8 +233,8 @@ sum(is.na(final.df$num_neut_postfilter))
 n <- ggplot(final.df) + geom_violin(aes(y=num_neut_postfilter, x=demog_level_sub, fill=demog_level), color="grey70") + ggtheme + ylab("Number of neutral loci\nafter sampling and MAF filter") + xlab("Demography") + guides(fill=guide_legend(title="Landscape"))
 n
 
-tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), median)
-tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), mean)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), median, na.rm=TRUE)
+tapply(final.df$num_neut_postfilter, list(final.df$demog_level_sub), mean, na.rm=TRUE)
 
 pdf(paste0(outputs,"NumLociPrePostfilter.pdf"), width=7, height=8)
   grid.arrange(m, n, nrow=2)
@@ -246,7 +258,7 @@ summary(final.df$K)
 
 pdf(paste0(outputs,"K_by_demog.pdf"), width=6, height=6)
   ggplot(final.df) + geom_histogram(aes(x=K, fill=demog_level), binwidth=1, color="grey") + ggtheme + coord_cartesian(xlim = c(0, 11)) + facet_grid(demog_level_sub~.) + scale_fill_viridis(option="viridis", discrete=TRUE, name="Demography") + xlab("Number of population clusters (K)") + ylab("Number of simulations")  + theme(legend.position="bottom") +
-  guides(fill = guide_legend(reverse = FALSE)) 
+  guides(fill = guide_legend(reverse = FALSE))  + geom_hline(yintercept=0, color="white", size=1)  + geom_hline(yintercept=0, color="grey10", size=0.1)
 dev.off()
 ```
 
@@ -360,13 +372,22 @@ fboth
 ## Phenotypic clines vs. af clines
 
 ### For each trait, I want to plot the (correlation between the trait and environment) vs. (correlation between af and environment)
-
+final.df$N_traits2 <- final.df$N_traits
+final.df$N_traits2[final.df$N_traits==1] <- "1 Trait"
+final.df$N_traits2[final.df$N_traits==2] <- "2 Traits"
+final.df$ispleiotropy <- factor(final.df$ispleiotropy)
+head(final.df$ispleiotropy)
 
 f3 <- ggplot(final.df) + 
-  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") +  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=demog_level, shape=arch_level), alpha=0.6, fill="grey") + 
+  geom_point(aes(x=subsamp_corr_phen_temp, y=cor_TPR_temp, color=arch_level#,shape=ispleiotropy
+                 ), alpha=0.6, fill="grey", shape=0) +  
+  geom_point(aes(x=subsamp_corr_phen_sal, y=cor_TPR_sal, color=arch_level#, shape=ispleiotropy
+                 ), alpha=0.6, fill="grey", shape=0) + 
   ggtheme + ylim(0,1) + xlim(0,1)  +  
   xlab("Correlation(phenotype, deme environment)") + 
-  ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Landscape", discrete=TRUE) + scale_shape_manual(values=c(0,23, 16),name="Genic level") + ggtitle("A")
+  ylab("Proportion of causal \n loci with significant clines") + scale_color_viridis(name="Genic level", discrete=TRUE, option="rocket", begin=0, end=0.8) + #scale_shape_manual(values=c(0,19),name="Pleiotropy") + 
+  ggtitle("A") #+ #+ facet_grid(~N_traits2) 
+   # facet_grid(~arch_level_sub)
 f3
 # 450 missing values expected (simulations without the Env2 trait)
 
@@ -385,16 +406,22 @@ Same plots as above, but for the percent of the additive genetic variance (Va). 
 
 # Reorganize data for plotting
 pleiotropy.df2 <- gather(subdf_arch, key=trait, value=cor_VA_prop, cor_VA_temp_prop, cor_VA_sal_prop)
+pleiotropy.df3 <- gather(subdf_arch, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
 
-fboth2 <-   ggplot(pleiotropy.df2, aes(x=arch_level, y=cor_VA_prop, fill=as.factor(ispleiotropy))) + geom_boxplot(color="grey") + ggtheme + xlab("") + ylab("Proportion of explainable VA \n explained by loci with significant clines") + scale_fill_manual( values=my_col_arch, labels=c("No pleiotropy", "Pleiotropy"), name="2-trait architectures")  + ylim(0,1) + ggtitle("A")
+fboth2 <-   ggplot() + 
+  geom_boxplot(aes(x=arch_level, y=cor_TPR), data=pleiotropy.df3, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(aes(x=arch_level, y=cor_VA_prop, fill=arch_level), data=pleiotropy.df2, color="grey20") + ggtheme + xlab("") + ylab("Proportion of explainable VA \n explained by loci with significant clines") + scale_fill_viridis(option="rocket", discrete=TRUE)  + ylim(0,1) + ggtitle("A") + theme(legend.position = "none")
 fboth2
 
-a1<- ggplot(final.df, aes(x=as.factor(N_traits), y=cor_VA_temp_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
+a1<- ggplot() + 
+  geom_boxplot(aes(x=demog_level, y=cor_TPR_temp), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(data=final.df, aes(x=demog_level, y=cor_VA_temp_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
 a1
 
-b1<- ggplot(forb, aes(x=N_traits, y=cor_VA_sal_prop, fill=demog_level)) + geom_boxplot(color="grey") + ggtheme + xlab("Number of traits") + ylab("Proportion of explainable VA in Env2 \n loci  explained by loci with significant clines") + scale_color_viridis(discrete=TRUE, name="Landscape") + ylim(0,1) + ggtitle("C") + guides(fill=guide_legend(title="Landscape"))
+b1<- ggplot()+
+    geom_boxplot(aes(x=demog_level, y=cor_TPR_sal), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(data=final.df, aes(x=demog_level, y=cor_VA_sal_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of explainable VA in Env2 \n explained by loci with significant clines") + scale_color_viridis(discrete=TRUE) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("C")
 b1
-
 
 pdf(paste0(outputs,"WhatDrivesNonClines_VA.pdf"), width=8, height=8)
   grid.arrange(fboth2, a1,b1, nrow=2, ncol=2, layout_matrix=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
@@ -760,10 +787,10 @@ final.df$seed[which(final.df$RDA_cor_RDA20000salppredict_salPhen < 0)]
 ## Can redundancy analysis identify mutations with pleiotropic effects?
 ```{r RDA mutation prediction ~ architecture}
 
-g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1)) + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
+g1<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1)) + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect")
 g1 
 
-g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme+ coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
+g2 <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme+ coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect") 
 g2
 # removing 450 expected
 
@@ -773,7 +800,7 @@ g2
 # They show the same pattern, so combine for analysis:
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_RDAmutpred_cor_tempEffect, RDA_RDAmutpred_cor_salEffect)
 
-g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (QTN effect size)") 
+g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (QTN effect size)") 
 g3
 # 450 missing values expected
 
@@ -782,10 +809,10 @@ g3
 Same analysis as above, but with structure correction
 
 ```{r RDA mutation prediction ~ architecture with structure correction}
-g1sc<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect with structure correction")
+g1sc<- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_tempEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on temp,\nRDA-predicted temp. effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) + theme(legend.position = "none") + ggtitle("A) Temperature mutation effect with structure correction")
 g1sc
 
-g2sc <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect with structure correction") 
+g2sc <- ggplot(final.df, aes(x=RDA_RDAmutpred_cor_salEffect_structcorr, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))  + xlab("Cor(QTN effect on Env2,\nRDA-predicted Env2 effect)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) + theme(legend.position="bottom") + ggtitle("B) Env2 mutation effect with structure correction") 
 g2sc
 
 grid.arrange(g1sc, g2sc,
@@ -894,9 +921,8 @@ Visualize the effect of genetic architecture on phenotype prediction
 ```{r RDA phenotype prediction}
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen)
 
-g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))   + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="cividis", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental trait, no structure correction)") 
+g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))   + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("B) Accuracy of RDA prediction \n     (individual environmental trait, no structure correction)") 
 g4
-
 ```
 
 

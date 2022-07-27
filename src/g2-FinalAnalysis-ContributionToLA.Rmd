@@ -1,0 +1,125 @@
+```{r}
+setwd("/work/lotterhos/MVP-NonClinalAF")
+figures_folder <- "figures_20220428/"
+LA <- read.table("LAcalc.txt", header=TRUE)
+nrow(LA)
+head(LA)
+
+out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
+head(out.df)
+tail(out.df)
+
+
+
+load("src/0b-final_params-20220428.RData")
+sims.df <- final
+head(sims.df)
+
+final.df <- merge(sims.df, out.df, all.x=TRUE)
+head(final.df)
+nrow(final.df)
+
+final.df2 <- merge(LA, final.df, all.x=TRUE)
+nrow(final.df2)
+rm(final.df)
+rm(final)
+```
+
+
+GGtheme
+```{r}
+
+ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
+
+final.df2$arch_level <- factor(final.df2$arch_level, levels=c( "oliogenic", "mod-polygenic", "highly-polygenic"), ordered=TRUE)
+
+levels(final.df2$arch_level) <- c("oligogenic", "mod.\npolygenic", "highly\npolygenic")
+str(final.df2$arch_level) 
+
+final.df$arch_level_sub <-
+  factor(final.df$arch_level_sub,
+  levels=c("1-trait", "2-trait-no-pleiotropy-equal-S",
+           "2-trait-pleiotropy-equal-S",
+           "2-trait-no-pleiotropy-unequal-S",
+           "2-trait-pleiotropy-unequal-S"), ordered=TRUE)
+```
+
+```{r}
+final.df2 <- final.df2[order(final.df2$LEA3.2_lfmm2_TPR_sal - final.df2$cor_TPR_sal),]
+
+final.df2$N_traits2 <- final.df2$N_traits
+final.df2$N_traits2[final.df2$N_traits==1] <- "Only Temp Trait"
+final.df2$N_traits2[final.df2$N_traits==2] <- "Temp + Env2 Trait"
+
+
+pdf(paste0(figures_folder,"LA_by_loci_set.pdf"), width=10, height=7)
+ggplot(final.df2) + geom_segment(aes(x = 1, y = LAcalc_1000ind_allmuts/LAcalc_1000ind_allmuts, 
+                              xend = 2, yend = LAcalc_1000ind_NoMAFmuts/LAcalc_1000ind_allmuts, 
+                              #colour=N_traits), alpha=0.2) +
+                             # colour=final_LA), alpha=0.5) +
+                             #colour=paste(N_traits,SIGMA_K_2, sep="_")), alpha=0.5) +
+                            #colour= LEA3.2_lfmm2_TPR_temp), alpha=0.5) + 
+                            colour= LEA3.2_lfmm2_TPR_sal - cor_TPR_sal), alpha=0.5) +
+   geom_segment(aes(x = 2, y = LAcalc_1000ind_NoMAFmuts/LAcalc_1000ind_allmuts, 
+                              xend = 3, yend = LAcalc_1000ind_ClinalMuts/LAcalc_1000ind_allmuts,
+                             #colour=paste(N_traits,SIGMA_K_2, sep="_")), alpha=0.5) +
+  #colour=N_traits), alpha=0.2) + 
+                              #colour=final_LA), alpha=0.5) +
+              #colour= LEA3.2_lfmm2_TPR_temp), alpha=0.5) + 
+    colour= LEA3.2_lfmm2_TPR_sal - cor_TPR_sal), alpha=0.5) +
+   geom_segment(aes(x = 3, y = LAcalc_1000ind_ClinalMuts/LAcalc_1000ind_allmuts, 
+                              xend = 4, yend = LAcalc_1000ind_ClinalMutsLFMM/LAcalc_1000ind_allmuts,
+                              #colour=paste(N_traits,SIGMA_K_2, sep="_")), alpha=0.5) +
+  #colour=N_traits), alpha=0.2) + 
+                              #colour=final_LA), alpha=0.5) +
+                            #colour= LEA3.2_lfmm2_TPR_temp), alpha=0.5) + 
+    colour= LEA3.2_lfmm2_TPR_sal - cor_TPR_sal), alpha=0.5) +
+  ylim(0,1) + ggtheme + ylab("Proportion of local adaptation\n explained by loci set") +
+  facet_grid(arch_level~N_traits2*demog_level) + 
+  geom_segment(aes(x=1, y=0.5, xend=4, yend=0.5), color="grey", alpha=1, linetype = "dotted") + 
+  geom_segment(x=0, y=-0.05, xend=4, yend=-0.05, color="grey30", alpha=1 , size=0.3) + scale_color_viridis_c(limits=c(-1,1),name="Change in power\nto detect ENV2\nQTNs after\nstructure\ncorrection")  + 
+  scale_x_continuous( labels=c("All QTNs", "After MAF filtering", "Clinal QTNs (no correction)", "Clinal QTNs (after correction)")) +   theme(axis.text.x = element_text(angle = 60, vjust = 1, hjust=1)) + xlab("Loci set")
+dev.off()
+```
+
+
+```{r}
+
+final.df2$Landscape = final.df2$demog_level
+pdf(paste0(figures_folder,"LA_explain_weirdness.pdf"), width=8, height=10)
+
+p1 <- ggplot(final.df2) + geom_point(aes(
+  x = LEA3.2_lfmm2_TPR_temp - cor_TPR_temp,
+  y = LAcalc_1000ind_ClinalMutsLFMM - LAcalc_1000ind_ClinalMuts,
+  color=Landscape, shape=Landscape), alpha=0.5
+  ) + 
+  xlab("Change in power to detect Temp QTNs after structure correction\n(worse <-- after correction --> better)") +
+ ylab("Change in Local Adaptation calculation \n(lower<--after correction-->closer to truth)") + ggtheme + 
+  geom_smooth( aes( x = LEA3.2_lfmm2_TPR_temp - cor_TPR_temp,
+  y = LAcalc_1000ind_ClinalMutsLFMM - LAcalc_1000ind_ClinalMuts), method="lm") + geom_hline(yintercept=0, color="grey") + geom_vline(xintercept=0, colour="grey") + xlim(-1,1) + ylim(-0.6,0.6) + ggtitle("A) Temperature QTNs") + facet_grid(~arch_level)
+
+p2 <- ggplot(final.df2) + geom_point(aes(
+  x = LEA3.2_lfmm2_TPR_sal - cor_TPR_sal,
+  y = LAcalc_1000ind_ClinalMutsLFMM - LAcalc_1000ind_ClinalMuts,
+  color=Landscape, shape=Landscape), alpha=0.5
+  ) + 
+  xlab("Change in power to detect Env2 QTNs after structure correction\n(worse <-- after correction --> better)") +
+ ylab("Change in Local Adaptation calculation \n(lower<--after correction-->closer to truth)") + ggtheme + 
+  geom_smooth( aes( x = LEA3.2_lfmm2_TPR_sal - cor_TPR_sal,
+  y = LAcalc_1000ind_ClinalMutsLFMM - LAcalc_1000ind_ClinalMuts), method="lm") + geom_hline(yintercept=0, color="grey") + geom_vline(xintercept=0, colour="grey") + xlim(-1,1) + ylim(-0.6,0.6) + ggtitle("B) Env2 QTNs") + facet_grid(~arch_level)
+
+p3 <- ggplot(final.df2) + geom_point(aes(
+  x = LEA3.2_lfmm2_TPR_sal - cor_TPR_sal,
+  y = LEA3.2_lfmm2_FPR_neutSNPs_sal - cor_FPR_sal_neutSNPs,
+  color=Landscape, shape=Landscape), alpha=0.5
+  ) + 
+  xlab("Change in power to detect Env2 QTNs after structure correction\n(worse <-- after correction --> better)") +
+ ylab("Change in False Positive Rate\n(better <-- after correction --> worse)") + ggtheme + 
+  geom_smooth( aes( x = LEA3.2_lfmm2_TPR_sal - cor_TPR_sal,
+  y = LEA3.2_lfmm2_FPR_neutSNPs_sal - cor_FPR_sal_neutSNPs), method="lm") + geom_hline(yintercept=0, color="grey") + geom_vline(xintercept=0, colour="grey") + xlim(-1,1) + ylim(-0.6,0.6) + ggtitle("C) Env2 QTNs (FPR)") + facet_grid(~arch_level)
+
+grid.arrange(p1,p2, p3)
+dev.off()
+
+
+```

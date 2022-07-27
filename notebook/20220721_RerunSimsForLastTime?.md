@@ -50,9 +50,9 @@ sbatch e-run_nonAF_sims_1R-longruns-20220428.sh #Submitted batch job 29484119
 
 ## Check R runs are finished
 ```
-ls *_pdf_1pop.pdf | wc -l
+ls -la *_pdf_1pop.pdf | grep "Jul" | wc -l #2250
 
-ls -l *_Rout_simSummary.txt | wc -l
+ls -la *_Rout_simSummary.txt | grep "Jul" | wc -l #2250
 ```
 
 additional checks (I overwrote these files, so just want to check all the files are recent and there aren't any old ones left)
@@ -61,8 +61,10 @@ cd sim_output_20220428
 ls -la | grep "1231094" | wc -l #number of files expected for each sim = 50 files
 ls -la | grep "May" | wc -l #should be 0 files # but it's 2250
 ls -la | grep "Jul" | wc -l # 110250 # should be 112500, the missing are the 2250 files
-head -n 50 # each seed has one file from May and it is 1233339_genotypes.pca
+ls -la | head -n 100 # each seed has one file from May and it is 1233339_genotypes.pca
+rm -rf *_genotypes.pca
 ```
+Now everything is up to date
 
 ## Create summary
 

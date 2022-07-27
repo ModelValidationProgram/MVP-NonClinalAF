@@ -55,11 +55,29 @@ ls *_pdf_1pop.pdf | wc -l
 ls -l *_Rout_simSummary.txt | wc -l
 ```
 
-## Create summary
+additional checks (I overwrote these files, so just want to check all the files are recent and there aren't any old ones left)
 ```
-awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220428.txt # header
+cd sim_output_20220428
+ls -la | grep "1231094" | wc -l #number of files expected for each sim = 50 files
+ls -la | grep "May" | wc -l #should be 0 files # but it's 2250
+ls -la | grep "Jul" | wc -l # 110250 # should be 112500, the missing are the 2250 files
+head -n 50 # each seed has one file from May and it is 1233339_genotypes.pca
+```
 
-awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220428.txt # data
+## Create summary
+
+```
+cd /work/lotterhos/MVP-NonClinalAF/sim_output_20220428
+
+awk 'NR==1' 1231094_Rout_simSummary.txt > ../summary_20220428_20220726.txt # header
+
+awk 'FNR>1' *_Rout_simSummary.txt >> ../summary_20220428_20220726.txt # data
+```
+
+```
+awk 'NR==1' 1231094_LA.txt > ../summary_LAthroughtime_20220428_20220726.txt # header
+
+awk 'FNR>1' *_LA.txt >> ../summary_LAthroughtime_20220428_20220726.txt # data
 ```
 
 ## Run LA script

@@ -16,9 +16,9 @@ run20210920*
 graphics_*
 env.RData
 old*
-examples/
+examples*/
 *pcaProject
 graphs*
 figures_20220201*
-archived/*
+archived*
 src/archived/*

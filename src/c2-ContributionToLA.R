@@ -1,6 +1,7 @@
 
 setwd("/work/lotterhos/MVP-NonClinalAF")
 
+library(mvtnorm)
 # The loop takes about 10 hours to run
 
 ### load params ####
@@ -21,8 +22,10 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
   #runID = args[3]
 
 ### Read in Sims
+runID = "20220428"
 allsims <- load(paste0("src/0b-final_params-",runID,".RData"))
 allsims<- final
+path = "sim_output_20220428/"
 
 which(allsims$seed==1231109)
 
@@ -67,8 +70,8 @@ for (seed in allsims$seed[16:nrow(allsims)]){
   
   
   ### Function to calculate the fitness of an individual given the stabilizing selection function ####
-  fitness_var_temp <- info$SIGMA_K_2
-  fitness_var_sal <- info$SIGMA_K_1
+  fitness_var_temp <- info$SIGMA_K_1
+  fitness_var_sal <- info$SIGMA_K_0
   fitness_cov <- info$SIGMA_K_Cov
   N_traits <- info$Ntraits
   
@@ -80,8 +83,8 @@ for (seed in allsims$seed[16:nrow(allsims)]){
       phens <- cbind(temp_phen, sal_phen)
       opts <- c(temp_opt, sal_opt)
       fitness_varcov <- matrix(c(fitness_var_temp, fitness_cov, fitness_cov, fitness_var_sal), nrow=2);
-      fitness_norm <- dmvnorm(c(0.0, 0.0), c(0.0, 0.0), fitness_varcov);
-      fits <- dmvnorm(phens, opts, fitness_varcov) / fitness_norm;
+      fitness_norm <- dmvnorm(x = c(0.0, 0.0), mean = c(0.0, 0.0), sigma = fitness_varcov);
+      fits <- dmvnorm(x = phens, mean = opts, sigma = fitness_varcov) / fitness_norm;
     }
     
     if (N_traits==1){ # 1 trait

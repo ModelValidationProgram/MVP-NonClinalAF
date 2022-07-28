@@ -5,7 +5,7 @@ LA <- read.table("LAcalc.txt", header=TRUE)
 nrow(LA)
 head(LA)
 
-out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
+out.df <- read.table(file = "summary_20220428_20220726.txt", header=TRUE)
 head(out.df)
 tail(out.df)
 
@@ -36,8 +36,8 @@ final.df2$arch_level <- factor(final.df2$arch_level, levels=c( "oliogenic", "mod
 levels(final.df2$arch_level) <- c("oligogenic", "mod.\npolygenic", "highly\npolygenic")
 str(final.df2$arch_level) 
 
-final.df$arch_level_sub <-
-  factor(final.df$arch_level_sub,
+final.df2$arch_level_sub <-
+  factor(final.df2$arch_level_sub,
   levels=c("1-trait", "2-trait-no-pleiotropy-equal-S",
            "2-trait-pleiotropy-equal-S",
            "2-trait-no-pleiotropy-unequal-S",

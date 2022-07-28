@@ -6,13 +6,16 @@ output: html_document
 ---
 
 ```{r}
+library(ggplot2)
+library(viridis)
+
 setwd("/work/lotterhos/MVP-NonClinalAF")
-figures_folder <- "figures_20220428/"
-LA_time <- read.table("summary_LAthroughtime_20220428.txt", header=TRUE)
+figures_folder <- "figures_20220428_20220726/"
+LA_time <- read.table("summary_LAthroughtime_20220428_20220726.txt", header=TRUE)
 nrow(LA_time)
 head(LA_time, 50)
 
-out.df <- read.table(file = "summary_20220428.txt", header=TRUE)
+out.df <- read.table(file = "summary_20220428_20220726.txt", header=TRUE)
 head(out.df)
 tail(out.df)
 

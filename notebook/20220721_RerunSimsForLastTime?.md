@@ -82,6 +82,14 @@ awk 'NR==1' 1231094_LA.txt > ../summary_LAthroughtime_20220428_20220726.txt # he
 awk 'FNR>1' *_LA.txt >> ../summary_LAthroughtime_20220428_20220726.txt # data
 ```
 
+```
+awk 'NR==1' 1231094_Rout_RDA_predictions.txt | awk '{print $0, "seed"}' > ../summary_20220428_20220726_RDApredictions.txt # header
+
+for i in {1231094..1233343} # may need to loop through seeds 1231094 to 1233344
+do
+awk 'FNR>1' $i"_Rout_RDA_predictions.txt" | awk -v myi=" $i" '{print $0 myi}'  >> ../summary_20220428_20220726_RDApredictions.txt # data
+done
+```
 ## Run LA script
 * Open R Studio in OOD
 * Run the code in `c2-ContributionToLA.R`

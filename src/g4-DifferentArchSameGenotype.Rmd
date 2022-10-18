@@ -1,0 +1,91 @@
+---
+title: "Untitled"
+author: "KE Lotterhos"
+date: "10/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyr)
+
+load("src/0b-final_params-20220428.RData")
+head(final)
+levels(final$arch)
+final$seed[final$demog_level=="SS-Mtn" & final$demog_level_sub=="N-equal_m-constant" &
+             final$arch=="mod-polygenic_2-trait-pleiotropy-equal-S"]
+
+fseed <- 1231227
+
+ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), axis.line = element_line(colour="grey30"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey30")), legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey30"))
+```
+
+
+
+```{r focal seed}
+list.files("sim_output_20220428",pattern = fseed)
+
+# hard coding for seed
+read.table("sim_output_20220428/1231227_Rout_simSummary.txt", header=TRUE)
+
+G <- read.table("sim_output_20220428/1231227_Rout_Gmat_sample.txt",header = TRUE)
+muts <- read.table("sim_output_20220428/1231227_Rout_muts_full.txt",header = TRUE)
+ind <- read.table("sim_output_20220428/1231227_Rout_ind_subset.txt")
+
+head(ind)
+
+ggplot(ind) + geom_point(aes(x=x, y=y, col=phen_sal))
+ggplot(ind) + geom_point(aes(x=x, y=y, col=phen_temp))
+ggplot(ind) + geom_text(aes(x=x, y=y, label=subpop))
+  # compare 1 and 10
+  # compare 91 and 100
+
+dim(G)
+dim(ind)
+dim(muts)
+
+if (length(which(rownames(G)!=muts$mutname))>0){print("Problem here! rownames should line up")}
+if (length(which(colnames(G)!=paste0("X",ind$indID)))>0){print("Problem here! colnames should line up")}
+
+# Get heatmaps for population 1 and 10
+G1 <- G[which(muts$causal==TRUE), which(ind$subpop==1 )]
+heatmap(t(as.matrix(G1)), Rowv=NA, Colv=NA, scale="none")
+
+G10 <- G[which(muts$causal==TRUE), which(ind$subpop==10)]
+heatmap(t(as.matrix(G10)), Rowv=NA, Colv=NA, scale="none")
+
+G91 <- G[which(muts$causal==TRUE), which(ind$subpop==91)]
+heatmap(t(as.matrix(G91)), Rowv=NA, Colv=NA, scale="none")
+  
+G100 <- G[which(muts$causal==TRUE), which(ind$subpop==100)]
+heatmap(t(as.matrix(G100)), Rowv=NA, Colv=NA, scale="none")
+
+
+### All
+focal_ind <- which(ind$subpop==1 | ind$subpop==10 |
+                                             ind$subpop==91 | ind$subpop==100)
+G_focal <- G[which(muts$causal==TRUE), focal_ind]
+colnames(G_focal) <- ind$subpop[focal_ind]
+
+heatmap((as.matrix(G_focal)), Colv=NA, scale="none", cexCol=2, col=c("grey90", "grey50", "grey5"))
+
+## only focal populations
+ggplot(ind[focal_ind,]) +
+    geom_point(aes(x=RDA1, y = RDA2, size=sal_opt), color="grey20") + 
+    geom_point(aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) +
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + 
+  geom_text(aes(x=RDA1, y=RDA2, label=subpop), nudge_x = 0.1) + ggtheme
+
+## all populations with focal populations
+pdf("RDA_diffArchSamePheno.pdf", width=7, height=5)
+ggplot() +
+    geom_point(data=ind, aes(x=RDA1, y = RDA2, size=sal_opt), color=adjustcolor("grey20")) + 
+    geom_point(data=ind, aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) +
+    geom_point(data=ind[focal_ind,], aes(x=RDA1, y = RDA2, size=sal_opt), color="grey20") + 
+    geom_point(data=ind[focal_ind,], aes(x=RDA1, y=RDA2, color=temp_opt), size=2.5) +
+    scale_colour_gradient2(high=rgb(1,0.4,0.2), low="cornflowerblue", mid=rgb(0.8,0.8,0.7), name="Temp") + 
+    labs(size="Env2") + 
+    geom_text(data=ind[focal_ind,],aes(x=RDA1, y=RDA2, label=subpop), nudge_x = 0.1, size=5) + ggtheme
+dev.off()
+
+```

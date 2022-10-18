@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --job-name=R-Run-20220428
+#SBATCH --job-name=R-Run-20221018
 #SBATCH --mail-user=k.lotterhos@northeastern.edu
 #SBATCH --mail-type=FAIL
 #SBATCH --partition=lotterhos
 #SBATCH --mem=15G
 #SBATCH --nodes=1
 #SBATCH --array=2-301%30
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220428_%j.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20220428_%j.err
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20221018_%j.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/R-Run20221018_%j.err
 
 source ~/miniconda3/bin/activate MVP_env_R4.0.3
 

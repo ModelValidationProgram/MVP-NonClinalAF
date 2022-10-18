@@ -29,8 +29,8 @@
 libraries_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools", 
                       "PRROC", "qvalue", "OutFLANK", "LEA", "ggExtra")
 for (i in 1:length(libraries_needed)){
-#  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
-  library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
+  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
+#  library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
 }
 
 setwd("/work/lotterhos/MVP-NonClinalAF")
@@ -39,6 +39,7 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 
 args = commandArgs(trailingOnly=TRUE)
 
+#seed = 1231214 # MAIN GRAPHS
 #seed = 1231094
 #seed = 1231098
 #seed = 1231144
@@ -314,6 +315,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                            mutname = vcf_full@fix[,"INFO"],
                            a_freq_full = a_freq_full,
                            a_freq_subset = a_freq_subset)
+  
+  if(!identical(rownames(G_full_subset), muts_full0$mutname)){Print("Error mut names out of order");break}
+  
   head(muts_full0)
   dim(muts_full0)
   muts_full0$mutID <- as.character(muts_full0$mutID) # all loci, but only causal loci have unique ID
@@ -323,11 +327,14 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_full <- muts_full[order(muts_full$VCFrow),]
   head(muts_full)
   
+  if(!identical(rownames(G_full_subset), muts_full$mutname)){Print("Error mut names out of order");break}
+  
+  
   # Are there any missing values for LG?
-  sum(is.na(muts_full$LG))
+  if(sum(is.na(muts_full$LG))>0){Print("Error: Missing LGs"); break}
   
   # make sure mutations in correct order
-  plot(muts_full$pos_pyslim)
+  #plot(muts_full$pos_pyslim)
   rm(muts_full0)
   rm(muts_df)
   dim(muts_full)
@@ -346,7 +353,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     #muts_full$isMAF01[rm_loci] <- rep(TRUE, length=length(rm_loci))
   
     num_multiallelic <- sum((!complete.cases(G_full_subset)))
-    rm_loci <- c(rm_loci, which(!complete.cases(G_full_subset)))
+    rm_loci <- sort(c(rm_loci, which(!complete.cases(G_full_subset))))
         
     numCausalLowMAFsample <- sum(muts_full$a_freq_subset < 0.01 & muts_full$causal)
     
@@ -356,9 +363,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
       G_full_subset <- G_full_subset[-rm_loci,]
       muts_full <- muts_full[-rm_loci,]
     }
-    if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a: mutations not lined up");break()}
+    if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a2: mutations not lined up");break()}
     
     dim(G_full_subset)
+    
     head(G_full_subset[,1:10])
     
     hist(muts_full$a_freq_subset, breaks=seq(0,1,0.01))
@@ -392,6 +400,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
                            subset_indPhen_df$subpop, mean)
   
   subpop_subset <- as.numeric(rownames(subset_sal_opt))
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1b: mutations not lined up");break()}
+  
   
   af_pop <- matrix(NA, nrow=length(subpop_subset), ncol=nrow(G_full_subset))
   
@@ -449,6 +460,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   plot(muts_full$cor_temp, muts_full$cor_sal, main="SliM Correlation (AF, ENV) all samples", xlim=c(-1,1), ylim=c(-1,1))
   plot(muts_full$af_cor_temp, muts_full$af_cor_sal, main="Subsample Correlation (AF, ENV) all samples", xlim=c(-1,1), ylim=c(-1,1))
   
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1c: mutations not lined up");break()}
+  
   
   
   muts_full$causal_temp <- "neutral-linked"
@@ -495,6 +508,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     abline(0,1)
   }
 
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1d: mutations not lined up");break()}
   
   plot(muts_full$Va_temp_prop[muts_full$causal==TRUE],
        muts_full$Va_sal_prop[muts_full$causal==TRUE],
@@ -539,6 +553,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   p1a<-ggExtra::ggMarginal(p1, type="density",groupColour = TRUE, groupFill = TRUE, bw=0.05, size=3)
 
   
+
   p<- ggplot(aes(x=Va_sal_prop,y=abs(af_cor_sal),  fill=causal_sal,
                  shape=causal_sal, colour=causal_sal), data=muts_full) + 
     geom_point() + ggtheme +
@@ -563,6 +578,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   ### end show cool patterns of mutations ###
 
   ## Write G_full_subset to file ####
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1e: mutations not lined up");break()}
+  
   write.table(G_full_subset, paste0(path,seed,"_Rout_Gmat_sample.txt"), row.names=TRUE, col.names=TRUE)
     print("wrote G matrix to file")
     
@@ -620,6 +637,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   median_neut_sal_cor <-  median(abs(muts_full$af_cor_sal[!muts_full$causal_sal=="causal"]))# median Spearman's correlation  between allele frequency and salinity for neutral loci 
   
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1f: mutations not lined up");break()}
   
   ### Correlation Manhattan ####
   
@@ -697,9 +716,17 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
   dev.off()
   
+
 # FST Outflank ####
-  fst <- MakeDiploidFSTMat(t(G_full_subset), locusNames = muts_full$pos_pyslim, 
+  fst <- MakeDiploidFSTMat(t(G_full_subset), locusNames = muts_full$mutname, 
                            popNames = subset_indPhen_df$subpopID)
+  
+  head(fst)
+  
+  if(!identical(as.character(fst$locusNames), as.character(rownames(muts_full$mutname)))){print("Error 1h: mutations not lined up");break()}
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1g: mutations not lined up");break()}
+  
   
   muts_full$He_outflank <- fst$He
   muts_full$Fst_outflank <- fst$FST
@@ -804,6 +831,8 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     muts_full$structure_cor_G_LFMM_U1_modtemp[i] <- cor(G_full_subset[i,],mod_temp@U[,1], method = "kendall")
     muts_full$structure_cor_G_LFMM_U1_modsal[i] <- cor(G_full_subset[i,],mod_sal@U[,1], method = "kendall")  
   }
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1i: mutations not lined up");break()}
   
   #VIZ:
   #sig by different methods vs. corr locus with structure
@@ -1020,6 +1049,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_full$RDA2_score <- loci.sc[,2]
   muts_full$RDA1_score_corr <- loci.sc_corr[,1]
   muts_full$RDA2_score_corr <- loci.sc_corr[,2]
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1i: mutations not lined up");break()}
+  
   
   rdadapt<-function(rda,K) {
     zscores<-rda$CCA$v[,1:as.numeric(K)]
@@ -1391,6 +1423,9 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   write.table(data.frame(seed=as.character(seed), 
                          summary(rdaout_corr)$biplot),paste0(path,seed,"_RDAcorrected_loadings.txt")) 
   
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1j: mutations not lined up");break()}
+  
 ### RDA predict phenotype from random loci ####
   num_neut = num_neut_postfilter
   nmax <- min(c(20000, num_causal_postfilter+num_neut))
@@ -1441,12 +1476,12 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     # }
    
     
-    temp_pred <- ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + 
-                  ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2]
-    sal_pred <- ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + 
-                ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2]
+    temp_pred <- scale(ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[2,1] + 
+                  ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[2,2])
+    sal_pred <- scale(ind.sc_rand[,1]*eigenvals(rdaout_rand)[1]*summary(rdaout_rand)$biplot[1,1] + 
+                ind.sc_rand[,2]*eigenvals(rdaout_rand)[2]*summary(rdaout_rand)$biplot[1,2])
     
-    Random_cor_RDAtemppredict_tempphen[i] <- cor(scale(subset_indPhen_df$phen_temp), scale(temp_pred), method = "kendall")
+    Random_cor_RDAtemppredict_tempphen[i] <- cor(scale(subset_indPhen_df$phen_temp), scale(temp_pred), method = "kendall") #scaling doesn't matter for this calculation
     Random_cor_RDAsalpredict_salphen[i] <- cor(scale(subset_indPhen_df$phen_sal), scale(sal_pred), method = "kendall")
     
     ## With structure correction
@@ -1454,11 +1489,13 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     scores_rand_corr <- scores(rdaout_rand_corr, choices=1:4)
     loci.sc_rand_corr <- scores_rand_corr$species
     ind.sc_rand_corr <- scores_rand_corr$sites
+    
     # The following works because salinity is always 1st row of biplot and temp is always 2nd row - hard coding
-    temp_pred_corr <- ind.sc_rand_corr[,1]*eigenvals(rdaout_rand_corr)[1]*summary(rdaout_rand_corr)$biplot[2,1] + 
-      ind.sc_rand_corr[,2]*eigenvals(rdaout_rand_corr)[2]*summary(rdaout_rand_corr)$biplot[2,2]
-    sal_pred_corr <- ind.sc_rand_corr[,1]*eigenvals(rdaout_rand_corr)[1]*summary(rdaout_rand_corr)$biplot[1,1] + 
-      ind.sc_rand_corr[,2]*eigenvals(rdaout_rand_corr)[2]*summary(rdaout_rand_corr)$biplot[1,2]
+    temp_pred_corr <- scale(ind.sc_rand_corr[,1]*eigenvals(rdaout_rand_corr)[1]*summary(rdaout_rand_corr)$biplot[2,1] + 
+      ind.sc_rand_corr[,2]*eigenvals(rdaout_rand_corr)[2]*summary(rdaout_rand_corr)$biplot[2,2])
+    sal_pred_corr <- scale(ind.sc_rand_corr[,1]*eigenvals(rdaout_rand_corr)[1]*summary(rdaout_rand_corr)$biplot[1,1] + 
+      ind.sc_rand_corr[,2]*eigenvals(rdaout_rand_corr)[2]*summary(rdaout_rand_corr)$biplot[1,2])
+    
     Random_cor_RDAtemppredict_tempphen_structcorr[i] <- cor(scale(subset_indPhen_df$phen_temp), scale(temp_pred_corr), method = "kendall")
     Random_cor_RDAsalpredict_salphen_structcorr[i] <- cor(scale(subset_indPhen_df$phen_sal), scale(sal_pred_corr), method = "kendall")
   }
@@ -1468,10 +1505,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   RDA2_temp_cor <- summary(rdaout)$biplot[2,2]
   RDA2_sal_cor <- summary(rdaout)$biplot[1,2]
   
-  subset_indPhen_df$RDA_predict_tempPhen_20KSNPs <- temp_pred
-  subset_indPhen_df$RDA_predict_salPhen_20KSNPs <- sal_pred
-  subset_indPhen_df$RDA_predict_tempPhen_20KSNPs_structcorr <- temp_pred_corr
-  subset_indPhen_df$RDA_predict_salPhen_20KSNPs_structcorr <- sal_pred_corr
+  subset_indPhen_df$RDA_predict_tempPhen_20KSNPs <- scale(temp_pred)
+  subset_indPhen_df$RDA_predict_salPhen_20KSNPs <- scale(sal_pred)
+  subset_indPhen_df$RDA_predict_tempPhen_20KSNPs_structcorr <- scale(temp_pred_corr)
+  subset_indPhen_df$RDA_predict_salPhen_20KSNPs_structcorr <- scale(sal_pred_corr)
   
   out_RDA_pred <- data.frame(nloci, Random_cor_RDAtemppredict_tempphen, 
                              Random_cor_RDAsalpredict_salphen,
@@ -1490,10 +1527,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   # Without structure correction, using the RDA run on all the SNPs (rdaout object)
     # sum(locus_score * eigenvalue * loading_env_RDA_axis)
     # The following works because salinity is always 1st row of biplot and temp is always 2nd row - hard coding
-    muts_full$RDA_mut_temp_pred <- muts_full$RDA1_score*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + #RDA1
-                                   muts_full$RDA2_score*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2]   #RDA2
-    muts_full$RDA_mut_sal_pred <- muts_full$RDA1_score*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] +
-                                  muts_full$RDA2_score*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2] 
+    muts_full$RDA_mut_temp_pred <- scale(muts_full$RDA1_score*eigenvals(rdaout)[1]*summary(rdaout)$biplot[2,1] + #RDA1
+                                   muts_full$RDA2_score*eigenvals(rdaout)[2]*summary(rdaout)$biplot[2,2])   #RDA2
+    muts_full$RDA_mut_sal_pred <- scale(muts_full$RDA1_score*eigenvals(rdaout)[1]*summary(rdaout)$biplot[1,1] +
+                                  muts_full$RDA2_score*eigenvals(rdaout)[2]*summary(rdaout)$biplot[1,2]) 
     #plot(muts_full$mutTempEffect, muts_full$RDA1_score)
     RDA_RDAmutpred_cor_tempEffect <- cor(muts_full$RDA_mut_temp_pred, muts_full$mutTempEffect, use="complete.obs", method="kendall")
     RDA_absRDAmutpred_cor_tempVa <- cor(abs(muts_full$RDA_mut_temp_pred), muts_full$Va_temp, use="complete.obs", method="kendall")
@@ -1509,10 +1546,10 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   # With structure correction, using the RDA run on all the SNPs (rdaout_corr object)
     # sum(locus_score * eigenvalue * loading_env_RDA_axis)
     # The following works because salinity is always 1st row of biplot and temp is always 2nd row - hard coding
-    muts_full$RDA_mut_temp_pred_structcorr <- muts_full$RDA1_score_corr*eigenvals(rdaout_corr)[1]*summary(rdaout_corr)$biplot[2,1] + #RDA1
-                                              muts_full$RDA2_score_corr*eigenvals(rdaout_corr)[2]*summary(rdaout_corr)$biplot[2,2]   #RDA2
-    muts_full$RDA_mut_sal_pred_structcorr <- muts_full$RDA1_score_corr*eigenvals(rdaout_corr)[1]*summary(rdaout_corr)$biplot[1,1] +
-                                              muts_full$RDA2_score_corr*eigenvals(rdaout_corr)[2]*summary(rdaout_corr)$biplot[1,2] 
+    muts_full$RDA_mut_temp_pred_structcorr <- scale(muts_full$RDA1_score_corr*eigenvals(rdaout_corr)[1]*summary(rdaout_corr)$biplot[2,1] + #RDA1
+                                              muts_full$RDA2_score_corr*eigenvals(rdaout_corr)[2]*summary(rdaout_corr)$biplot[2,2])   #RDA2
+    muts_full$RDA_mut_sal_pred_structcorr <- scale(muts_full$RDA1_score_corr*eigenvals(rdaout_corr)[1]*summary(rdaout_corr)$biplot[1,1] +
+                                              muts_full$RDA2_score_corr*eigenvals(rdaout_corr)[2]*summary(rdaout_corr)$biplot[1,2]) 
     #plot(muts_full$mutTempEffect, muts_full$RDA1_score)
     
     RDA_RDAmutpred_cor_tempEffect_structcorr <- cor(muts_full$RDA_mut_temp_pred_structcorr, muts_full$mutTempEffect, use="complete.obs")
@@ -1550,12 +1587,92 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   dev.off()
   
 
+### GWAS ####  
+  dim(subset_indPhen_df)
+  dim(G_full_subset)
+  
+  #check everyone is lined up
+  if(!identical(as.character(subset_indPhen_df$indID), colnames(G_full_subset))){print("Error: not lined up"); break}
+  if(!identical(as.character(muts_full$mutname), rownames(G_full_subset))){print("Error: not lined up"); break}
+  
+  for (i in 1:nrow(G_full_subset)){
+    lmgwas_temp <- summary(lm(subset_indPhen_df$phen_temp ~ G_full_subset[i,] + subset_indPhen_df$PC1 + subset_indPhen_df$PC2))
+    muts_full$gwas_temp_est[i] <- lmgwas_temp$coeff[2,1]
+    muts_full$gwas_temp_P[i] <- lmgwas_temp$coeff[2,4]
+    
+    lmgwas_sal <- summary(lm(subset_indPhen_df$phen_sal ~ G_full_subset[i,] + subset_indPhen_df$PC1 + subset_indPhen_df$PC2))
+    muts_full$gwas_sal_est[i] <- lmgwas_sal$coeff[2,1]
+    muts_full$gwas_sal_P[i] <- lmgwas_sal$coeff[2,4]
+  }
+
+  #assess TPR of gwas
+  muts_full$gwas_sal_sig <- p.adjust(muts_full$gwas_sal_P, method="BH") < 0.05
+  (gwas_TPR_sal <- sum(muts_full$gwas_sal_sig & (muts_full$mutSalEffect!=0), na.rm=TRUE)/ # gwas significant and non-zero effect
+      sum((muts_full$mutSalEffect!=0), na.rm=TRUE)) #divide by total number of causal mutations
+  
+  muts_full$gwas_temp_sig <- p.adjust(muts_full$gwas_temp_P, method="BH") < 0.05
+  (gwas_TPR_temp <-  sum(muts_full$gwas_temp_sig & (muts_full$mutTempEffect!=0), na.rm=TRUE)/ # gwas significant and non-zero effect
+    sum((muts_full$mutTempEffect!=0), na.rm=TRUE)) #divide by total number of causal mutations
+  
+  (gwas_FDR_sal_neutbase <- sum(muts_full$gwas_sal_sig & muts_full$causal_sal=="neutral")/ #purely neutral loci unaffected by selection
+      sum(muts_full$gwas_sal_sig & muts_full$causal_sal!="neutral-linked")) #total number of causal loci and neutral loci outliers
+  
+  (gwas_FDR_temp_neutbase <- sum(muts_full$gwas_temp_sig & muts_full$causal_temp=="neutral")/ #purely neutral loci unaffected by selection
+      sum(muts_full$gwas_temp_sig & muts_full$causal_temp!="neutral-linked")) #total number of causal loci and neutral loci outliers
+  
+  # GWAS plots
+  pdf(paste0(path,seed,"_pdf_7b_GWAS.pdf"), width=7, height=7)
+    plot(muts_full$mutTempEffect, muts_full$gwas_temp_est); abline(0,1)
+    plot(muts_full$mutSalEffect, muts_full$gwas_sal_est); abline(0,1)
+  
+    ggplot(muts_full) + geom_density(aes(x=-log10(gwas_temp_P), color=causal_temp)) + ggtheme
+    ggplot(muts_full) + geom_density(aes(x=-log10(gwas_sal_P), color=causal_sal)) + ggtheme
+    
+    ggplot(muts_full) + geom_density(aes(x=abs(gwas_temp_est), color=causal_temp)) + ggtheme
+    ggplot(muts_full) + geom_density(aes(x=abs(gwas_sal_est), color=causal_sal)) + ggtheme
+    
+    ggplot(muts_full[order(muts_full$causal_sal, decreasing=TRUE),]) + geom_point(aes(x=-log10(gwas_sal_P), y=abs(gwas_sal_est), color=causal_sal), alpha=0.5) + ggtheme
+    ggplot(muts_full[order(muts_full$causal_temp, decreasing=TRUE),]) + geom_point(aes(x=-log10(gwas_temp_P), y=abs(gwas_temp_est), color=causal_temp), alpha=0.5) + ggtheme
+  dev.off()
+    
+    
+  #framework for assessing clinal paradigm ####
+
+  
+  criteria_sal <- muts_full$gwas_sal_P < quantile(muts_full$gwas_sal_P,0.05) # top 5% GWAS hits
+  sal_gwastop5per_num <- sum(criteria_sal)
+  # proportionf of top 5% of GWAS (with structure correction) hits that show clines (without structure correction)
+  clinalparadigm_sal_proptop5GWASclines <- sum(criteria_sal & # meets outlier GWAS criteria
+        muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+    sal_gwastop5per_num 
+  #compare to cor_TPR_sal
+  
+  # proportion of GWAS outliers (with structure correction) that show clines (without structure correction)
+  (clinalparadigm_sal_propsigGWASclines <- sum(muts_full$gwas_sal_sig & # meets outlier GWAS criteria
+                                                 muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+    sum(muts_full$gwas_sal_sig))
+  #compare to cor_TPR_sal
+  
+  criteria_temp <- muts_full$gwas_temp_P < quantile(muts_full$gwas_temp_P,0.05)
+  temp_gwastop5per_num <- sum(criteria_temp)
+  clinalparadigm_temp_proptop5GWASclines <- sum(criteria_temp  & # top 5% of GWAS hits
+        muts_full$cor_temp_sig)/ #AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+    temp_gwastop5per_num
+  #compare to cor_TPR_temp
+  
+  # proportion of GWAS outliers (with structure correction) that show clines (without structure correction)
+  (clinalparadigm_temp_propsigGWASclines <- sum(muts_full$gwas_temp_sig & # meets outlier GWAS criteria
+                                                 muts_full$cor_temp_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+      sum(muts_full$gwas_temp_sig))
+  #compare to cor_TPR_temp
+  
   
 ### AF as a function of environment ####
   
   #str(af_pop)
   #subset_temp_opt
   #subset_sal_opt
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1j: mutations not lined up");break()}
   
   sal_levels <- sort(as.numeric(unique(subset_indPhen_df$sal_opt)))
   #sal_levels
@@ -1571,11 +1688,11 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
     af_temp[,i] <- tapply(af_pop[,i], subset_temp_opt, mean)
     af_sal[,i] <- tapply(af_pop[,i], subset_sal_opt, mean)
   }
-  colnames(af_temp) <- muts_full$mutID
+  colnames(af_temp) <- muts_full$mutname
   v <- tapply(af_pop[,1], subset_temp_opt, mean)
   rownames(af_temp) <- as.numeric(dimnames(v)[[1]])
   
-  colnames(af_sal) <- muts_full$mutID
+  colnames(af_sal) <- muts_full$mutname
   v <- tapply(af_pop[,1], subset_sal_opt, mean)
   rownames(af_sal) <- as.numeric(dimnames(v)[[1]])
 
@@ -1630,11 +1747,16 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_full$color_af.temp.cline <- muts_full$color_af.sal.cline <- NA
   muts_full1 <- muts_full[order(abs(muts_full$cor_temp), decreasing=TRUE),]
   muts_full1$color_af.temp.cline[1:length(col)] <- as.character(col)
-  muts_full <- muts_full1[order(muts_full1$pos_pyslim),]
+  muts_full <- muts_full1[order(muts_full1$VCFrow),]
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1k: mutations not lined up");break()}
+  
   
   muts_full1 <- muts_full[order(abs(muts_full$cor_sal), decreasing=TRUE),]
   muts_full1$color_af.sal.cline[1:length(col)] <- as.character(col)
-  muts_full <- muts_full1[order(muts_full1$pos_pyslim),]
+  muts_full <- muts_full1[order(muts_full1$VCFrow),]
+  
+  if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1k: mutations not lined up");break()}
   
   
   #Temp plot
@@ -1711,14 +1833,14 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   #       cex=0.7, bty="n", title="abs(Cor (p, env))") 
   
   
-### genotype heatmaps
+### genotype heatmaps ####
   
 pdf(paste0(path,seed,"_pdf_heatmaps.pdf"), width=8, height=8)
 
 par(cex.main=0.5)
 
 # Make sure in correct order
-identical(subset_indPhen_df$temp_opt , subset_indPhen_df$temp_opt[order(subset_indPhen_df$temp_opt)])
+if(!identical(subset_indPhen_df$temp_opt , subset_indPhen_df$temp_opt[order(subset_indPhen_df$temp_opt)])){print("Error optimums not identical");break}
 
 G_heatmap <- G_full_subset[which(muts_full$causal),]
 
@@ -1932,7 +2054,17 @@ out_full <- data.frame(seed=as.character(seed),
                       cor_PC1_LFMMU1_temp, 
                       cor_PC1_LFMMU1_sal, 
                       cor_PC2_LFMMU1_temp, 
-                      cor_PC2_LFMMU1_sal
+                      cor_PC2_LFMMU1_sal,
+            
+            #GWAS outputs
+            gwas_TPR_sal,
+            gwas_TPR_temp,
+            gwas_FDR_sal_neutbase,
+            gwas_FDR_temp_neutbase,
+            clinalparadigm_sal_proptop5GWASclines,
+            clinalparadigm_temp_proptop5GWASclines,
+            clinalparadigm_sal_propsigGWASclines,
+            clinalparadigm_temp_propsigGWASclines
 )
 
 write.table(out_full,paste0(path,seed,"_Rout_simSummary.txt"), row.names = FALSE)

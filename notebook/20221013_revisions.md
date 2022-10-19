@@ -47,7 +47,7 @@ rm -r  *genotypes.pca
 I will also check the dates on the replaced files to make sure they are for the most recent run.
 
 ```
-sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 32293914
+sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 32301181
 
 sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job 
 

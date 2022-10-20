@@ -49,7 +49,7 @@ I will also check the dates on the replaced files to make sure they are for the 
 ```
 sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 32304308
 
-sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job 
+sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job  32313384
 
 sbatch e-run_nonAF_sims_1R-longruns-20220428.sh #Submitted batch job 
 ```

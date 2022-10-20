@@ -4,11 +4,11 @@
 
 ### To do in slim / on computer:
 - [x] check SLiM version is the same as OOD
-- [ ] update to dmv_norm
-- [ ] output mutation effect size table
-- [ ] output individual environments and phenotypes table
-- [ ] output mutation vcf file
-- [ ] compare parameters to the MVP simulation
+- [x] update to dmv_norm. I tried this and the behavior was unexpected, it works without it so will skip for now.
+- [x] output mutation effect size table
+- [x] output individual environments and phenotypes table
+- [x] output mutation vcf file
+- [x] compare parameters to the MVP simulation
 - [ ] use tree sequencing to recap and output VCF - see Recombination paper
 
 ### In R:

@@ -1,0 +1,689 @@
+/*////////////////////////////////
+Initialize and define constants
+*////////////////////////////////
+initialize() {
+	// paths
+	defineConstant("root", "~/Desktop/MVP_multipheno_multienvi/");
+	defineConstant("path", root + "results/");
+	defineConstant("inputpath", root + "bioclim/");
+	// constants from orig script
+	
+	defineConstant("my_seed", 892657863);//getSeed());
+	setSeed(my_seed);
+	defineConstant("BURNIN", 300);//getSeed());
+	
+	defineConstant("C_num", 20);							// number of chromosomes
+	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome	
+	
+	defineConstant("MU_base", 1e-07);
+	defineConstant("MU_QTL_proportion", 0.2);
+	//MU_QTL_proportion <- c(0.001, 0.1, 0.25) # proportion of mutations that are QTNs
+	defineConstant("sigma_qtn", 0.01);
+		//SIGMA_QTN_1 <- c(0.4, 0.1, 0.002)
+	defineConstant("MU", MU_base * MU_QTL_proportion);	// mut rate for QTNs specifically	
+	
+	defineConstant("sigma_C", 0.01); //0.27 smaller is weaker competition; weaker competition allows more similar phenotypes to coexist
+	defineConstant("sigma_K", 2.00); // smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection
+	defineConstant("sigma_xy", 0.25); // set sigma_xy based on dispersal scale!! (modified child callback)
+	defineConstant("sigma_d", 0.009); // set sigma_xy based on dispersal scale!! 
+	defineConstant("sigma_stat", 5.0); //strength of selection for the first burnin generation
+	defineConstant("sigma_M", 2.0); // larger is less assortative mating
+	//defineConstant("N", 1000); // samples size
+	defineConstant("R", 1e-05); // recombination rate
+
+   defineConstant("Ntraits", 6);
+   defineConstant("TOTAL_GEN", 10000);
+
+	// initialize non WF simulation
+	initializeSLiMModelType("nonWF");
+	initializeSLiMOptions(dimensionality="xy", periodicity="xy");
+	initializeTreeSeq();
+	defineConstant("K", 10000);	// carrying capacity
+	defineConstant("S", 0.1); // spatial competition distance
+	
+	initializeMutationType("m2", 0.5, "f", 0.0); // QTL
+		m2.convertToSubstitution = F;
+	initializeGenomicElementType("g1", m2, 1.0); //QTL
+	
+	initializeGenomicElement(g1, 0, sum(C_lengths[0:(C_num - 11)]));
+	
+	rates = c(rep(c(R, 0.5), C_num-1), R);
+	ends = repEach(cumSum(C_lengths), 2);
+	ends = ends[0:(length(ends) - 2)];
+	ends = ends + c(rep(c(0,1), C_num-1), 0);
+	initializeRecombinationRate(rates, ends);
+	
+	initializeMutationRate(MU);
+	
+	// spatial mate choice
+	initializeInteractionType(1, "xy", reciprocal=T, maxDistance = sigma_C);
+	i1.setInteractionFunction("n", 1.0, sigma_M);
+	
+	// density dependent selection
+	initializeInteractionType(2, "xy", reciprocal=T, maxDistance=sigma_C * 5);
+	i2.setInteractionFunction("n", 1.0, sigma_C);
+	
+		
+	
+	//define variables for variance-covariance matrix
+	// this determines the distribution from which mutational effects are drawn from
+	defineConstant("QTL_mu", rep(0, Ntraits));
+	defineConstant("QTL_cov", 0);
+	defineConstant("QTL_var", sigma_qtn);
+	QTL_sigma1 = matrix(rep(0.0, Ntraits*Ntraits), nrow=Ntraits);
+	for (i in 0:(Ntraits-1)){
+		QTL_sigma1[i,i]=QTL_var;
+	}
+	defineConstant("QTL_sigma", QTL_sigma1);
+	
+	//print matrix to output
+	catn();
+	catn("QTL DFE means: ");
+	print(QTL_mu);
+	catn();
+	catn("QTL DFE variance-covariance matrix: ");
+	print(QTL_sigma);
+}
+
+reproduction() {
+	// choose nearest neighbor as mate, within max distance
+	mate = i1.nearestNeighbors(individual, 1);
+	
+	for (i in seqLen(rpois(1, 0.1)))
+	{
+		if (mate.size())
+			offspring = subpop.addCrossed(individual, mate);
+		else
+			offspring = subpop.addSelfed(individual);
+		
+		// set offspring position
+		pos = individual.spatialPosition + rnorm(2,0,sigma_d);
+		offspring.setSpatialPosition(p1.pointReflected(pos));
+	}
+}
+
+// create an initial population of 10 individuals
+1 early() {
+	// create file to keep track of simulation parameters
+	param = "sigma_C" + "\t" + sigma_C + "\n" +
+		"sigma_K" + "\t" + sigma_K + "\n" +
+		"sigma_M" + "\t" + sigma_M + "\n" +
+		"sigma_xy" + "\t" + sigma_xy + "\n" +
+		"sigma_d" + "\t" + sigma_d + "\n" +
+		"QTL_cov" + "\t" + QTL_cov + "\n" +
+		"QTL_var" + "\t" + QTL_var + "\n" +
+		"sigma_stat" + "\t" + sigma_stat + "\n" +
+		"QTL_prop" + "\t" + MU_QTL_proportion + "\n" +
+		"Ntraits" + "\t" + Ntraits	+ "\n" +
+		"C_num" + "\t" + C_num	+ "\n" +
+		"C_lengths" + "\t" + C_lengths	+ "\n" +
+		"MU_base" + "\t" + MU_base	+ "\n" +
+		"MU" + "\t" + MU	+ "\n" +
+		"sigma_qtn" + "\t" + sigma_qtn	+ "\n" +
+		"TOTAL_GEN" + "\t" + TOTAL_GEN	+ "\n" +
+		"R" + "\t" + R	+ "\n" +
+		"S" + "\t" + S	+ "\n" 
+		;
+	
+	// write simulation parameter file
+	writeFile(paste(c(path, my_seed, "_", "simulation_parameters.txt"), sep=""), param);
+	
+
+	// add single subpopulation
+	sim.addSubpop("p1", 100);
+	
+	//set spatial bounds to be between 0 and 1 for x and y
+	p1.setSpatialBounds(c(0.0, 0.0, 1.0, 0.1));
+	
+	mapscale = 3.0; // make smaller to create more extreme environments
+	// Add map adaptive mean annual temperature
+	matmapLines = (readFile(inputpath + "MAT_BC_360x360.csv"));
+	matmapLines = sapply(matmapLines, "strsplit(applyValue, ',');");
+	matmapValues = (matrix(asFloat(matmapLines), 360, 360));
+	p1.defineSpatialMap("map1-mat", "xy", values= matmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100,"cm"));
+		// the division of map values by mapscale is 
+		// because the params are calculated based
+		// on adaptation to extreme environments to +1 and -1.
+		// the input has a sd of 1.0, so the division reduces the extreme values 
+		// close to +1 and -1
+	
+	// add map mean temperature wettest quarter
+	MTWetQmapLines = (readFile(inputpath + "MTWetQ_BC_360x360.csv"));
+	MTWetQmapLines = sapply(MTWetQmapLines, "strsplit(applyValue, ',');");
+	MTWetQmapValues = (matrix(asFloat(MTWetQmapLines), 360, 360));
+	p1.defineSpatialMap("map2-MTWetQ", "xy", values=MTWetQmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100,"parula"));
+		
+	
+	// add map 3, static map for burnin gen so population doesn't crash
+	defineConstant("mapBIValues", rep(0.0, 25));
+	p1.defineSpatialMap("mapBI", "xy", matrix(mapBIValues, 5,5), interpolate=T,
+		valueRange=c(-3.0, 3.0), colors=c("white", "white"));
+	
+	// add map mean temperature driest quarter
+	MTDQmapLines = (readFile(inputpath + "MTDQ_BC_360x360.csv"));
+	MTDQmapLines = sapply(MTDQmapLines, "strsplit(applyValue, ',');");
+	MTDQmapValues = (matrix(asFloat(MTDQmapLines), 360, 360));
+		p1.defineSpatialMap("map3-MTDQ", "xy", values=MTDQmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100, "jet"));
+	
+	// add map Precipitation of driest month
+	PDMmapLines = (readFile(inputpath + "PDM_BC_360x360.csv"));
+	PDMmapLines = sapply(PDMmapLines, "strsplit(applyValue, ',');");
+	PDMmapValues = (matrix(asFloat(PDMmapLines), 360, 360));
+		p1.defineSpatialMap("map4-PDM", "xy", values=PDMmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100, "magma"));
+	
+	// add map precipitation of warmest quarter
+	
+	PwarmQmapLines = (readFile(inputpath + "PwarmQ_BC_360x360.csv"));
+	PwarmQmapLines = sapply(PwarmQmapLines, "strsplit(applyValue, ',');");
+	PwarmQmapValues = (matrix(asFloat(PwarmQmapLines), 360, 360));
+		p1.defineSpatialMap("map5-PwarmQ", "xy", values=PwarmQmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100, "viridis"));
+	
+	// add map precipitation of wettest month
+	PWMmapLines = (readFile(inputpath + "PWM_BC_360x360.csv"));
+	PWMmapLines = sapply(PWMmapLines, "strsplit(applyValue, ',');");
+	PWMmapValues = (matrix(asFloat(PWMmapLines), 360, 360));
+		p1.defineSpatialMap("map6-PWM", "xy", values=PWMmapValues/mapscale, interpolate=T,
+		valueRange=c(-1.0, 1.0), colors=colors(100, "cividis"));
+	
+	// initialize where individuals start
+	for (ind in p1.individuals)
+		ind.setSpatialPosition(p1.pointUniform());
+	
+	//set spatial bounds to be between 0 and 1 for x and y
+	p1.setSpatialBounds(c(0.0, 0.0, 1.0, 1.0));
+}
+
+// provide density-dependent selection
+
+early() {
+	i2.evaluate();
+	// spatial competition provides density-dependent selection
+	inds = p1.individuals;
+	competition = i2.totalOfNeighborStrengths(inds);
+	
+	competition = (competition + 1) / (2 * PI * sigma_C^2);
+	inds.fitnessScaling = K / competition;
+}
+
+/*///////////////////////////
+ADD EFFECT SIZES OF MUTATIONS
+*///////////////////////////
+
+early() {
+	// add effect sizes into new mutation objects
+	// this must come before setting phenotype values!
+	all_m2 = sim.mutationsOfType(m2);
+	new_m2 = all_m2[all_m2.originGeneration == sim.generation];
+	
+	if (size(new_m2))
+	{
+		// draw mutational effects for all new mutations at once; this is
+		// faster than drawing them individually if there are many of them
+		effects = rmvnorm(size(new_m2), QTL_mu, QTL_sigma);
+		
+		for (i in seqAlong(new_m2)){
+			e = drop(effects[i,]);	// each draw is one row in the matrix result from rmvnorm
+			mut = new_m2[i];
+			mut.setValue("e1-mat", e[0]);
+			mut.setValue("e2-MTWetQ", e[1]);
+
+			if (Ntraits==2){
+				mut.setValue("e3-MTDQ", 0);
+			 	mut.setValue("e4-PDM", 0);
+			 	mut.setValue("e5-PwarmQ", 0);
+			 	mut.setValue("e6-PWM", 0);
+			}
+			if(Ntraits==3){
+				mut.setValue("e3-MTDQ", e[2]);
+				mut.setValue("e4-PDM", 0);
+			 	mut.setValue("e5-PwarmQ", 0);
+			 	mut.setValue("e6-PWM", 0);
+			}
+			if(Ntraits==4){
+				mut.setValue("e3-MTDQ", e[2]);
+				mut.setValue("e4-PDM", e[3]);
+				mut.setValue("e5-PwarmQ", 0);
+			 	mut.setValue("e6-PWM", 0);
+			}
+			if(Ntraits==5){
+				mut.setValue("e3-MTDQ", e[2]);
+				mut.setValue("e4-PDM", e[3]);
+				mut.setValue("e5-PwarmQ", e[4]);
+				mut.setValue("e6-PWM", 0);
+			}
+			if(Ntraits==6){
+				mut.setValue("e3-MTDQ", e[2]);
+				mut.setValue("e4-PDM", e[3]);
+				mut.setValue("e5-PwarmQ", e[4]);
+				mut.setValue("e6-PWM", e[5]);
+			}
+			
+		}//end for loop through new muts
+	}// end if new muts
+}//end early
+
+late()
+{
+	// look for mates
+	i1.evaluate();
+	
+}
+
+/*///////////////////////////
+SET PHENOTYPE VALUES
+*///////////////////////////
+
+early() {
+	// construct phenotypes from additive effects of QTL mutations
+	// this must come after adding effect sizes of mutations!
+	inds = sim.subpopulations.individuals;
+	
+	
+	for (ind in inds){
+		muts = ind.genomes.mutationsOfType(m2);
+		
+		// we have to special-case when muts is empty, since getValue()
+		// on an empty vector is NULL and sum(NULL) is an error
+		
+		if (size(muts)){
+			ind.setValue("phenotype1-mat", sum(muts.getValue("e1-mat")));
+			ind.setValue("phenotype2-MTWetQ", sum(muts.getValue("e2-MTWetQ")));
+			ind.setValue("phenotype3-MTDQ", sum(muts.getValue("e3-MTDQ")));
+			ind.setValue("phenotype4-PDM", sum(muts.getValue("e4-PDM")));
+			ind.setValue("phenotype5-PwarmQ", sum(muts.getValue("e5-PwarmQ")));
+			ind.setValue("phenotype6-PWM", sum(muts.getValue("e6-PWM")));
+		}else {
+			ind.setValue("phenotype1-mat", 0);
+			ind.setValue("phenotype2-MTWetQ", 0);
+			ind.setValue("phenotype3-MTDQ", 0);
+			ind.setValue("phenotype4-PDM", 0);
+			ind.setValue("phenotype5-PwarmQ", 0);
+			ind.setValue("phenotype6-PWM", 0);
+
+		}
+	}
+////////////////////////////////////////////////////////////////////	
+	// color individuals according to phenotype; alternating between phenotypes every other generation
+////////////////////////////////////////////////////////////////////
+	if (sim.generation % 1000 < 150) {
+		inds.color = p1.spatialMapColor("map1-mat", asFloat(inds.getValue("phenotype1-mat")));
+	}
+	if ((sim.generation % 1000 >= 150) & (sim.generation % 1000 < 300)) {
+		inds.color = p1.spatialMapColor("map2-MTWetQ", asFloat(inds.getValue("phenotype2-MTWetQ")));
+	}
+	if ((sim.generation % 1000 >= 300) & (sim.generation % 1000 < 450)) {
+		inds.color = p1.spatialMapColor("map3-MTDQ", asFloat(inds.getValue("phenotype3-MTDQ")));
+	}
+	if ((sim.generation % 1000 >= 450) & (sim.generation % 1000 < 600)) {
+		inds.color = p1.spatialMapColor("map4-PDM", asFloat(inds.getValue("phenotype4-PDM")));
+	}
+	if ((sim.generation % 1000 >= 600) & (sim.generation % 1000 < 800)) {
+		inds.color = p1.spatialMapColor("map5-PwarmQ", asFloat(inds.getValue("phenotype5-PwarmQ")));
+	}
+	if ((sim.generation % 1000 >= 800)) {
+		inds.color = p1.spatialMapColor("map6-PWM", asFloat(inds.getValue("phenotype6-PWM")));
+	}
+/// END COLOR INDIVIDUALS
+
+//////////////////////////////
+/// 200 gen outputs
+//////////////////////////////
+	
+	if (sim.generation ==200){
+			// create file with header which will keep track of simulation results
+		out_header = "sim.generation" + "\t" + "num_muts" + "\t" + "num_ind" + "\t" +
+		"mean-phenotype1-mat" + "\t" +
+		"mean-phenotype2-MTWetQ" + "\t" +
+		"mean-phenotype3-MTDQ" + "\t" +
+		"mean-phenotype4-PDM" + "\t" +
+		"mean-phenotype5-PwarmQ" + "\t" +
+		"mean-phenotype6-PWM" + "\t" +
+		
+	  "sd-phenotype1-mat" + "\t" +
+	  "sd-phenotype2-MTWetQ" + "\t" +
+	  	"sd-phenotype3-MTDQ" + "\t" + 
+	  	"sd-phenotype4-PDM" + "\t" +
+	  	"sd-phenotype5-PwarmQ" + "\t" +
+	  	 "sd-phenotype6-PWM" + "\t" + 
+			
+		"corr_phen_env_1mat" + "\t" + 
+		"corr_phen_env_2MTWetQ" + "\t" + 
+		"corr_phen_env_3MTDQ" + "\t" + 
+		"corr_phen_env_4PDM" + "\t" + 
+		"corr_phen_env_5PwarmQ" + "\t" + 
+		"corr_phen_env_6PWM"
+		;
+	
+	
+		// write header to file
+		writeFile(paste(c(path, my_seed, "_throughtime.txt"), sep=""), out_header, append=F);
+	
+	}
+	// get information on m2 mutations and environments for each individual
+	if (sim.generation % 200 == 0){
+		g = sim.subpopulations.genomes;
+		m = sortBy(unique(g.mutationsOfType(m2)), "position");
+		mut = sim.mutationsOfType(m2);
+		
+		// get environmental value from each map for each individual
+		env1_mat=c();
+		env2_MTWetQ=c();
+		env3_MTDQ=c();
+		env4_PDM=c();
+		env5_PwarmQ=c();
+		env6_PWM=c();
+		
+		for (ind in inds){
+			env1_mat = c(env1_mat, p1.spatialMapValue("map1-mat", ind.spatialPosition[0:1]));
+			env2_MTWetQ = c(env2_MTWetQ, p1.spatialMapValue("map2-MTWetQ", ind.spatialPosition[0:1]));
+			env3_MTDQ=c(env3_MTDQ, p1.spatialMapValue("map3-MTDQ", ind.spatialPosition[0:1]));
+			env4_PDM=c(env4_PDM, p1.spatialMapValue("map4-PDM", ind.spatialPosition[0:1]));
+			env5_PwarmQ=c(env5_PwarmQ, p1.spatialMapValue("map5-PwarmQ", ind.spatialPosition[0:1]));
+			env6_PWM=c(env6_PWM, p1.spatialMapValue("map6-PWM", ind.spatialPosition[0:1]));
+		}
+		
+		
+		// correlation between phenotype and environment
+		corr_phen_env_1mat = cor(inds.getValue("phenotype1-mat"), env1_mat);
+		//corr_matphen_MTWetQenv = cor(inds.getValue("phenotype1-mat"), env2_MTWetQ); //sanity check
+		corr_phen_env_2MTWetQ= cor(inds.getValue("phenotype2-MTWetQ"), env2_MTWetQ);
+		//corr_MTWetQphen_matenv = cor(inds.getValue("phenotype2-MTWetQ"), env1_mat); //sanity check
+		corr_phen_env_3MTDQ= cor(inds.getValue("phenotype3-MTDQ"), env3_MTDQ);
+		corr_phen_env_4PDM= cor(inds.getValue("phenotype4-PDM"), env4_PDM);
+		corr_phen_env_5PwarmQ= cor(inds.getValue("phenotype5-PwarmQ"), env5_PwarmQ);
+		corr_phen_env_6PWM= cor(inds.getValue("phenotype6-PWM"), env6_PWM);
+		
+		catn(size(p1.individuals));
+		
+		// output for phenenv correlation
+		out = paste(c(sim.generation, 
+		size(m), 
+		size(inds),
+		
+		mean(inds.getValue("phenotype1-mat")),
+		mean(inds.getValue("phenotype2-MTWetQ")),
+		mean(inds.getValue("phenotype3-MTDQ")),
+		mean(inds.getValue("phenotype4-PDM")),
+		mean(inds.getValue("phenotype5-PwarmQ")),
+		mean(inds.getValue("phenotype6-PWM")),
+		
+	  sd(inds.getValue("phenotype1-mat")), 
+	  sd(inds.getValue("phenotype2-MTWetQ")), 
+	  	  sd(inds.getValue("phenotype3-MTDQ")), 
+	  	  	  sd(inds.getValue("phenotype4-PDM")), 
+	  	  	  	  sd(inds.getValue("phenotype5-PwarmQ")), 
+	  	  	  	  	  sd(inds.getValue("phenotype6-PWM")), 
+			
+		corr_phen_env_1mat,
+		corr_phen_env_2MTWetQ,
+		corr_phen_env_3MTDQ,
+		corr_phen_env_4PDM,
+		corr_phen_env_5PwarmQ,
+		corr_phen_env_6PWM
+		
+		),
+			 sep="\t");
+			 
+		
+		// write phenenv file every 200 generations
+		writeFile(paste(c(path, my_seed, "_throughtime.txt"), sep=""), out, append=T);
+	}
+	
+	// This is an extra bit of code to keep track of total fitness
+	// tot_fit = p1.cachedFitness(NULL);
+	// tot_fit_out = paste(c(tot_fit));
+	// writeFile(paste(c(path, my_seed, "_", "_totalFitness_2trait_1mut_2env.txt"), sep=""), tot_fit_out, append=T);
+	// output all mutations at end
+	if(sim.generation == TOTAL_GEN){
+
+// MUTATIONS
+		writeFile(paste(c(path, my_seed, "_muts.txt"), sep=""), 
+		paste(c("seed", "mutID","muttype","p", 
+			"mut1-mat-Effect",
+			"mut2-MTWetQ-Effect",
+			"mut3_MTDQ-Effect",
+			"mut4_PDM-Effect",
+			"mut5_PwarmQ-Effect",
+			"mut6_PWM-Effect"
+			))
+		);
+
+		mutid = sim.mutations.id;			
+		freq = sim.mutationFrequencies(sim.subpopulations);
+		mut_matEffect = sim.mutations.getValue("e1-mat"); 
+		mut_MTWetQEffect = sim.mutations.getValue("e2-MTWetQ"); 
+		mut_MTDQEffect = sim.mutations.getValue("e3-MTDQ"); 
+		mut_PDMEffect = sim.mutations.getValue("e4-PDM"); 
+		mut_PwarmQEffect = sim.mutations.getValue("e5-PwarmQ"); 
+		mut_PWMEffect = sim.mutations.getValue("e6-PWM"); 
+			
+		for (i in seqAlong(mutid)){
+			//thismutfreqs = freq[i,];
+			out_i = paste(my_seed, mutid[i],"m2", freq[i], 
+			mut_matEffect[i], 
+			mut_MTWetQEffect[i],
+			mut_MTDQEffect[i],
+			mut_PDMEffect[i],
+			mut_PwarmQEffect[i],
+			mut_PWMEffect[i]
+			);
+			writeFile(paste(c(path, my_seed, "_muts.txt"), sep=""), out_i, append=T);
+		}
+	
+// TREE SEQ
+sim.treeSeqOutput(path + my_seed + ".trees");
+	
+	
+// VCF muts
+	inds = sim.subpopulations.individuals;
+	inds.genomes.outputVCF(paste(c(path, my_seed, "_VCF_causal.vcf"), sep=""));
+		
+// INDIVIDUALS
+	phenotype1_mat = inds.getValue("phenotype1-mat");
+	phenotype2_MTWetQ = inds.getValue("phenotype2-MTWetQ");
+	phenotype3_MTDQ = inds.getValue("phenotype3-MTDQ");
+	phenotype4_PDM = inds.getValue("phenotype4-PDM");
+	phenotype5_PwarmQ = inds.getValue("phenotype5-PwarmQ");
+	phenotype6_PWM = inds.getValue("phenotype6-PWM");
+	location_x = inds.x;
+	location_y = inds.y;
+	env1_mat = p1.spatialMapValue("map1-mat", c(location_x, location_y));
+	env2_MTWetQ = p1.spatialMapValue("map2-MTWetQ", c(location_x, location_y));
+	env3_MTDQ = p1.spatialMapValue("map3-MTDQ", c(location_x, location_y));
+	env4_PDM = p1.spatialMapValue("map4-PDM", c(location_x, location_y));
+	env5_PwarmQ = p1.spatialMapValue("map5-PwarmQ", c(location_x, location_y));
+	env6_PWM = p1.spatialMapValue("map6-PWM", c(location_x, location_y));
+		
+	writeFile(paste(c(path, my_seed, "_ind.txt"), sep=""), 
+		paste(c("seed", "ind_index",  "x", "y",
+		"phenotype1_mat", 
+		"phenotype2_MTWetQ",
+		"phenotype3_MTDQ",
+		"phenotype4_PDM",
+		"phenotype5_PwarmQ",
+		"phenotype6_PWM",
+		
+		"env1_mat",
+		"env2_MTWetQ",
+		"env3_MTDQ",
+		"env4_PDM",
+		"env5_PwarmQ",
+		"env6_PWM"
+		)));
+		
+
+		for (i in seqAlong(inds)){
+			out_i = paste(my_seed,  inds[i].index, location_x[i],location_y[i],
+			phenotype1_mat[i], 
+			phenotype2_MTWetQ[i], 
+			phenotype3_MTDQ[i],
+			phenotype4_PDM[i],
+			phenotype5_PwarmQ[i],
+			phenotype6_PWM[i],
+		
+			env1_mat[i],
+			env2_MTWetQ[i],
+			env3_MTDQ[i],
+			env4_PDM[i],
+			env5_PwarmQ[i],
+			env6_PWM[i],
+			inds[i].getValue("fitness")
+			);
+			writeFile(paste(c(path, my_seed, "_ind.txt"), sep=""), out_i, append=T);
+		}// end loop through individuals
+
+	} // end final gen output
+}
+
+/*///////////////////////////
+EVALUATE FITNESS
+*///////////////////////////
+
+fitness(NULL) {    // reward proximity to the optimum
+	location = individual.spatialPosition[0:1];
+	
+	// optimums for each map are equal to the the value of the map at each individual's location
+	// therefore, if phenotypes mismatch env, individuals will have lower fitness
+	optimum_mat = subpop.spatialMapValue("map1-mat", location);
+	optimum_MTWetQ = subpop.spatialMapValue("map2-MTWetQ", location);
+	optimum_MTDQ = p1.spatialMapValue("map3-MTDQ",location);
+	optimum_PDM = p1.spatialMapValue("map4-PDM", location);
+	optimum_PwarmQ = p1.spatialMapValue("map5-PwarmQ", location);
+	optimum_PWM = p1.spatialMapValue("map6-PWM", location);
+	
+	optimum_BI = subpop.spatialMapValue("mapBI", location);
+	
+	// have individuals adapt to static map for burnin generations to build genetic variance, i.e. so pop doesn't crash right away
+	if (sim.generation < BURNIN){
+		// uncomment f1 lines below to keep track of fitness in this callback
+		// f1 = exp(-0.5*((individual.getValue("phenotype1-mat")-optimum3)^2*sigma_stat +
+		//		(individual.getValue("phenotype2-MTWetQ")-optimum3)^2*sigma_stat));
+		// f1_out = paste(c(sim.generation, f1));
+		// writeFile(paste(c(path, my_seed, "_", "_Fitness1_2trait_1mut_2env.txt"), sep=""), f1_out, append=T);
+		
+		if (Ntraits==2){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_BI)^2*sigma_stat));
+		}
+		if (Ntraits==3){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_BI)^2*sigma_stat 
+			));
+		}
+		if (Ntraits==4){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_BI)^2*sigma_stat
+			));
+		}
+		if (Ntraits==5){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype5-PwarmQ")-optimum_BI)^2*sigma_stat
+			));
+		}
+		if (Ntraits==6){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype5-PwarmQ")-optimum_BI)^2*sigma_stat +
+			(individual.getValue("phenotype6-PWM")-optimum_BI)^2*sigma_stat 
+			));
+		}
+	  bizero = asInteger(individual.y <0.2);
+	  fit = fit*bizero;
+	  return fit;
+			
+		//opts1 = rep(optimum3, Ntraits);
+		//phens1 = c(asFloat(individual.getValue("phenotype1-mat")), asFloat(individual.getValue("phenotype2-MTWetQ")));
+		//return dmvnorm(phens1, opts1, sigma_fitness_burnin); something funny is going on here, this wasn't working
+	}
+	else {
+		
+		// f1 = exp(-0.5*((individual.getValue("phenotype1-mat")-optimum-mat)^2*sigma_K + 
+		// 	(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_K));
+		// f1_out = paste(c(sim.generation, f1));
+		// writeFile(paste(c(path, my_seed, "_", "_Fitness1_2trait_1mut_2env.txt"), sep=""), f1_out, append=T);
+
+		if (Ntraits==2){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_mat)^2*sigma_K +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_K)
+			);
+		}
+		if (Ntraits==3){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_mat)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_MTDQ)^2*sigma_stat 
+			));
+		}
+		if (Ntraits==4){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_mat)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_MTDQ)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_PDM)^2*sigma_stat
+			));
+		}
+		if (Ntraits==5){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_mat)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_MTDQ)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_PDM)^2*sigma_stat +
+			(individual.getValue("phenotype5-PwarmQ")-optimum_PwarmQ)^2*sigma_stat
+			));
+		}
+		if (Ntraits==6){
+		fit = exp(-0.5*(
+		   (individual.getValue("phenotype1-mat")-optimum_mat)^2*sigma_stat +
+			(individual.getValue("phenotype2-MTWetQ")-optimum_MTWetQ)^2*sigma_stat +
+			(individual.getValue("phenotype3-MTDQ")-optimum_MTDQ)^2*sigma_stat +
+			(individual.getValue("phenotype4-PDM")-optimum_PDM)^2*sigma_stat +
+			(individual.getValue("phenotype5-PwarmQ")-optimum_PwarmQ)^2*sigma_stat +
+			(individual.getValue("phenotype6-PWM")-optimum_PWM)^2*sigma_stat 
+			));
+		}
+					
+			
+		if (sim.generation==TOTAL_GEN){
+			individual.setValue("fitness", fit);
+		}
+		
+		return fit;
+		//opts2 = c(optimum_mat, optimum_MTWetQ);
+		//phens2 = c(asFloat(individual.getValue("phenotype1-mat")), asFloat(individual.getValue("phenotype2-MTWetQ")));
+		//return dmvnorm(phens2, opts2, QTL_sigma);
+	}
+}
+
+// calculate mating interaction strength between individuals
+interaction(i1) {
+	return exp(-0.5*((exerter.spatialPosition[0] - receiver.spatialPosition[0])^2*sigma_xy + (exerter.spatialPosition[1]-
+		receiver.spatialPosition[1])^2*sigma_xy + (exerter.getValue("phenotype1-mat") -
+		receiver.getValue("phenotype1-mat"))^2*sigma_M + (exerter.getValue("phenotype2-MTWetQ") -
+		receiver.getValue("phenotype2-MTWetQ"))^2*sigma_M));
+}
+
+
+
+10001 late(){
+	
+
+}

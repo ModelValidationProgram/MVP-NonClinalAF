@@ -29,8 +29,8 @@
 libraries_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools", 
                       "PRROC", "qvalue", "OutFLANK", "LEA", "ggExtra")
 for (i in 1:length(libraries_needed)){
-  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
-#  library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
+#  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
+ library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
 }
 
 setwd("/work/lotterhos/MVP-NonClinalAF")
@@ -40,7 +40,7 @@ setwd("/work/lotterhos/MVP-NonClinalAF")
 args = commandArgs(trailingOnly=TRUE)
 
 #seed = 1231214 # MAIN GRAPHS
-#seed = 1231094
+#seed = 1231094 # one trait
 #seed = 1231098
 #seed = 1231144
 #seed=1232947
@@ -1595,69 +1595,87 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   if(!identical(as.character(subset_indPhen_df$indID), colnames(G_full_subset))){print("Error: not lined up"); break}
   if(!identical(as.character(muts_full$mutname), rownames(G_full_subset))){print("Error: not lined up"); break}
   
+  muts_full$gwas_sal_est <- muts_full$gwas_sal_P <- NA
+  
   for (i in 1:nrow(G_full_subset)){
     lmgwas_temp <- summary(lm(subset_indPhen_df$phen_temp ~ G_full_subset[i,] + subset_indPhen_df$PC1 + subset_indPhen_df$PC2))
     muts_full$gwas_temp_est[i] <- lmgwas_temp$coeff[2,1]
     muts_full$gwas_temp_P[i] <- lmgwas_temp$coeff[2,4]
     
-    lmgwas_sal <- summary(lm(subset_indPhen_df$phen_sal ~ G_full_subset[i,] + subset_indPhen_df$PC1 + subset_indPhen_df$PC2))
-    muts_full$gwas_sal_est[i] <- lmgwas_sal$coeff[2,1]
-    muts_full$gwas_sal_P[i] <- lmgwas_sal$coeff[2,4]
+    if(thissim$N_traits>1){
+      lmgwas_sal <- summary(lm(subset_indPhen_df$phen_sal ~ G_full_subset[i,] + subset_indPhen_df$PC1 + subset_indPhen_df$PC2))
+      muts_full$gwas_sal_est[i] <- lmgwas_sal$coeff[2,1]
+      muts_full$gwas_sal_P[i] <- lmgwas_sal$coeff[2,4]
+    }
   }
 
   #assess TPR of gwas
   muts_full$gwas_sal_sig <- p.adjust(muts_full$gwas_sal_P, method="BH") < 0.05
-  (gwas_TPR_sal <- sum(muts_full$gwas_sal_sig & (muts_full$mutSalEffect!=0), na.rm=TRUE)/ # gwas significant and non-zero effect
-      sum((muts_full$mutSalEffect!=0), na.rm=TRUE)) #divide by total number of causal mutations
   
+  if(thissim$N_traits>1){
+    (gwas_TPR_sal <- sum(muts_full$gwas_sal_sig & (muts_full$mutSalEffect!=0), na.rm=TRUE)/ # gwas significant and non-zero effect
+        sum((muts_full$mutSalEffect!=0), na.rm=TRUE)) #divide by total number of causal mutations
+  }else{
+    gwas_TPR_sal <- NA
+  }
+
   muts_full$gwas_temp_sig <- p.adjust(muts_full$gwas_temp_P, method="BH") < 0.05
   (gwas_TPR_temp <-  sum(muts_full$gwas_temp_sig & (muts_full$mutTempEffect!=0), na.rm=TRUE)/ # gwas significant and non-zero effect
     sum((muts_full$mutTempEffect!=0), na.rm=TRUE)) #divide by total number of causal mutations
   
+  if(thissim$N_traits>1){
   (gwas_FDR_sal_neutbase <- sum(muts_full$gwas_sal_sig & muts_full$causal_sal=="neutral")/ #purely neutral loci unaffected by selection
       sum(muts_full$gwas_sal_sig & muts_full$causal_sal!="neutral-linked")) #total number of causal loci and neutral loci outliers
-  
+  }else{
+    gwas_FDR_sal_neutbase <- NA
+  }
+    
   (gwas_FDR_temp_neutbase <- sum(muts_full$gwas_temp_sig & muts_full$causal_temp=="neutral")/ #purely neutral loci unaffected by selection
       sum(muts_full$gwas_temp_sig & muts_full$causal_temp!="neutral-linked")) #total number of causal loci and neutral loci outliers
   
   # GWAS plots
   pdf(paste0(path,seed,"_pdf_7b_GWAS.pdf"), width=7, height=7)
     plot(muts_full$mutTempEffect, muts_full$gwas_temp_est); abline(0,1)
-    plot(muts_full$mutSalEffect, muts_full$gwas_sal_est); abline(0,1)
-  
     ggplot(muts_full) + geom_density(aes(x=-log10(gwas_temp_P), color=causal_temp)) + ggtheme
-    ggplot(muts_full) + geom_density(aes(x=-log10(gwas_sal_P), color=causal_sal)) + ggtheme
-    
     ggplot(muts_full) + geom_density(aes(x=abs(gwas_temp_est), color=causal_temp)) + ggtheme
-    ggplot(muts_full) + geom_density(aes(x=abs(gwas_sal_est), color=causal_sal)) + ggtheme
-    
-    ggplot(muts_full[order(muts_full$causal_sal, decreasing=TRUE),]) + geom_point(aes(x=-log10(gwas_sal_P), y=abs(gwas_sal_est), color=causal_sal), alpha=0.5) + ggtheme
     ggplot(muts_full[order(muts_full$causal_temp, decreasing=TRUE),]) + geom_point(aes(x=-log10(gwas_temp_P), y=abs(gwas_temp_est), color=causal_temp), alpha=0.5) + ggtheme
-  dev.off()
+    
+    if(thissim$N_traits>1){
+     plot(muts_full$mutSalEffect, muts_full$gwas_sal_est); abline(0,1)
+      ggplot(muts_full) + geom_density(aes(x=-log10(gwas_sal_P), color=causal_sal)) + ggtheme
+      ggplot(muts_full) + geom_density(aes(x=abs(gwas_sal_est), color=causal_sal)) + ggtheme
+      ggplot(muts_full[order(muts_full$causal_sal, decreasing=TRUE),]) + geom_point(aes(x=-log10(gwas_sal_P), y=abs(gwas_sal_est), color=causal_sal), alpha=0.5) + ggtheme
+    }
+  
+ dev.off()
     
     
   #framework for assessing clinal paradigm ####
 
-  
-  criteria_sal <- muts_full$gwas_sal_P < quantile(muts_full$gwas_sal_P,0.05) # top 5% GWAS hits
-  sal_gwastop5per_num <- sum(criteria_sal)
-  # proportionf of top 5% of GWAS (with structure correction) hits that show clines (without structure correction)
-  clinalparadigm_sal_proptop5GWASclines <- sum(criteria_sal & # meets outlier GWAS criteria
-        muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
-    sal_gwastop5per_num 
-  #compare to cor_TPR_sal
-  
-  # proportion of GWAS outliers (with structure correction) that show clines (without structure correction)
-  (clinalparadigm_sal_propsigGWASclines <- sum(muts_full$gwas_sal_sig & # meets outlier GWAS criteria
-                                                 muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
-    sum(muts_full$gwas_sal_sig))
-  #compare to cor_TPR_sal
+  if(thissim$N_traits>1){
+    criteria_sal <- muts_full$gwas_sal_P < quantile(muts_full$gwas_sal_P,0.05) # top 5% GWAS hits
+    sal_gwastop5per_num <- sum(criteria_sal)
+    # proportionf of top 5% of GWAS (with structure correction) hits that show clines (without structure correction)
+    clinalparadigm_sal_proptop5GWASclines <- sum(criteria_sal & # meets outlier GWAS criteria
+          muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+      sal_gwastop5per_num 
+    #compare to cor_TPR_sal
+    
+    # proportion of GWAS outliers (with structure correction) that show clines (without structure correction)
+    (clinalparadigm_sal_propsigGWASclines <- sum(muts_full$gwas_sal_sig & # meets outlier GWAS criteria
+                                                   muts_full$cor_sal_sig)/ # AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_salenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
+      sum(muts_full$gwas_sal_sig))
+    #compare to cor_TPR_sal
+  }else{
+    clinalparadigm_sal_proptop5GWASclines <- NA
+    clinalparadigm_sal_propsigGWASclines <- NA
+  }
   
   criteria_temp <- muts_full$gwas_temp_P < quantile(muts_full$gwas_temp_P,0.05)
   temp_gwastop5per_num <- sum(criteria_temp)
-  clinalparadigm_temp_proptop5GWASclines <- sum(criteria_temp  & # top 5% of GWAS hits
+  (clinalparadigm_temp_proptop5GWASclines <- sum(criteria_temp  & # top 5% of GWAS hits
         muts_full$cor_temp_sig)/ #AND CLINAL #muts_full$LEA3.2_lfmm2_mlog10P_tempenv_sig )/ # This didn't work as well for temp b/c overcorrection for structure
-    temp_gwastop5per_num
+    temp_gwastop5per_num)
   #compare to cor_TPR_temp
   
   # proportion of GWAS outliers (with structure correction) that show clines (without structure correction)
@@ -1699,7 +1717,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   muts_full$af_cor_temp_pooled <- as.numeric(cor(af_temp, temp_levels, method = "kendall"))
   muts_full$af_cor_sal_pooled <- as.numeric(cor(af_sal, sal_levels, method = "kendall"))
 
-  pdf(paste0(path,seed,"_pdf_7_afcors.pdf"), width=9, height=8)
+  pdf(paste0(path,seed,"_pdf_9_afcors.pdf"), width=9, height=8)
   
   ggplot() + 
     geom_point(data=muts_full[muts_full$causal_temp=="neutral-linked",], aes(x=af_cor_temp, y = af_cor_temp_pooled), color=adjustcolor("goldenrod", 0.1)) +
@@ -1721,7 +1739,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
 # Plot phenotype vs. AF clines ####
   
-  pdf(paste0(path,seed,"_pdf_8phen-env_af-env.pdf"), width=9, height=9)
+  pdf(paste0(path,seed,"_pdf_10phen-env_af-env.pdf"), width=9, height=9)
   
   par(mfrow=c(2,2), mar=c(4,4,1,1), oma=c(0,0,2,1))
 
@@ -1835,7 +1853,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   
 ### genotype heatmaps ####
   
-pdf(paste0(path,seed,"_pdf_heatmaps.pdf"), width=8, height=8)
+pdf(paste0(path,seed,"_pdf_11heatmaps.pdf"), width=8, height=8)
 
 par(cex.main=0.5)
 

@@ -77,7 +77,7 @@ final.df$seed[which(final.df$arch_level=="mod-polygenic" & final.df$demog_level=
 #    system(file)
 #}
 
-i = 1232792#1232117#1231441 #seed example for publication
+i = 1231214#1232792#1232117#1231441 #seed example for publication
 system(paste0("cp sim_output_20220428/",i,"*.pdf figures_20220428_20220726/"))
 
 # Seeds needed for 10x2 demography graph are the first 15 seeds

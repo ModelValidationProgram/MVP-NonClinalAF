@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s", "--seed", required = True)
+# parser.add_argument("-s", "--seed", required = True)
 
 args = vars(parser.parse_args())
 
@@ -13,10 +13,11 @@ seed = 892657863
 r = 1e-05
 N = 1000
 mu = 1e-07
+output = "multipheno_multienvi/output_multisim/"
 
 
 # Load the .trees file
-T2 = pyslim.load(seed + "_Invers.trees")
+T2 = pyslim.load(output+"892657863.trees")
 
 # Calculate tree heights, giving uncoalesced sites the maximum time
 def tree_heights(ts):
@@ -32,7 +33,10 @@ def tree_heights(ts):
     return heights
  
 # Recapitate!
+start = time.time()
 recapT2 = T2.recapitate(recombination_rate = r, Ne=N, random_seed=seed)
+end = time.time()
+print("Time it took to to recapitate:", end - start)
 
 
 # Mutation! 

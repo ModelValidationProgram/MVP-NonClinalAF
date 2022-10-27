@@ -82,3 +82,9 @@ I dug up an old 2-trait range expansion continuous space simulation from TTT. Ed
 - decided on a system to include all 6 traits in each simulation; whether mutations effect a trait depends on the parameters. 
   - I didn't notice a major performance difference using this system, as the unselected traits are just 0
 -  I tested the sims from 2 traits to 6 traits and they all seem to be working well!
+
+**Oct 24 2022**
+- Running recapitation and vcf filtering on multivariate simulations - job ID 32337835
+
+**Oct 27 2022**
+- Bug in getting the individual environments in the output. It shouldn't have affected the trees file, but running everything again just in case.

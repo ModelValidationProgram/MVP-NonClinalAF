@@ -9,12 +9,35 @@
 - [x] output individual environments and phenotypes table
 - [x] output mutation vcf file
 - [x] compare parameters to the MVP simulation
-- [ ] use tree sequencing to recap and output VCF - see Recombination paper
+- [x] use tree sequencing to recap and output VCF - see Recombination paper
 
 ### In R:
-- [ ] run RDA and test ideas with the 2 trait sims
-- [ ] evaluate clinal paradigm with proportion of causal clines
-- [ ] add non-adaptive environments to RDA and test it
+- [x] run RDA and test ideas with the 2 trait sims
+- [x] evaluate clinal paradigm with proportion of causal clines
+- [x] add non-adaptive environments to RDA and test it
 
 ## Expand sim to multiple traits
-- [ ] for simplicity just have one mutation type and pleiotropic mutations, no trade-offs
+- [x] for simplicity just have one mutation type and pleiotropic mutations, no trade-offs
+
+
+## See timestamps in last notebook post
+After fixing the errors, I ran it again just in case:
+```
+(base) [lotterhos@ood src]$ sbatch c-pyslim.sh
+Submitted batch job 32368804
+```
+
+## Base simulations
+- [ ] Remake manuscript figures
+- [ ] Remake/Rearrange RDA figure
+- [ ] Conduct GWAS analysis
+
+## Multitrait simulations
+- [ ] Run a PCA just to visualize structure, colored by xy location
+- [ ] clean up code
+- [ ] Main plot - 6 environment panels, PCA, and a barplot showing accuracy of the RDA prediction in the 3 scenarios (or 4, if add PCA)
+- [ ] Supp plot - correlation matrices for bioclim environments
+- [ ] Supp plot - correlation matrices for mutation effect size
+- [ ] Supp plot - RDA colored by each environmental variable (for the base RDA)
+- [ ] write subsetted datasets to file
+- [ ] create a tutorial

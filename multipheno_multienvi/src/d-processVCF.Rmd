@@ -1,0 +1,501 @@
+### Process vcf file for multivariate simulations
+### KE Lotterhos
+### Oct 2022
+
+## Libraries
+```{r}
+#libraries_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools", "PRROC", "qvalue", "OutFLANK", "LEA", "ggExtra")
+libraries_needed <- c("vcfR", "vegan","ggplot2", "viridis", "gplots", "corrplot", "RANN")
+
+for (i in 1:length(libraries_needed)){
+#  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
+ #library(libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/miniconda3/envs/MVP_env_R4.0.3/lib/R/library") # for bash script
+  library(libraries_needed[i],character.only = TRUE) #laptop
+}
+
+
+```
+
+## Load VCF and data files
+```{r}
+path <- "~/Documents/GitHub/MVP-NonClinalAF/multipheno_multienvi/output_multisim/"
+#setwd("/work/lotterhos/MVP-NonClinalAF") #OOD
+setwd(path)
+seed <- 892657863
+vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
+
+vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf"))
+
+indPhen_df <- read.table(paste0(path,seed,"_ind.txt"), header=TRUE)
+  indPhen_df$indID <- 1:nrow(indPhen_df)
+
+throughtime <- read.table(paste0(path,seed,"_throughtime.txt"), header=TRUE)
+
+muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE)
+
+adp_env <- read.table("../bioclim/adaptive_env.txt", header=TRUE) 
+ext_env <- read.table("../bioclim/extra_env.txt", header=TRUE) 
+bioclim <- read.table("../bioclim/bioclim.txt", header=TRUE)
+
+  ggtheme <- theme_bw() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), panel.border=element_blank(), 
+                                axis.line = element_line(colour="grey20"), axis.title = element_text(colour="grey20"), axis.text = (element_text(colour="grey20")), 
+                                legend.title = element_text(colour="grey20"), legend.text = element_text(colour="grey20"))
+
+```
+
+## Sanity check environments line up
+```{r}
+tail(throughtime)
+
+
+head(indPhen_df)
+cor(indPhen_df$phenotype1_mat, indPhen_df$env1_mat)
+cor(indPhen_df$phenotype2_MTWetQ, indPhen_df$env2_MTWetQ)
+cor(indPhen_df$phenotype3_MTDQ, indPhen_df$env3_MTDQ)
+cor(indPhen_df$phenotype4_PDM, indPhen_df$env4_PDM)
+cor(indPhen_df$phenotype5_PwarmQ, indPhen_df$env5_PwarmQ)
+cor(indPhen_df$phenotype6_PWM, indPhen_df$env6_PWM)
+
+ggplot(indPhen_df) + geom_point(aes(x, y, color=env1_mat)) 
+
+ggplot(indPhen_df) + geom_point(aes(x, y, color=phenotype1_mat))
+
+head(adp_env)
+ggplot(adp_env) + geom_point(aes(slim_x, slim_y, color=MAT))
+```
+
+## Add information to SNPs and individuals
+```{r}
+geno_full <- vcf_full@gt[,-1] 
+  dim(geno_full)
+  position_full <- getPOS(vcf_full)
+  rown <- vcf_full@fix[,"ALT"] # mutation ID
+  causal_mut_locs <- which(rown %in% as.character(muts_df$mutID)) # causal mutations
+ G_full <- matrix(NA, nrow = nrow(geno_full), ncol = ncol(geno_full))
+  G_full[geno_full %in% c("0/0", "0|0")] <- 0
+  G_full[geno_full  %in% c("0/1", "1/0", "1|0", "0|1")] <- 1
+  G_full[geno_full %in% c("1/1", "1|1")] <- 2  
+
+  a_freq_full <- rowSums(G_full)/(2*ncol(G_full))
+  hist(a_freq_full, breaks=seq(0,1,0.01))
+  
+  if (!identical(sort(unique(unlist(as.numeric(G_full)))), as.numeric(0:2))){
+    print("Error: full genotype matrix not uniquely 012")
+    break
+  }
+
+### Subsampling
+  indPhen_df$subset <- FALSE
+  whichinds <- sort(sample(1:nrow(indPhen_df), size=1000, replace=FALSE))
+  indPhen_df$subset[whichinds] <- TRUE
+  sum(indPhen_df$subset) #sanity check
+  
+  G_full_subset <- G_full[,which(indPhen_df$subset)]
+
+### Assign LGs
+   # Assign loci to LG groups
+  numLGs <- ceiling(max(as.numeric(vcf_full@fix[,"POS"]))/50000)
+  for (LG in 1:numLGs){
+    sites_low <- (LG-1)*50000+1
+    sites_high <- (LG)*50000
+    pos <- as.numeric(vcf_full@fix[,"POS"])
+    whichlocs <- pos >= sites_low & pos <= sites_high
+    vcf_full@fix[whichlocs,"CHROM"] <- as.numeric(LG)
+  }
+  table(vcf_full@fix[,"CHROM"])
+  
+# Assign unique names to each locus
+  head(vcf_full@fix)
+  vcf_full@fix[,"INFO"] <- paste0(vcf_full@fix[,"CHROM"],"-",vcf_full@fix[,"POS"])
+  if (sum(duplicated(vcf_full@fix[,"POS"]))>0){
+    dups <- which(duplicated(vcf_full@fix[,"POS"]))
+    vcf_full@fix[dups,"INFO"] <- paste0(vcf_full@fix[dups,"INFO"],"_2")
+  }
+  b <- 3
+  while (sum(duplicated(vcf_full@fix[,"INFO"]))>0){
+    dups <- which(duplicated(vcf_full@fix[,"INFO"]))
+    vcf_full@fix[dups,"INFO"] <- gsub(paste0("_",b-1),
+                                      paste0("_",b),
+                                      x = vcf_full@fix[dups,"INFO"])
+    b <- b+1
+    if (b==10){print("problem in naming loci"); break}
+  }
+
+ # Check duplicated locus names
+  if(sum(duplicated(vcf_full@fix[dups,"INFO"]))>0){print("Error:duplicate locus names");break}
+  
+  head(vcf_full@fix)
+  
+   rownames(G_full_subset)=vcf_full@fix[,"INFO"]
+
+   # Add individual names to G_full subset
+ colnames(G_full_subset)=indPhen_df$indID[which(indPhen_df$subset)]
+  head(G_full_subset[,1:5])
+  plot(colnames(G_full_subset), indPhen_df$indID[which(indPhen_df$subset)])
+  
+  
+  ## Mutation stuff
+   a_freq_subset <- as.numeric(rowSums(G_full_subset)/(2*ncol(G_full_subset)))
+  # should have 1000 individuals
+  #hist(a_freq_subset)
+  
+  muts_full0 <- data.frame(seed = as.character(seed),
+                           VCFrow = 1:nrow(vcf_full@gt),
+                           mutID = vcf_full@fix[,"ALT"],
+                           LG = as.integer(vcf_full@fix[,"CHROM"]),
+                           pos_pyslim = as.integer(vcf_full@fix[,"POS"]),
+                           mutname = vcf_full@fix[,"INFO"],
+                           a_freq_full = a_freq_full,
+                           a_freq_subset = a_freq_subset)
+  
+  if(!identical(rownames(G_full_subset), muts_full0$mutname)){Print("Error mut names out of order");break}
+  
+  head(muts_full0)
+  dim(muts_full0)
+  muts_full0$mutID <- as.character(muts_full0$mutID) # all loci, but only causal loci have unique ID
+  muts_df$mutID <- as.character(muts_df$mutID) #only causal loci, unique ID from SliM
+  
+  muts_full <- merge(muts_full0, muts_df, by=c("mutID", "seed"), all.x=TRUE)
+  muts_full <- muts_full[order(muts_full$VCFrow),]
+  head(muts_full)
+  dim(muts_full)
+  
+  if(!identical(rownames(G_full_subset), muts_full$mutname)){Print("Error mut names out of order");break}
+  # Are there any missing values for LG?
+  if(sum(is.na(muts_full$LG))>0){Print("Error: Missing LGs"); break}
+
+  head(muts_full)
+  muts_full$mut1.mat.Effect <- as.numeric(muts_full$mut1.mat.Effect)
+  muts_full$mut2.MTWetQ.Effect <- as.numeric(muts_full$mut2.MTWetQ.Effect)
+    muts_full$mut3_MTDQ.Effect <- as.numeric(muts_full$mut3_MTDQ.Effect)
+      muts_full$mut4_PDM.Effect <- as.numeric(muts_full$mut4_PDM.Effect)
+        muts_full$mut5_PwarmQ.Effect <- as.numeric(muts_full$mut5_PwarmQ.Effect)
+          muts_full$mut6_PWM.Effect <- as.numeric(muts_full$mut6_PWM.Effect)
+  muts_full$causal <- FALSE
+  muts_full$causal[muts_full$mutID!=1] <- TRUE
+  sum(muts_full$causal)
+  
+   # FILTER OUT ALLELS WITH MAF < 0.01 AFTER SAMPLING ####
+   if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a: mutations not lined up");break()}
+    
+    #muts_full$isMAF01 <- FALSE
+    rm_loci <- which(muts_full$a_freq_subset < 0.01 | muts_full$a_freq_subset > 0.99)
+    #muts_full$isMAF01[rm_loci] <- rep(TRUE, length=length(rm_loci))
+  
+    num_multiallelic <- sum((!complete.cases(G_full_subset)))
+    rm_loci <- sort(c(rm_loci, which(!complete.cases(G_full_subset))))
+        
+    numCausalLowMAFsample <- sum(muts_full$a_freq_subset < 0.01 & muts_full$causal)
+    
+    # Filter out MAF loci from G_full_subset
+    
+    if(length(rm_loci)>0){
+      G_full_subset <- G_full_subset[-rm_loci,]
+      muts_full <- muts_full[-rm_loci,]
+    }
+    if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a2: mutations not lined up");break()}
+    
+    dim(G_full_subset)
+    
+    head(G_full_subset[,1:10])
+    
+    hist(muts_full$a_freq_subset, breaks=seq(0,1,0.01)) #After MAF
+  plot(muts_full$a_freq_full, muts_full$a_freq_subset) #sanity check
+  
+```
+
+
+Correlation plots
+```{r}
+  plotmain="Mutivariate simulation"
+  mut_effect_cols <- c("mut1.mat.Effect","mut2.MTWetQ.Effect",
+                       "mut3_MTDQ.Effect", "mut4_PDM.Effect",
+                       "mut5_PwarmQ.Effect","mut6_PWM.Effect")
+  
+  which_mut_effect_cols <- which(colnames(muts_full) %in% mut_effect_cols)
+  
+  muteffect_cormat <- cor(muts_full[,which_mut_effect_cols], use = "complete.obs")
+
+  env_cormat <- cor(adp_env[,c(3,4,5,7,8,6)]) #hard coding  
+
+  heatmap.2(muteffect_cormat, Rowv = NA, Colv=NA,
+  scale="none", col= viridis(100), density.info = "none",
+   dendrogram="none",
+          trace = "none", 
+  key.xlab="|Cor(effect a,effect b)|")
+  
+    heatmap.2(env_cormat, Rowv = NA, Colv=NA,
+  scale="none", col= viridis(100),dendrogram="none",
+          trace = "none", density.info = "none", 
+  key.xlab="|Cor(envi a,envi b)|")
+
+  # Mutation effect size correlations vs. environmental correlations
+  corrplot(muteffect_cormat, type = "upper", order = "original", 
+         tl.col = "black", tl.srt = 45)
+  corrplot(env_cormat, type = "upper", order = "original", 
+         tl.col = "black", tl.srt = 45)
+  
+  corrplot(cor(adp_env[,c(1,2,3,4,5,7,8,6)]), type = "upper", order = "original", 
+         tl.col = "black", tl.srt = 45) #hard coding 
+  
+```
+
+
+
+```{r}
+   # Sanity check that muts_full mutations line up with G_full_subset
+  if(nrow(muts_full)!=nrow(G_full_subset)){print("Error 1: mutation data frames have different number of rows");break()}
+
+  num_causal_postfilter <- sum(muts_full$causal)
+  num_causal_prefilter <- nrow(vcf_muts@fix)
+  num_neut_postfilter <- sum(!muts_full$causal)
+  num_neut_prefilter <- sum((vcf_full@fix[,"ALT"]=="1"))
+  
+  dim(G_full_subset)
+  
+  subset_indPhen_df <- indPhen_df[indPhen_df$subset,]
+  dim(subset_indPhen_df)
+   if(!identical(subset_indPhen_df$indID, sort(subset_indPhen_df$indID))){print("Error individuals in wrong order"); break()}
+
+```
+
+## Calculate proportion of causal SNPs with clines
+```{r}
+start on line 377 in notes
+```
+
+## Visualize SNP frequency patterns across environmental clines
+Maybe: visualize SNP frequency patterns on maps
+
+## Calculate RDA without nuisance environmental variables
+```{r}
+rdaout <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
+                subset_indPhen_df$env2_MTWetQ +
+                subset_indPhen_df$env3_MTDQ + 
+                subset_indPhen_df$env4_PDM +
+                subset_indPhen_df$env5_PwarmQ +
+                subset_indPhen_df$env6_PWM
+              )
+
+```
+
+## RDA Outputs
+```{r}
+ #str(rdaout)
+  scores <- scores(rdaout, choices=1:6)
+scores
+  
+  loci.sc <- scores$species
+  ind.sc <- scores$sites
+  subset_indPhen_df$RDA1 <- ind.sc[,1]
+  subset_indPhen_df$RDA2 <- ind.sc[,2]
+  subset_indPhen_df$RDA3 <- ind.sc[,3]
+  subset_indPhen_df$RDA4 <- ind.sc[,4]
+
+a<- screeplot(rdaout)
+  str(a)
+  a$y # save this it's the eigenvalues
+  prop_var <- round(a$y[1:6]/sum(a$y),3)
+  cumsum(prop_var)
+  
+rdaout$CCA$biplot
+enviRDA=unlist(lapply(strsplit(rownames(rdaout$CCA$biplot),"_"),function(x){x[4]}))
+phencols <- grep("phenotype",colnames(indPhen_df))
+```
+
+## Visualize RDA
+```{r}
+
+str(subset_indPhen_df)
+
+plot_env <- function(i){
+  scalea=2
+  subset_indPhen_df$color <- subset_indPhen_df[,phencols[i]]
+  p1 <- ggplot(subset_indPhen_df) + 
+    geom_point(aes(x=RDA1, y = RDA2, col=color)) + 
+   scale_colour_viridis(breaks=seq(-1,1,0.5))+
+   geom_segment(aes(x=0,y=0, 
+                    xend=rdaout$CCA$biplot[i,1]*scalea, 
+                    yend=rdaout$CCA$biplot[i,2]*scalea),
+                    arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(aes(x=rdaout$CCA$biplot[i,1]*scalea, 
+                   y=rdaout$CCA$biplot[i,2]*scalea, 
+                   label=enviRDA[i]), 
+              hjust="right", vjust="bottom") + ggtheme
+
+    
+  p2 <-  ggplot(subset_indPhen_df) + 
+      geom_point(aes(x=RDA3, y = RDA4, col=color)) + 
+   scale_colour_viridis(breaks=seq(-1,1,0.5))+
+   geom_segment(aes(x=0,y=0, 
+                    xend=rdaout$CCA$biplot[i,3]*scalea, 
+                    yend=rdaout$CCA$biplot[i,4]*scalea),
+                    arrow=arrow(length = unit(0.2,"cm"))) + 
+    geom_text(aes(x=rdaout$CCA$biplot[i,3]*scalea, 
+                   y=rdaout$CCA$biplot[i,4]*scalea, 
+                   label=enviRDA[i]), 
+              hjust="right", vjust="bottom") + ggtheme
+  
+  grid.arrange(p1,p2)
+}
+ 
+plot_env(1)
+plot_env(2)
+plot_env(3)
+plot_env(4)
+plot_env(5)
+plot_env(6)
+```
+
+## Function to Back-calculate RDA trait prediction
+```{r}
+
+rdaout$CCA$biplot
+
+rda_trait_pred <- function(rdaobj, env_row, K){
+  #rdaobj is RDA object
+  #envi row is the row of the environment in the biplot output
+  #K is the number of RDA axes
+  scores <- scores(rdaobj, choices=1:K)
+  ind.sc <- scores$sites
+  pred <- matrix(NA, nrow=nrow(ind.sc), ncol=K)
+  for (k in 1:K){
+    pred[,k] <- ind.sc[,k]*eigenvals(rdaobj)[k]*summary(rdaobj)$biplot[env_row,k]
+  }
+  trait_pred <- scale(rowSums(pred))
+ return(trait_pred) 
+}
+```
+
+```{r}
+
+newcols <- paste("rda_trait_pred", 1:6, enviRDA, sep="_")
+subset_indPhen_df$new1 <- subset_indPhen_df$new2 <- subset_indPhen_df$new3 <- subset_indPhen_df$new4 <-subset_indPhen_df$new5 <-subset_indPhen_df$new6 <- NA
+
+colnames(subset_indPhen_df)[(ncol(subset_indPhen_df)-5):ncol(subset_indPhen_df)] <- newcols # hard coding here!!
+head(subset_indPhen_df)
+
+for (i in 1:6){ # hard coding here!!
+ subset_indPhen_df[,ncol(subset_indPhen_df)-6+i] <- unlist(rda_trait_pred(rdaout, i, 3))
+}
+
+head(subset_indPhen_df)
+```
+
+## Compare RDA trait prediction to true trait prediction
+As my dad would say, not too shabby...
+```{r}
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rda_trait_pred_1_mat)    
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rda_trait_pred_2_MTWetQ)  
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rda_trait_pred_3_MTDQ)  
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rda_trait_pred_4_PDM)  
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rda_trait_pred_5_PwarmQ)  
+cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rda_trait_pred_6_PWM)  
+```
+
+## Compare with an RDA conditioned on geographic distance
+Check if poor performers are correlated with lat/long
+```{r}
+rdaout_geo <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
+                subset_indPhen_df$env2_MTWetQ +
+                subset_indPhen_df$env3_MTDQ + 
+                subset_indPhen_df$env4_PDM +
+                subset_indPhen_df$env5_PwarmQ +
+                subset_indPhen_df$env6_PWM +
+                Condition(subset_indPhen_df$x + subset_indPhen_df$y)
+              )
+
+#Make sure the 6 environments correspond to the first 6 rows
+summary(rdaout_geo)$biplot
+enviRDA=unlist(lapply(strsplit(rownames(rdaout_geo$CCA$biplot),"_"),function(x){x[4]}))
+rdaout_geo_pred <- data.frame(matrix(NA, 
+                                     nrow=nrow(subset_indPhen_df),
+                                     ncol=6)
+                              )
+colnames(rdaout_geo_pred) <- paste("rdageo_trait_pred",1:6,enviRDA,sep="_")
+
+a<- screeplot(rdaout_geo)
+  str(a)
+  a$y # save this it's the eigenvalues
+  prop_var <- round(a$y[1:6]/sum(a$y),3)
+  cumsum(prop_var)
+
+for (i in 1:6){ # hard coding here!!
+ rdaout_geo_pred[,i] <- unlist(rda_trait_pred(rdaout_geo, i, 3))
+}
+head(rdaout_geo_pred)
+
+subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_geo_pred)
+
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdageo_trait_pred_1_mat)    
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdageo_trait_pred_2_MTWetQ)  
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdageo_trait_pred_3_MTDQ)  
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdageo_trait_pred_4_PDM)  
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdageo_trait_pred_5_PwarmQ)  
+cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdageo_trait_pred_6_PWM)  
+```
+
+
+## Compare with an RDA with extra environmental variables
+```{r}
+
+head(ext_env)
+?nn2
+nearest <- nn2(cbind(ext_env$slim_x, ext_env$slim_y), 
+    cbind(subset_indPhen_df$x, subset_indPhen_df$y),k=1
+)
+head(nearest$nn.idx)
+subset_indPhen_df$ISO <- ext_env$ISO[unlist(nearest$nn.idx)]
+subset_indPhen_df$TSsd <- ext_env$TSsd[unlist(nearest$nn.idx)]
+subset_indPhen_df$PSsd <- ext_env$PSsd[unlist(nearest$nn.idx)]
+# sanity check
+ggplot(ext_env) + geom_point( aes(x=x,y=y, color=ISO))
+ggplot(subset_indPhen_df) + geom_point( aes(x=x,y=y, color=ISO))
+
+subset_indPhen_df <- subset_indPhen_df2
+nrow(subset_indPhen_df)
+
+rdaout_nuisance <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
+                subset_indPhen_df$env2_MTWetQ +
+                subset_indPhen_df$env3_MTDQ + 
+                subset_indPhen_df$env4_PDM +
+                subset_indPhen_df$env5_PwarmQ +
+                subset_indPhen_df$env6_PWM +
+                subset_indPhen_df$ISO + 
+                subset_indPhen_df$TSsd +
+                subset_indPhen_df$PSsd  
+              )
+
+#Make sure the 6 environments correspond to the first 6 rows
+summary(rdaout_nuisance)$biplot
+
+rdaout_nuis_pred <- data.frame(matrix(NA, 
+                                     nrow=nrow(subset_indPhen_df),
+                                     ncol=6)
+                              )
+
+enviRDA=unlist(lapply(strsplit(rownames(rdaout_nuisance$CCA$biplot),"_"),function(x){x[4]}))
+
+colnames(rdaout_nuis_pred)[1:6] <- paste("rdanuis_trait_pred",1:6,enviRDA[1:6],sep="_")
+
+a<- screeplot(rdaout_nuisance)
+  str(a)
+  a$y # save this it's the eigenvalues
+  prop_var <- round(a$y[1:6]/sum(a$y),3)
+  cumsum(prop_var)
+  #could argue to do K=4 here
+
+for (i in 1:6){ # hard coding here!!
+ rdaout_nuis_pred[,i] <- unlist(rda_trait_pred(rdaout_nuisance, i, 4))
+}
+head(rdaout_nuis_pred)
+
+subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_nuis_pred)
+
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdanuis_trait_pred_1_mat)    
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdanuis_trait_pred_2_MTWetQ)  
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdanuis_trait_pred_3_MTDQ)  
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdanuis_trait_pred_4_PDM)  
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdanuis_trait_pred_5_PwarmQ)  
+cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdanuis_trait_pred_6_PWM)  
+```

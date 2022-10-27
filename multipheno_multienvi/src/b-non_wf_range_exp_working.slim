@@ -16,9 +16,9 @@ initialize() {
 	defineConstant("C_lengths", rep(50000, C_num));	// lengths for each chromosome	
 	
 	defineConstant("MU_base", 1e-07);
-	defineConstant("MU_QTL_proportion", 0.2);
+	defineConstant("MU_QTL_proportion", 0.2);//0.2
 	//MU_QTL_proportion <- c(0.001, 0.1, 0.25) # proportion of mutations that are QTNs
-	defineConstant("sigma_qtn", 0.01);
+	defineConstant("sigma_qtn", 0.01);//0.01
 		//SIGMA_QTN_1 <- c(0.4, 0.1, 0.002)
 	defineConstant("MU", MU_base * MU_QTL_proportion);	// mut rate for QTNs specifically	
 	
@@ -166,7 +166,7 @@ reproduction() {
 	MTDQmapLines = sapply(MTDQmapLines, "strsplit(applyValue, ',');");
 	MTDQmapValues = (matrix(asFloat(MTDQmapLines), 360, 360));
 		p1.defineSpatialMap("map3-MTDQ", "xy", values=MTDQmapValues/mapscale, interpolate=T,
-		valueRange=c(-1.0, 1.0), colors=colors(100, "jet"));
+		valueRange=c(-1.0, 1.0), colors=colors(100, "cividis"));
 	
 	// add map Precipitation of driest month
 	PDMmapLines = (readFile(inputpath + "PDM_BC_360x360.csv"));
@@ -188,7 +188,7 @@ reproduction() {
 	PWMmapLines = sapply(PWMmapLines, "strsplit(applyValue, ',');");
 	PWMmapValues = (matrix(asFloat(PWMmapLines), 360, 360));
 		p1.defineSpatialMap("map6-PWM", "xy", values=PWMmapValues/mapscale, interpolate=T,
-		valueRange=c(-1.0, 1.0), colors=colors(100, "cividis"));
+		valueRange=c(-1.0, 1.0), colors=colors(100, "inferno"));
 	
 	// initialize where individuals start
 	for (ind in p1.individuals)
@@ -283,7 +283,6 @@ early() {
 	// this must come after adding effect sizes of mutations!
 	inds = sim.subpopulations.individuals;
 	
-	
 	for (ind in inds){
 		muts = ind.genomes.mutationsOfType(m2);
 		
@@ -310,24 +309,49 @@ early() {
 ////////////////////////////////////////////////////////////////////	
 	// color individuals according to phenotype; alternating between phenotypes every other generation
 ////////////////////////////////////////////////////////////////////
+	if (sim.generation < BURNIN) {
+	inds.color = "white";
+	}else{
+		if (sim.generation == BURNIN) {
+	   	//slimgui.pauseExecution();
+		}	
+		if (sim.generation % 1000 == 0) {
+	   	//slimgui.pauseExecution();
+		}	
 	if (sim.generation % 1000 < 150) {
 		inds.color = p1.spatialMapColor("map1-mat", asFloat(inds.getValue("phenotype1-mat")));
 	}
+			if (sim.generation % 1000 == 150) {
+	   	//slimgui.pauseExecution();
+		}	
 	if ((sim.generation % 1000 >= 150) & (sim.generation % 1000 < 300)) {
 		inds.color = p1.spatialMapColor("map2-MTWetQ", asFloat(inds.getValue("phenotype2-MTWetQ")));
 	}
+			if (sim.generation % 1000 == 300) {
+	   	//slimgui.pauseExecution();
+		}	
 	if ((sim.generation % 1000 >= 300) & (sim.generation % 1000 < 450)) {
 		inds.color = p1.spatialMapColor("map3-MTDQ", asFloat(inds.getValue("phenotype3-MTDQ")));
 	}
+			if (sim.generation % 1000 == 450) {
+	   	//slimgui.pauseExecution();
+		}	
 	if ((sim.generation % 1000 >= 450) & (sim.generation % 1000 < 600)) {
 		inds.color = p1.spatialMapColor("map4-PDM", asFloat(inds.getValue("phenotype4-PDM")));
 	}
+			if (sim.generation % 1000 == 600) {
+	   	//slimgui.pauseExecution();
+		}	
 	if ((sim.generation % 1000 >= 600) & (sim.generation % 1000 < 800)) {
 		inds.color = p1.spatialMapColor("map5-PwarmQ", asFloat(inds.getValue("phenotype5-PwarmQ")));
 	}
+			if (sim.generation % 1000 == 800) {
+	   	//slimgui.pauseExecution();
+		}	
 	if ((sim.generation % 1000 >= 800)) {
 		inds.color = p1.spatialMapColor("map6-PWM", asFloat(inds.getValue("phenotype6-PWM")));
 	}
+	}// end else
 /// END COLOR INDIVIDUALS
 
 //////////////////////////////
@@ -492,12 +516,13 @@ sim.treeSeqOutput(path + my_seed + ".trees");
 	phenotype6_PWM = inds.getValue("phenotype6-PWM");
 	location_x = inds.x;
 	location_y = inds.y;
-	env1_mat = p1.spatialMapValue("map1-mat", c(location_x, location_y));
-	env2_MTWetQ = p1.spatialMapValue("map2-MTWetQ", c(location_x, location_y));
-	env3_MTDQ = p1.spatialMapValue("map3-MTDQ", c(location_x, location_y));
-	env4_PDM = p1.spatialMapValue("map4-PDM", c(location_x, location_y));
-	env5_PwarmQ = p1.spatialMapValue("map5-PwarmQ", c(location_x, location_y));
-	env6_PWM = p1.spatialMapValue("map6-PWM", c(location_x, location_y));
+	locs = asFloat(t(matrix(c(location_x, location_y), ncol=2))); //order for envi lookup
+	env1_mat = p1.spatialMapValue("map1-mat", locs);
+	env2_MTWetQ = p1.spatialMapValue("map2-MTWetQ", locs);
+	env3_MTDQ = p1.spatialMapValue("map3-MTDQ", locs);
+	env4_PDM = p1.spatialMapValue("map4-PDM", locs);
+	env5_PwarmQ = p1.spatialMapValue("map5-PwarmQ", locs);
+	env6_PWM = p1.spatialMapValue("map6-PWM", locs);
 		
 	writeFile(paste(c(path, my_seed, "_ind.txt"), sep=""), 
 		paste(c("seed", "ind_index",  "x", "y",

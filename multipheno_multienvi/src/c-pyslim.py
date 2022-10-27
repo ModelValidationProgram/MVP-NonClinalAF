@@ -1,6 +1,13 @@
-import msprime, pyslim, argparse
-
+import pyslim 
+import msprime
+import argparse
 import numpy as np
+import random
+import time
+import re
+import ast
+import sys
+import os
 
 import matplotlib.pyplot as plt
 
@@ -42,6 +49,9 @@ print("Time it took to to recapitate:", end - start)
 # Mutation! 
 mutatedT2 = pyslim.SlimTreeSequence(msprime.mutate(recapT2, rate=mu, random_seed=seed, keep=True))
 
+print(f"The tree sequence now has {mutatedT2.num_trees} trees,"
+      f" and {mutatedT2.num_mutations} mutations.")
+      
 # mutated.dump("results/2388682558411_recap_mutate.trees")
 
 # Plot tree hieghts after recapitation

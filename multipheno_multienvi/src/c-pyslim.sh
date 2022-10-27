@@ -6,8 +6,8 @@
 #SBATCH --partition=lotterhos
 #SBATCH --mem=10G
 #SBATCH --nodes=1
-#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimMultvar20221024.out
-#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/slurm_log/SlimMultvar20221024.err
+#SBATCH --output=/work/lotterhos/MVP-NonClinalAF/multipheno_multienvi/SlimMultvar20221024.out
+#SBATCH --error=/work/lotterhos/MVP-NonClinalAF/multipheno_multienvi/SlimMultvar20221024.err
 
 source ~/miniconda3/bin/activate MVP_env
 # This is a CONDA environment I created on my own personal CONDA folder using the environment found in src/env/MVP_env.yml
@@ -21,6 +21,8 @@ mypath="/work/lotterhos/MVP-NonClinalAF"
 cd ${mypath}
 # Folder within MVP where you want are your output files
 outpath="multipheno_multienvi/output_multisim/"
+seed="892657863"
+MAF=0.01
 
 ##############
 #### TREE SEQUENCING

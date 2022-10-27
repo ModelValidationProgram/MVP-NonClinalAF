@@ -33,8 +33,10 @@ Submitted batch job 32368804
 - [ ] Conduct GWAS analysis
 
 ## Multitrait simulations
-- [ ] Run a PCA just to visualize structure, colored by xy location
+- [ ] Run everything from the start in R, to make sure it works
 - [ ] clean up code
+- [ ] Run a PCA just to visualize structure, colored by xy location
+
 - [ ] Main plot - 6 environment panels, PCA, and a barplot showing accuracy of the RDA prediction in the 3 scenarios (or 4, if add PCA)
 - [ ] Supp plot - correlation matrices for bioclim environments
 - [ ] Supp plot - correlation matrices for mutation effect size

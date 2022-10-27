@@ -1,0 +1,2 @@
+Time it took to to recapitate: 31.083234548568726
+The tree sequence now has 625508 trees, and 267287 mutations.

@@ -45,3 +45,9 @@ Submitted batch job 32368804
 - [x] write subsetted datasets to file
 - [ ] create a tutorial
 - [ ] edit movie to make 1 min long (7x speed)
+
+## Writing
+- [ ] write methods for multivariate sims
+- [ ] write results for multivariate sims
+- [ ] finish editing and responding to reviewer comments
+- [ ] remake/reorganize figures

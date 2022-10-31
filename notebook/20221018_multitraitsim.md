@@ -29,17 +29,17 @@ Submitted batch job 32368804
 
 ## Base simulations
 - [ ] Remake manuscript figures
-- [ ] Remake/Rearrange RDA figure
+- [ ] Remake/Rearrange Figure 5
 - [ ] Conduct GWAS analysis
 
 ## Multitrait simulations
-- [ ] Run everything from the start in R, to make sure it works
-- [ ] clean up code
-- [ ] Run a PCA just to visualize structure, colored by xy location
+- [x] Run everything from the start in R, to make sure it works
+- [x] clean up code
+- [x] Run a PCA just to visualize structure, colored by xy location
 
-- [ ] Main plot - 6 environment panels, PCA, and a barplot showing accuracy of the RDA prediction in the 3 scenarios (or 4, if add PCA)
-- [ ] Supp plot - correlation matrices for bioclim environments
-- [ ] Supp plot - correlation matrices for mutation effect size
+- [x] Main plot - 6 environment panels, PCA, and a barplot showing accuracy of the RDA prediction in the 3 scenarios (or 4, if add PCA)
+- [x] Supp plot - correlation matrices for bioclim environments
+- [x] Supp plot - correlation matrices for mutation effect size
 - [ ] Supp plot - RDA colored by each environmental variable (for the base RDA)
 - [ ] write subsetted datasets to file
 - [ ] create a tutorial

@@ -31,6 +31,7 @@ Submitted batch job 32368804
 - [ ] Remake manuscript figures
 - [ ] Remake/Rearrange Figure 5
 - [ ] Conduct GWAS analysis
+- [ ] outputs for Jeff R-I
 
 ## Multitrait simulations
 - [x] Run everything from the start in R, to make sure it works
@@ -40,7 +41,7 @@ Submitted batch job 32368804
 - [x] Main plot - 6 environment panels, PCA, and a barplot showing accuracy of the RDA prediction in the 3 scenarios (or 4, if add PCA)
 - [x] Supp plot - correlation matrices for bioclim environments
 - [x] Supp plot - correlation matrices for mutation effect size
-- [ ] Supp plot - RDA colored by each environmental variable (for the base RDA)
-- [ ] write subsetted datasets to file
+- [x] Supp plot - RDA colored by each environmental variable (for the base RDA)
+- [x] write subsetted datasets to file
 - [ ] create a tutorial
 - [ ] edit movie to make 1 min long (7x speed)

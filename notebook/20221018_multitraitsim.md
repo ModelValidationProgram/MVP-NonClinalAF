@@ -43,3 +43,4 @@ Submitted batch job 32368804
 - [ ] Supp plot - RDA colored by each environmental variable (for the base RDA)
 - [ ] write subsetted datasets to file
 - [ ] create a tutorial
+- [ ] edit movie to make 1 min long (7x speed)

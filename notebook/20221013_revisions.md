@@ -79,6 +79,10 @@ ls -l *_Rout_simSummary.txt | wc -l
 
 2250 Simulations are complete!
 
+## Sat Nov 12
+Cat outputs together. I accidently overwrote the 20220726 outputs - so those are the final files
+
+
 ## Outputs to copy for Jeff Ross-Ibarra
 
 -[x] https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/main/notebook/20220914_JeffRossIbarra.md

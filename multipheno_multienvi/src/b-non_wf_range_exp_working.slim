@@ -313,40 +313,40 @@ early() {
 	inds.color = "white";
 	}else{
 		if (sim.generation == BURNIN) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 		if (sim.generation % 1000 == 0) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if (sim.generation % 1000 < 150) {
 		inds.color = p1.spatialMapColor("map1-mat", asFloat(inds.getValue("phenotype1-mat")));
 	}
 			if (sim.generation % 1000 == 150) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if ((sim.generation % 1000 >= 150) & (sim.generation % 1000 < 300)) {
 		inds.color = p1.spatialMapColor("map2-MTWetQ", asFloat(inds.getValue("phenotype2-MTWetQ")));
 	}
 			if (sim.generation % 1000 == 300) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if ((sim.generation % 1000 >= 300) & (sim.generation % 1000 < 450)) {
 		inds.color = p1.spatialMapColor("map3-MTDQ", asFloat(inds.getValue("phenotype3-MTDQ")));
 	}
 			if (sim.generation % 1000 == 450) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if ((sim.generation % 1000 >= 450) & (sim.generation % 1000 < 600)) {
 		inds.color = p1.spatialMapColor("map4-PDM", asFloat(inds.getValue("phenotype4-PDM")));
 	}
 			if (sim.generation % 1000 == 600) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if ((sim.generation % 1000 >= 600) & (sim.generation % 1000 < 800)) {
 		inds.color = p1.spatialMapColor("map5-PwarmQ", asFloat(inds.getValue("phenotype5-PwarmQ")));
 	}
 			if (sim.generation % 1000 == 800) {
-	   	//slimgui.pauseExecution();
+	   	slimgui.pauseExecution();
 		}	
 	if ((sim.generation % 1000 >= 800)) {
 		inds.color = p1.spatialMapColor("map6-PWM", asFloat(inds.getValue("phenotype6-PWM")));
@@ -700,10 +700,9 @@ fitness(NULL) {    // reward proximity to the optimum
 
 // calculate mating interaction strength between individuals
 interaction(i1) {
-	return exp(-0.5*((exerter.spatialPosition[0] - receiver.spatialPosition[0])^2*sigma_xy + (exerter.spatialPosition[1]-
-		receiver.spatialPosition[1])^2*sigma_xy + (exerter.getValue("phenotype1-mat") -
-		receiver.getValue("phenotype1-mat"))^2*sigma_M + (exerter.getValue("phenotype2-MTWetQ") -
-		receiver.getValue("phenotype2-MTWetQ"))^2*sigma_M));
+	return exp(-0.5*((exerter.spatialPosition[0] - receiver.spatialPosition[0])^2*sigma_xy + (exerter.spatialPosition[1]- receiver.spatialPosition[1])^2*sigma_xy + 
+		(exerter.getValue("phenotype1-mat") - receiver.getValue("phenotype1-mat"))^2*sigma_M + 
+		(exerter.getValue("phenotype2-MTWetQ") -	receiver.getValue("phenotype2-MTWetQ"))^2*sigma_M));
 }
 
 

@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 ### Process vcf file for multivariate simulations
 ### KE Lotterhos
 ### Oct 2022
@@ -5,7 +10,8 @@
 ## Libraries
 ```{r}
 #libraries_needed <- c("vcfR", "distances","ggplot2",  "fields", "stringr", "vegan", "robust", "mvtnorm", "viridis", "gridExtra", "devtools", "PRROC", "qvalue", "OutFLANK", "LEA", "ggExtra")
-libraries_needed <- c("vcfR", "vegan","ggplot2", "viridis", "gplots", "corrplot", "RANN")
+libraries_needed <- c("vcfR", "vegan","ggplot2", "viridis", "gplots", "corrplot", "RANN",
+                      "LEA", "gridExtra")
 
 for (i in 1:length(libraries_needed)){
 #  library( libraries_needed[i], character.only = TRUE, lib.loc = "/home/lotterhos/R/x86_64-pc-linux-gnu-library/4.0") # for OOD
@@ -43,7 +49,7 @@ bioclim <- read.table("../bioclim/bioclim.txt", header=TRUE)
 
 ```
 
-## Sanity check environments line up
+## Sanity check - orientation of environments
 ```{r}
 tail(throughtime)
 
@@ -83,16 +89,19 @@ geno_full <- vcf_full@gt[,-1]
     print("Error: full genotype matrix not uniquely 012")
     break
   }
-
-### Subsampling
+```
+### Subsampling individuals from landscape
+```{r}
   indPhen_df$subset <- FALSE
+  set.seed(9801235)
   whichinds <- sort(sample(1:nrow(indPhen_df), size=1000, replace=FALSE))
   indPhen_df$subset[whichinds] <- TRUE
   sum(indPhen_df$subset) #sanity check
   
   G_full_subset <- G_full[,which(indPhen_df$subset)]
-
-### Assign LGs
+```
+### Assign Linkage groups
+```{r}
    # Assign loci to LG groups
   numLGs <- ceiling(max(as.numeric(vcf_full@fix[,"POS"]))/50000)
   for (LG in 1:numLGs){
@@ -127,8 +136,10 @@ geno_full <- vcf_full@gt[,-1]
   head(vcf_full@fix)
   
    rownames(G_full_subset)=vcf_full@fix[,"INFO"]
+```
 
-   # Add individual names to G_full subset
+### Add individual and locus names to G_full subset
+```{r}
  colnames(G_full_subset)=indPhen_df$indID[which(indPhen_df$subset)]
   head(G_full_subset[,1:5])
   plot(colnames(G_full_subset), indPhen_df$indID[which(indPhen_df$subset)])
@@ -163,7 +174,9 @@ geno_full <- vcf_full@gt[,-1]
   if(!identical(rownames(G_full_subset), muts_full$mutname)){Print("Error mut names out of order");break}
   # Are there any missing values for LG?
   if(sum(is.na(muts_full$LG))>0){Print("Error: Missing LGs"); break}
-
+```
+### Add effect sizes to muts table
+```{r}
   head(muts_full)
   muts_full$mut1.mat.Effect <- as.numeric(muts_full$mut1.mat.Effect)
   muts_full$mut2.MTWetQ.Effect <- as.numeric(muts_full$mut2.MTWetQ.Effect)
@@ -174,8 +187,10 @@ geno_full <- vcf_full@gt[,-1]
   muts_full$causal <- FALSE
   muts_full$causal[muts_full$mutID!=1] <- TRUE
   sum(muts_full$causal)
-  
-   # FILTER OUT ALLELS WITH MAF < 0.01 AFTER SAMPLING ####
+```
+
+### FILTER OUT ALLELS WITH MAF < 0.01 AFTER SAMPLING ####
+```{r}
    if(!identical(as.character(muts_full$mutname), as.character(rownames(G_full_subset)))){print("Error 1a: mutations not lined up");break()}
     
     #muts_full$isMAF01 <- FALSE
@@ -218,11 +233,13 @@ Correlation plots
 
   env_cormat <- cor(adp_env[,c(3,4,5,7,8,6)]) #hard coding  
 
+  
   heatmap.2(muteffect_cormat, Rowv = NA, Colv=NA,
   scale="none", col= viridis(100), density.info = "none",
    dendrogram="none",
           trace = "none", 
   key.xlab="|Cor(effect a,effect b)|")
+  
   
     heatmap.2(env_cormat, Rowv = NA, Colv=NA,
   scale="none", col= viridis(100),dendrogram="none",
@@ -230,14 +247,27 @@ Correlation plots
   key.xlab="|Cor(envi a,envi b)|")
 
   # Mutation effect size correlations vs. environmental correlations
+    
+   # TO DO OUTPUT TO PDF
+  colnames(muteffect_cormat) <- c("MAT effect size",
+                                  "MTWetQ effect size",
+                                 "MTDQ effect size",
+                                  "PDM effect size",
+                                  "PwarmQ effect size",
+                                  "PWM effect size")
+    rownames(muteffect_cormat) <- colnames(muteffect_cormat)
+  
+  #plot.new()
+  pdf("plots_MutEffectCorMat.pdf", width=7,height=5)
   corrplot(muteffect_cormat, type = "upper", order = "original", 
          tl.col = "black", tl.srt = 45)
-  corrplot(env_cormat, type = "upper", order = "original", 
-         tl.col = "black", tl.srt = 45)
+  dev.off()
   
-  corrplot(cor(adp_env[,c(1,2,3,4,5,7,8,6)]), type = "upper", order = "original", 
-         tl.col = "black", tl.srt = 45) #hard coding 
+ # corrplot(env_cormat, type = "upper", order = "original", 
+   #      tl.col = "black", tl.srt = 45)
   
+  #corrplot(cor(adp_env[,c(1,2,3,4,5,7,8,6)]), type = "upper", order = "original", 
+  #       tl.col = "black", tl.srt = 45) #hard coding 
 ```
 
 
@@ -254,20 +284,63 @@ Correlation plots
   dim(G_full_subset)
   
   subset_indPhen_df <- indPhen_df[indPhen_df$subset,]
+  
   dim(subset_indPhen_df)
    if(!identical(subset_indPhen_df$indID, sort(subset_indPhen_df$indID))){print("Error individuals in wrong order"); break()}
 
 ```
 
-## Calculate proportion of causal SNPs with clines
+## Do causal SNPs show clinal patterns with environments?
 ```{r}
-start on line 377 in notes
+dim(G_full_subset[which(muts_full$causal),])
+
+muts <- G_full_subset[which(muts_full$causal),]
+
+dim(muts)
+
+
+mut_freq <- list()
+
+#plot(sort(unique(MAT)), rep(0,18), ylim=c(0,1))
+
+(env_cols <- grep("env", colnames(subset_indPhen_df)))
+
+for (env in 1:6){
+  print("start")
+  ENVI <- round(subset_indPhen_df[,env_cols[env]], 1)
+  mut_freq_ENV <- matrix(NA, nrow=nrow(muts), ncol=length(unique(ENVI)))
+  colnames(mut_freq_ENV) <- sort(unique(ENVI))
+  for (i in 1:nrow(muts)){
+    tab <- t(table(ENVI, muts[i,]))
+    num <- as.numeric(rownames(tab))
+    a <- unlist(colSums(tab*num)/(colSums(tab)*2))
+    if(i%%3==0 | i%%4==0){mut_freq_ENV[i,] <- a}else{mut_freq_ENV[i,] <- 1-a}
+    #print(i)
+  }
+  mut_freq[[env]] <- mut_freq_ENV
+  print(env)
+}
+
+str(mut_freq)
 ```
 
 ## Visualize SNP frequency patterns across environmental clines
-Maybe: visualize SNP frequency patterns on maps
+```{r}
+colnames(subset_indPhen_df[,env_cols])
+bioclim
+pdf("plot_AFpatterns.pdf", width=3, height=8)
+par(mar=c(1,2.5,1,0), mfrow=c(6,1))
+matplot(t(mut_freq[[1]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Annual Temperature")
+matplot(t(mut_freq[[2]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Temperature of Wettest Quarter")
+matplot(t(mut_freq[[3]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Temperature of Driest Quarter")
+matplot(t(mut_freq[[4]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Driest Month")
+matplot(t(mut_freq[[5]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Warmest Quarter")
+matplot(t(mut_freq[[6]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Wettest Month")
+dev.off()
+```
 
-## Calculate RDA without nuisance environmental variables
+
+## Calculate RDA without nuisance environmental variables and without structure correction
 ```{r}
 rdaout <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
                 subset_indPhen_df$env2_MTWetQ +
@@ -277,6 +350,9 @@ rdaout <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
                 subset_indPhen_df$env6_PWM
               )
 
+write.table(t(G_full_subset), "../../tutorial/Genotypes.txt", col.names =FALSE, row.names=FALSE)
+write.table(subset_indPhen_df[,-c(1,17,18)], "../../tutorial/Individuals.txt", col.names =TRUE, row.names=FALSE)
+write.table(muts_full[,c(4,5,6,8,17)], "../../tutorial/SNPs.txt", col.names =TRUE, row.names=FALSE)
 ```
 
 ## RDA Outputs
@@ -308,7 +384,7 @@ phencols <- grep("phenotype",colnames(indPhen_df))
 
 str(subset_indPhen_df)
 
-plot_env <- function(i){
+plot_env <- function(i, maintext){
   scalea=2
   subset_indPhen_df$color <- subset_indPhen_df[,phencols[i]]
   p1 <- ggplot(subset_indPhen_df) + 
@@ -321,7 +397,8 @@ plot_env <- function(i){
     geom_text(aes(x=rdaout$CCA$biplot[i,1]*scalea, 
                    y=rdaout$CCA$biplot[i,2]*scalea, 
                    label=enviRDA[i]), 
-              hjust="right", vjust="bottom") + ggtheme
+              hjust="right", vjust="bottom") + ggtheme +ggtitle(maintext) +
+    labs(color="Stnd.\nEnvi.\nValue")
 
     
   p2 <-  ggplot(subset_indPhen_df) + 
@@ -334,17 +411,22 @@ plot_env <- function(i){
     geom_text(aes(x=rdaout$CCA$biplot[i,3]*scalea, 
                    y=rdaout$CCA$biplot[i,4]*scalea, 
                    label=enviRDA[i]), 
-              hjust="right", vjust="bottom") + ggtheme
+              hjust="right", vjust="bottom") + ggtheme +ggtitle("") +
+    labs(color="Stnd.\nEnvi.\nValue")
   
-  grid.arrange(p1,p2)
+  grid.arrange(p1,p2, ncol=2)
 }
- 
-plot_env(1)
-plot_env(2)
-plot_env(3)
-plot_env(4)
-plot_env(5)
-plot_env(6)
+# TO DO OUTPUT TO PDFS
+
+pdf("plots_RDAs.pdf", height=4, width=10)
+  plot_env(1, "A) MAT")
+  plot_env(2, "B) MTWetQ")
+  plot_env(3, "C) MTDQ")
+  plot_env(4, "D) PDM")
+  plot_env(5, "E) PwarmQ")
+  plot_env(6, "F) PWM")
+dev.off()
+
 ```
 
 ## Function to Back-calculate RDA trait prediction
@@ -370,27 +452,39 @@ rda_trait_pred <- function(rdaobj, env_row, K){
 ```{r}
 
 newcols <- paste("rda_trait_pred", 1:6, enviRDA, sep="_")
-subset_indPhen_df$new1 <- subset_indPhen_df$new2 <- subset_indPhen_df$new3 <- subset_indPhen_df$new4 <-subset_indPhen_df$new5 <-subset_indPhen_df$new6 <- NA
 
-colnames(subset_indPhen_df)[(ncol(subset_indPhen_df)-5):ncol(subset_indPhen_df)] <- newcols # hard coding here!!
-head(subset_indPhen_df)
+rdaout_pred <- data.frame(matrix(NA, 
+                                     nrow=nrow(subset_indPhen_df),
+                                     ncol=6)
+                              )
 
+colnames(rdaout_pred) <- newcols
+
+# Choose 3 RDA axes that explain 75% of the variation
 for (i in 1:6){ # hard coding here!!
- subset_indPhen_df[,ncol(subset_indPhen_df)-6+i] <- unlist(rda_trait_pred(rdaout, i, 3))
+ rdaout_pred[,i] <- unlist(rda_trait_pred(rdaout, i, 3))
 }
-
+subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_pred)
 head(subset_indPhen_df)
 ```
 
 ## Compare RDA trait prediction to true trait prediction
-As my dad would say, not too shabby...
+
 ```{r}
-cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rda_trait_pred_1_mat)    
-cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rda_trait_pred_2_MTWetQ)  
-cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rda_trait_pred_3_MTDQ)  
-cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rda_trait_pred_4_PDM)  
-cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rda_trait_pred_5_PwarmQ)  
+#TO DO MATRIX FOR BAR GRAPH
+
+RDAbarplot <- matrix(NA, nrow=6, ncol=4)
+colnames(RDAbarplot) <- c("RDA", "RDA + nuisance env.", "pRDA - geography", "pRDA - PCs")
+rownames(RDAbarplot) <- c("MAT", "MTWetQ", "MTDQ", "PDM", "PwarmQ", "PWM")
+
+RDAbarplot[,1] <- c(
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rda_trait_pred_1_mat)   , 
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rda_trait_pred_2_MTWetQ)  ,
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rda_trait_pred_3_MTDQ)  ,
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rda_trait_pred_4_PDM)  ,
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rda_trait_pred_5_PwarmQ)  ,
 cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rda_trait_pred_6_PWM)  
+)
 ```
 
 ## Compare with an RDA conditioned on geographic distance
@@ -414,6 +508,7 @@ rdaout_geo_pred <- data.frame(matrix(NA,
                               )
 colnames(rdaout_geo_pred) <- paste("rdageo_trait_pred",1:6,enviRDA,sep="_")
 
+par(mfrow=c(1,1))
 a<- screeplot(rdaout_geo)
   str(a)
   a$y # save this it's the eigenvalues
@@ -427,20 +522,22 @@ head(rdaout_geo_pred)
 
 subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_geo_pred)
 
-cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdageo_trait_pred_1_mat)    
-cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdageo_trait_pred_2_MTWetQ)  
-cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdageo_trait_pred_3_MTDQ)  
-cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdageo_trait_pred_4_PDM)  
-cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdageo_trait_pred_5_PwarmQ)  
+RDAbarplot[,3] <- c(
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdageo_trait_pred_1_mat)  ,  
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdageo_trait_pred_2_MTWetQ)  ,
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdageo_trait_pred_3_MTDQ)  ,
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdageo_trait_pred_4_PDM)  ,
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdageo_trait_pred_5_PwarmQ)  ,
 cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdageo_trait_pred_6_PWM)  
+)
 ```
 
 
-## Compare with an RDA with extra environmental variables
+## Compare with an RDA with extra (nuisance) environmental variables
 ```{r}
 
 head(ext_env)
-?nn2
+
 nearest <- nn2(cbind(ext_env$slim_x, ext_env$slim_y), 
     cbind(subset_indPhen_df$x, subset_indPhen_df$y),k=1
 )
@@ -452,7 +549,6 @@ subset_indPhen_df$PSsd <- ext_env$PSsd[unlist(nearest$nn.idx)]
 ggplot(ext_env) + geom_point( aes(x=x,y=y, color=ISO))
 ggplot(subset_indPhen_df) + geom_point( aes(x=x,y=y, color=ISO))
 
-subset_indPhen_df <- subset_indPhen_df2
 nrow(subset_indPhen_df)
 
 rdaout_nuisance <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
@@ -492,10 +588,113 @@ head(rdaout_nuis_pred)
 
 subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_nuis_pred)
 
-cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdanuis_trait_pred_1_mat)    
-cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdanuis_trait_pred_2_MTWetQ)  
-cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdanuis_trait_pred_3_MTDQ)  
-cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdanuis_trait_pred_4_PDM)  
-cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdanuis_trait_pred_5_PwarmQ)  
+RDAbarplot[,2] <- c(
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdanuis_trait_pred_1_mat)    ,
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdanuis_trait_pred_2_MTWetQ),  
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdanuis_trait_pred_3_MTDQ)  ,
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdanuis_trait_pred_4_PDM)  ,
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdanuis_trait_pred_5_PwarmQ),  
 cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdanuis_trait_pred_6_PWM)  
+)
 ```
+
+
+## PCA
+```{r}
+
+ lfmmfile <- paste0(seed, "_genotypes.lfmm")
+  write.lfmm(t(G_full_subset), lfmmfile)
+  #dim(rbind(subset_indPhen_df$ind_index,t(G_full_subset)))
+  
+  pc = pca(lfmmfile, 20, scale = TRUE)
+  #saveRDS(pc,paste0(path, seed, "_pca.RDS"))
+  print("calculated pca")
+  str(pc)
+  subset_indPhen_df$PC1 <- pc$projections[,1]
+  subset_indPhen_df$PC2 <- pc$projections[,2]
+  subset_indPhen_df$PC3 <- pc$projections[,3]
+  propvarpc <- pc$sdev[1:15]/sum(pc$sdev)
+  plot(propvarpc, bty="l", ylab="Prop Var of PC axis", 
+       main=paste0(plotmain, "; K=", 20), cex.main=0.5)
+  
+pdf("plots_PCA.pdf",width=5, height=4)
+  ggplot(subset_indPhen_df) + geom_point(aes(x=PC1, y=PC2, color=x), size=5) + 
+    scale_color_viridis(option="magma") +
+    geom_point(aes(x=PC1, y=PC2, fill=y), size=2, pch=21) +  ggtheme +
+    scale_fill_viridis(option="mako")
+dev.off()
+  
+```
+
+
+## Compare with an RDA conditioned on PC axes
+```{r}
+rdaout_PC <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
+                subset_indPhen_df$env2_MTWetQ +
+                subset_indPhen_df$env3_MTDQ + 
+                subset_indPhen_df$env4_PDM +
+                subset_indPhen_df$env5_PwarmQ +
+                subset_indPhen_df$env6_PWM +
+                Condition(subset_indPhen_df$PC1 + subset_indPhen_df$PC2)
+              )
+
+#Make sure the 6 environments correspond to the first 6 rows
+summary(rdaout_PC)$biplot
+enviRDA=unlist(lapply(strsplit(rownames(rdaout_PC$CCA$biplot),"_"),function(x){x[4]}))
+rdaout_pc_pred <- data.frame(matrix(NA, 
+                                     nrow=nrow(subset_indPhen_df),
+                                     ncol=6)
+                              )
+colnames(rdaout_pc_pred) <- paste("rdapc_trait_pred",1:6,enviRDA,sep="_")
+
+a<- screeplot(rdaout_PC)
+  str(a)
+  a$y # save this it's the eigenvalues
+  prop_var <- round(a$y[1:6]/sum(a$y),3)
+  cumsum(prop_var)
+
+for (i in 1:6){ # hard coding here!!
+ rdaout_pc_pred[,i] <- unlist(rda_trait_pred(rdaout_PC, i, 3))
+}
+head(rdaout_pc_pred)
+
+subset_indPhen_df <- cbind(subset_indPhen_df, rdaout_pc_pred)
+
+RDAbarplot
+RDAbarplot[,4] <- c(
+cor(subset_indPhen_df$phenotype1_mat, subset_indPhen_df$rdapc_trait_pred_1_mat)    ,
+cor(subset_indPhen_df$phenotype2_MTWetQ, subset_indPhen_df$rdapc_trait_pred_2_MTWetQ)  ,
+cor(subset_indPhen_df$phenotype3_MTDQ, subset_indPhen_df$rdapc_trait_pred_3_MTDQ)  ,
+cor(subset_indPhen_df$phenotype4_PDM, subset_indPhen_df$rdapc_trait_pred_4_PDM)  ,
+cor(subset_indPhen_df$phenotype5_PwarmQ, subset_indPhen_df$rdapc_trait_pred_5_PwarmQ)  ,
+cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdapc_trait_pred_6_PWM)
+)
+
+head(subset_indPhen_df)
+forcor <- subset_indPhen_df[,c(
+  which(colnames(subset_indPhen_df)=="x"),
+  which(colnames(subset_indPhen_df)=="y"),
+  grep("PC1", colnames(subset_indPhen_df)), 
+  grep("PC2", colnames(subset_indPhen_df)),
+  grep("env", colnames(subset_indPhen_df)) 
+)
+  ]
+
+pdf("plots_env_PCCors.pdf", width=7, height=5)
+  corrplot(abs(cor(forcor)),type = "upper")
+dev.off()
+```
+
+# RDAbarplot
+```{r}
+
+colrs <- c(rocket(2, begin=0, end=0.3), rocket(2, begin=0.9, end=1.0))
+
+pdf("plots_RDApred.pdf", width=6, height=6)
+par(mar=c(5,5,1,1))
+  barplot(t(RDAbarplot), beside = TRUE, las=2, ylim=c(0,1.05), ylab="Cor(RDA-predicted trait value,\nground-truth trait value)", col=colrs)
+  legend(1.0,1.05,colnames(RDAbarplot), bty="n", fill= colrs)
+dev.off()
+
+```
+

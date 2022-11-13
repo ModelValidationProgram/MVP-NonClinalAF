@@ -1,0 +1,106 @@
+---
+title: "RDA trait prediction tutorial"
+author: "KE Lotterhos"
+date: '2022-10-31'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+
+libraries_needed <- c("vegan")
+
+for (i in 1:length(libraries_needed)){
+  library(libraries_needed[i],character.only = TRUE) #laptop
+}
+
+```
+
+## Load the data
+
+* A matrix of genotypes in 012 format (counts of reference allele)
+  * number of rows = number of individuals
+  * number of columns = number of SNPs
+* A table with information about sampled individuals (each individual in a row)
+* A table with information about SNPs (each SNP in a row)
+
+This data was simulated in SLiM and is associated with the paper "The paradox of adaptive trait clines with non-clinal patterns in the underlying genes" by K.E. Lotterhos. Briefly, a non-Wright-Fisher model was simulated on a landscape with 6 environmental variables that reflect different aspects of thermal stress and precipitation in British Columbia. The simulation included 6 environmental traits, each of which adapted to a different environmental variable.
+
+The `ind` table includes the xy location for each individual, the 6 exact trait values (note that these won't exactly equal the trait value calculated from the genotype matrix because of MAF filtering), and the 6 environmental values at their xy location.
+
+The `muts` table includes the linkage group `LG`, the position of the mutation on the genetic map `pos_pyslim`, a unique ID `mutname`, the allele frequency based on the 1000 sampled individuals `a_freq_subset`, and whether or not it had effects on one or more phenotypes `causal`.
+
+```{r load data}
+setwd("~/Documents/GitHub/MVP-NonClinalAF/tutorial") #change code to your working directory
+
+G <- read.table("Genotypes.txt")
+dim(G)
+
+ind <- read.table("Individuals.txt", header=TRUE)
+dim(ind) #corresponds to rows in G
+head(ind)
+
+muts <-  read.table("SNPs.txt", header=TRUE)
+dim(muts) #corresponds to columns in G
+head(muts)
+```
+
+## RDA trait prediction funciton
+
+This function predicts an environmental trait through the back-transformation of the RDA "site score" of an individual to a chosen environmental variable
+
+```{r function}
+rda_trait_pred <- function(rdaobj, env_row, K){
+  #rdaobj is RDA object
+  #envi row is the row of the environment in the biplot output
+  #K is the number of RDA axes
+  scores <- scores(rdaobj, choices=1:K)
+  ind.sc <- scores$sites
+  pred <- matrix(NA, nrow=nrow(ind.sc), ncol=K)
+  for (k in 1:K){
+    pred[,k] <- ind.sc[,k]*eigenvals(rdaobj)[k]*summary(rdaobj)$biplot[env_row,k]
+  }
+  trait_pred <- scale(rowSums(pred))
+ return(trait_pred) 
+}
+```
+
+## Example of an RDA-predicted environmental trait value
+
+First, run the RDA
+```{r example}
+# Run the RDA
+rdaout <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
+                subset_indPhen_df$env2_MTWetQ +
+                subset_indPhen_df$env3_MTDQ + 
+                subset_indPhen_df$env4_PDM +
+                subset_indPhen_df$env5_PwarmQ +
+                subset_indPhen_df$env6_PWM
+              )
+```
+
+Next, check the biplot output and decide how many RDA axes to use 
+```{r}
+# Check the biplot output
+rdaout$CCA$biplot
+
+# Decide how many RDA axes to use in calculation
+  a<- screeplot(rdaout)
+  str(a)
+  a$y # save this it's the eigenvalues
+  prop_var <- round(a$y[1:6]/sum(a$y),3)
+  cumsum(prop_var)
+  plot(cumsum(prop_var), xlab="Number of RDA axes", ylab="Cumulative percent of variation explained", ylim=c(0,1))
+```
+
+Here is an example of a trait prediction for MAT using the first 3 RDA axes
+```{r}
+# Make the trait prediction for MAT (1st row in biplot output)
+K = 3 # use 3 RDA axes to make the trait prediciton
+
+MATtraitPredict <- rda_trait_pred(rdaout, 1, K)
+
+# Since this is a simulation, we can compare the prediction to the true value
+# Similarly, an empirical study could compare an empirically measured trait value to the RDA-predicted trait value to test how well landscape genomic data can predict functional traits
+plot(ind$phenotype1_mat, MATtraitPredict)
+cor(ind$phenotype1_mat, MATtraitPredict)
+```

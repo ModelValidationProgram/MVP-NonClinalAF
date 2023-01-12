@@ -29,11 +29,17 @@ The `ind` table includes the xy location for each individual, the 6 exact trait 
 
 The `muts` table includes the linkage group `LG`, the position of the mutation on the genetic map `pos_pyslim`, a unique ID `mutname`, the allele frequency based on the 1000 sampled individuals `a_freq_subset`, and whether or not it had effects on one or more phenotypes `causal`.
 
+Note that you will have to change the working directory to where the data is stored on your computer.
+
 ```{r load data}
 setwd("~/Documents/GitHub/MVP-NonClinalAF/tutorial") #change code to your working directory
 
 G <- read.table("Genotypes.txt")
 dim(G)
+rownames(G) <- as.character(rownames(G))
+colnames(G) <- as.character(colnames(G))
+#G <- as.matrix(G)
+
 
 ind <- read.table("Individuals.txt", header=TRUE)
 dim(ind) #corresponds to rows in G
@@ -69,13 +75,15 @@ rda_trait_pred <- function(rdaobj, env_row, K){
 First, run the RDA
 ```{r example}
 # Run the RDA
-rdaout <- rda(t(G_full_subset) ~ subset_indPhen_df$env1_mat +
-                subset_indPhen_df$env2_MTWetQ +
-                subset_indPhen_df$env3_MTDQ + 
-                subset_indPhen_df$env4_PDM +
-                subset_indPhen_df$env5_PwarmQ +
-                subset_indPhen_df$env6_PWM
+rdaout <- rda(G ~ ind$env1_mat +
+                ind$env2_MTWetQ +
+                ind$env3_MTDQ + 
+                ind$env4_PDM +
+                ind$env5_PwarmQ +
+                ind$env6_PWM
               )
+
+
 ```
 
 Next, check the biplot output and decide how many RDA axes to use 
@@ -103,4 +111,39 @@ MATtraitPredict <- rda_trait_pred(rdaout, 1, K)
 # Similarly, an empirical study could compare an empirically measured trait value to the RDA-predicted trait value to test how well landscape genomic data can predict functional traits
 plot(ind$phenotype1_mat, MATtraitPredict)
 cor(ind$phenotype1_mat, MATtraitPredict)
+```
+
+### Compare to other functions in RDA
+
+Some readers may wonder if other functions in the R package `vegan` can be used to conduct the backtransformation from RDA space to an environmental trait variable `rda_trait_pred`. Here are the types of outputs produced by the functions `fitted`, `residuals`, and `predict`.
+```{r}
+bob <- fitted(rdaout)
+dim(bob)
+head(bob[,1:10])
+
+plot(ind$phenotype1_mat, rowSums(bob))
+plot(ind$phenotype1_mat, bob[,1])
+
+# Residuals
+ass <- residuals(rdaout)
+dim(ass)
+
+boob <- predict(rdaout, newdata=G, type="response")
+dim(boob)
+
+str(G)
+
+
+boob1 <- predict(rdaout, type="sp", newdata=G, scaling=2)
+
+boob2 <- predict(rdaout, type="lc", new=data.frame(A1 = 3, Management="NM", Moisture="2"), scal=2)
+
+boob3 <- predict(rdaout, type="wa", newdata=G)
+```
+
+
+### Compare to a regression with the environmental variable as the respone variable and PCs of the genotype matrix as the predictor variable
+
+```{r}
+ind$env1_mat ~ 
 ```

@@ -314,29 +314,103 @@ for (env in 1:6){
     tab <- t(table(ENVI, muts[i,]))
     num <- as.numeric(rownames(tab))
     a <- unlist(colSums(tab*num)/(colSums(tab)*2))
-    if(i%%3==0 | i%%4==0){mut_freq_ENV[i,] <- a}else{mut_freq_ENV[i,] <- 1-a}
+    mut_freq_ENV[i,] <- a
+    #if(i%%3==0 | i%%4==0){mut_freq_ENV[i,] <- a}else{mut_freq_ENV[i,] <- 1-a}
     #print(i)
   }
   mut_freq[[env]] <- mut_freq_ENV
   print(env)
 }
 
+# Each item in this list is an environment
+# Within each item is a matrix with rows corresponding to alleles
+# and columns corresponding to the environmental variable
 str(mut_freq)
+hist(mut_freq[[6]])
+
+length(mut_freq)
+
+mut_cors <- matrix(NA, nrow=90, ncol=6)
+mut_Ps <- matrix(NA, nrow=90, ncol=6)
+
+for (i in 1:length(mut_freq)){
+  env <- as.numeric(colnames(mut_freq[[i]]))
+  for (j in 1:90){#hard coding for number loci
+    mut_cors[j,i] <- cor.test(env, mut_freq[[i]][j,])$est
+    mut_Ps[j,i] <- cor.test(env, mut_freq[[i]][j,])$p.value
+  }
+}
+
+plot(mut_cors, mut_Ps)
+dim(mut_Ps)
+```
+
+## Proportion of significant QTN clines after Bonferroni correction based only on the number of tests done on QTNs
+```{r}
+  bonf <- 0.05/(nrow(mut_Ps))
+  mut_sigclines <- mut_Ps < bonf 
+  colSums(mut_sigclines)/nrow(mut_sigclines)
+```
+
+## Proportion of significant QTN clines after Benjamini-Hotchberg correction based only on the number of tests done on QTNs
+
+Note that these numbers and the ones above are conservative in the sense that we're only correcting for multiple tests on QTN loci and not the whole genome
+```{r}
+  mut_Padj <- matrix(p.adjust(mut_Ps,method="BH"), ncol=6)
+  plot(mut_Ps, mut_Padj)
+  colSums(mut_Padj<0.05)/nrow(mut_Ps)
+  
+  names(subset_indPhen_df[env_cols])
 ```
 
 ## Visualize SNP frequency patterns across environmental clines
+This is a matplot, which draws each line randomly with a color and shape
+
+This next plotting code draws each line with a color according to it's correlation between allele frequency and environment, and a solid line for non-clinal alleles and a dashed line for clinal alleles.
+
 ```{r}
-colnames(subset_indPhen_df[,env_cols])
-bioclim
-pdf("plot_AFpatterns.pdf", width=3, height=8)
-par(mar=c(1,2.5,1,0), mfrow=c(6,1))
-matplot(t(mut_freq[[1]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Annual Temperature")
-matplot(t(mut_freq[[2]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Temperature of Wettest Quarter")
-matplot(t(mut_freq[[3]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Mean Temperature of Driest Quarter")
-matplot(t(mut_freq[[4]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Driest Month")
-matplot(t(mut_freq[[5]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Warmest Quarter")
-matplot(t(mut_freq[[6]]), type="l", bty="l", ylab="", xlab="", xaxt = "n")#, main="Precipitation of Wettest Month")
+val2col<-function(z, zlim, col = turbo(100, begin=0, end=0.8), breaks){
+ if(!missing(breaks)){
+  if(length(breaks) != (length(col)+1)){stop("must have one more break than colour")}
+ }
+ if(missing(breaks) & !missing(zlim)){
+  zlim[2] <- zlim[2]+c(zlim[2]-zlim[1])*(1E-3)#adds a bit to the range in both directions
+  zlim[1] <- zlim[1]-c(zlim[2]-zlim[1])*(1E-3)
+  breaks <- seq(zlim[1], zlim[2], length.out=(length(col)+1)) 
+ }
+ if(missing(breaks) & missing(zlim)){
+  zlim <- range(z, na.rm=TRUE)
+  zlim[2] <- zlim[2]+c(zlim[2]-zlim[1])*(1E-3)#adds a bit to the range in both directions
+  zlim[1] <- zlim[1]-c(zlim[2]-zlim[1])*(1E-3)
+  breaks <- seq(zlim[1], zlim[2], length.out=(length(col)+1))
+ }
+ CUT <- cut(z, breaks=breaks)
+ colorlevels <- col[match(CUT, levels(CUT))] # assign colors to heights for each point
+ return(colorlevels)
+}
+```
+
+```{r}
+
+dim(mut_cors)
+dim(mut_Padj)
+
+pdf("plot_AFpatterns.pdf", width=5, height=4)
+for (i in 1:6){ #loop through climates
+  enva <- as.numeric(colnames(mut_freq[[i]]))
+  mutcor_enva <- abs(mut_cors[,i])
+  mutP_enva <- mut_Padj[,i]
+  mutsline <- as.numeric(mutP_enva<0.05) + 1
+  mutslwd <- as.numeric(mutP_enva>0.05) + 1
+  mutscol <-  val2col(mutcor_enva, 1.0, breaks=seq(0,1,by=0.01))
+  plot(c(min(enva), max(enva)), c(0,1), col="white", type="l", bty="l", ylab="", xlab="", xaxt = "n",
+       main=colnames(indPhen_df[env_cols[i]]))
+  for(j in 1:nrow(muts)){ #loop through mutations
+    points(enva, mut_freq[[i]][j,], col=mutscol[j], lwd=mutslwd[j], lty=mutsline[j], type="l")
+  }
+}
 dev.off()
+
 ```
 
 
@@ -398,7 +472,7 @@ plot_env <- function(i, maintext){
                    y=rdaout$CCA$biplot[i,2]*scalea, 
                    label=enviRDA[i]), 
               hjust="right", vjust="bottom") + ggtheme +ggtitle(maintext) +
-    labs(color="Stnd.\nEnvi.\nValue")
+    labs(color="Trait\nValue")
 
     
   p2 <-  ggplot(subset_indPhen_df) + 
@@ -602,7 +676,10 @@ cor(subset_indPhen_df$phenotype6_PWM, subset_indPhen_df$rdanuis_trait_pred_6_PWM
 ## PCA
 ```{r}
 
+write.table(t(G_full_subset), paste0(seed,"genotypes.txt"), row.names=FALSE)
+
  lfmmfile <- paste0(seed, "_genotypes.lfmm")
+  
   write.lfmm(t(G_full_subset), lfmmfile)
   #dim(rbind(subset_indPhen_df$ind_index,t(G_full_subset)))
   
@@ -698,3 +775,107 @@ dev.off()
 
 ```
 
+# Ancestry
+```{r}
+ lfmmfile <- paste0(seed, "_genotypes.lfmm")
+obj.snmf <- snmf(lfmmfile, K = 1:20, project = "new", repetitions = 5, tolerance = 0.00001, entropy=TRUE, ploidy = 2)
+
+# obj.snmf <- load.snmfProject("892657863_genotypes.snmfProject")
+
+# plot cross-entropy criterion
+plot(obj.snmf, cex = 1.2, col = "lightblue", pch = 19)
+
+# select run with lowest cross-entropy
+entropy <- cross.entropy(obj.snmf, K = 3)
+best <- which.min(entropy)
+
+# generate Q-matrix
+qmatrix <- Q(obj.snmf, K = 3, run = best)
+head(qmatrix)
+subset_indPhen_df$Q1 <- qmatrix[,1]
+subset_indPhen_df$Q2 <- qmatrix[,2]
+subset_indPhen_df$Q3 <- qmatrix[,3]
+
+cluster <- apply(qmatrix, 1, which.max)
+subset_indPhen_df$cluster <- cluster
+# order qmatrix and individual names by population
+qmatrix <- data.frame(qmatrix)
+qmatrix$cluster <- cluster
+head(qmatrix)
+qmat.ord <- qmatrix[order(cluster, qmatrix[,1], qmatrix[,2], qmatrix[,3]),]
+head(qmat.ord)
+
+qmat.ord <- qmat.ord[,c(3,2,1,4)]
+```
+
+```{r}
+pdf("Ancestry_barplot.pdf", width=11, height=5)
+par(mar=c(1,4,2,1))
+# generate plot
+ancestry <- barplot(t(qmat.ord[,1:3]),col=c("lightblue", "orange", "darkblue"),border = NA, space = 0,ylab = "Admixture coefficients", main = "Ancestry Matrix", horiz = FALSE,   las = 2, ylim=c(-0.15,1.0), xaxt="n")
+
+cexsize <- 0.5
+# Plot the first cluster
+xl <- which(qmat.ord$cluster==1)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col="darkblue",
+      pch=19, cex=cexsize)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,2],function(x){adjustcolor("orange", x)})),
+      pch=19, cex=cexsize, lwd=0 )
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,1],function(x){adjustcolor("lightblue", x)})),
+      pch=19, cex=cexsize , lwd=0)
+
+# plot the second cluster
+xl <- which(qmat.ord$cluster==2)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col="orange",
+      pch=19, cex=cexsize )
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,3],function(x){adjustcolor("darkblue", x)})),
+      pch=19, cex=cexsize , lwd=0)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,1],function(x){adjustcolor("lightblue", x)})),
+      pch=19, cex=cexsize, lwd=0 )
+
+# plot the third cluster
+xl <- which(qmat.ord$cluster==3)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col="lightblue",
+      pch=19, cex=cexsize )
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,3],function(x){adjustcolor("darkblue", x)})),
+      pch=19, cex=cexsize , lwd=0)
+points(x=xl, y=rep(-0.1,length(xl)),
+       col=unlist(lapply(qmat.ord[xl,2],function(x){adjustcolor("orange", x)})),
+      pch=19, cex=cexsize , lwd=0)
+dev.off()
+```
+
+```{r}
+plot(subset_indPhen_df$x, subset_indPhen_df$y, col=cluster)
+
+pdf("AncestryOnMap.pdf", width=7,height=7)
+
+ggplot() + 
+  #add first cluster
+  geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==1,], aes(x=x, y=y), pch=19, alpha=1, size=5,colour="darkblue") +
+    geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==1,], aes(x=x, y=y, alpha=round(Q2,1)), pch=19, size=5,colour="orange") +
+   geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==1,], aes(x=x, y=y, alpha=round(Q3,1)), pch=19, size=5,colour="lightblue") +
+  
+  #add second cluster            
+  geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==2,],aes(x=x, y=y), pch=19,size=5,colour="orange", alpha=1) +
+    geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==2,],aes(x=x, y=y, alpha=Q1), pch=19,size=5,colour="darkblue") +
+   geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==2,],aes(x=x, y=y, alpha=Q3), pch=19,size=5,colour="lightblue") +
+  
+  #add third cluster                        
+  geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==3,],aes(x=x, y=y, alpha=1),pch=19,size=5, colour="lightblue") + 
+  geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==3,],aes(x=x, y=y, alpha=Q1),pch=19,size=5, colour="darkblue") + 
+  geom_point(data=subset_indPhen_df[subset_indPhen_df$cluster==3,],aes(x=x, y=y, alpha=Q2),pch=19,size=5, colour="orange") + 
+  ggtheme + 
+  scale_alpha(range = c(0, 1)) + 
+  theme(legend.position = "none")
+                                         
+        dev.off()                                 
+```

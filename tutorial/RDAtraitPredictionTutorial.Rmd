@@ -5,9 +5,20 @@ date: '2022-10-31'
 output: html_document
 ---
 
+```
+install.packages("vegan")
+install.packages("lfmm")
+
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("LEA")
+```
+
 ```{r setup, include=FALSE}
 
-libraries_needed <- c("vegan")
+
+libraries_needed <- c("vegan", "LEA", "lfmm")
 
 for (i in 1:length(libraries_needed)){
   library(libraries_needed[i],character.only = TRUE) #laptop
@@ -72,8 +83,18 @@ rda_trait_pred <- function(rdaobj, env_row, K){
 
 ## Example of an RDA-predicted environmental trait value
 
-First, run the RDA
+1. First, run the RDA:
+
+Scale the environmental variables to have a mean of 0 and standard deviation of 1
 ```{r example}
+
+ind$env1_mat <- scale(ind$env1_mat)
+ind$env2_MTWetQ <- scale(ind$env2_MTWetQ)
+ind$env3_MTDQ <- scale(ind$env3_MTDQ)
+ind$env4_PDM <- scale(ind$env4_PDM)
+ind$env5_PwarmQ <- scale(ind$env5_PwarmQ)
+ind$env6_PWM <- scale(ind$env6_PWM)
+
 # Run the RDA
 rdaout <- rda(G ~ ind$env1_mat +
                 ind$env2_MTWetQ +
@@ -86,7 +107,7 @@ rdaout <- rda(G ~ ind$env1_mat +
 
 ```
 
-Next, check the biplot output and decide how many RDA axes to use 
+2. Next, check the biplot output and decide how many RDA axes to use in the prediction. In this case, the first 3 RDA axes explain 80% of the variance. Note that choosing too many axes may result in overfitting. 
 ```{r}
 # Check the biplot output
 rdaout$CCA$biplot
@@ -100,7 +121,7 @@ rdaout$CCA$biplot
   plot(cumsum(prop_var), xlab="Number of RDA axes", ylab="Cumulative percent of variation explained", ylim=c(0,1))
 ```
 
-Here is an example of a trait prediction for MAT using the first 3 RDA axes
+3. Here is an example of a trait prediction for MAT using the first 3 RDA axes:
 ```{r}
 # Make the trait prediction for MAT (1st row in biplot output)
 K = 3 # use 3 RDA axes to make the trait prediciton
@@ -109,13 +130,15 @@ MATtraitPredict <- rda_trait_pred(rdaout, 1, K)
 
 # Since this is a simulation, we can compare the prediction to the true value
 # Similarly, an empirical study could compare an empirically measured trait value to the RDA-predicted trait value to test how well landscape genomic data can predict functional traits
-plot(ind$phenotype1_mat, MATtraitPredict)
+plot(scale(ind$phenotype1_mat), MATtraitPredict)
+abline(0,1)
 cor(ind$phenotype1_mat, MATtraitPredict)
 ```
 
 ### Compare to other functions in RDA
 
-Some readers may wonder if other functions in the R package `vegan` can be used to conduct the backtransformation from RDA space to an environmental trait variable `rda_trait_pred`. Here are the types of outputs produced by the functions `fitted`, `residuals`, and `predict`.
+Some readers may wonder if other functions in the R package `vegan` can be used to conduct the back-transformation from RDA space to an environmental trait variable in the same way as `rda_trait_pred`. Here are the types of outputs produced by the function `predict` and it's variations:
+
 ```{r}
 bob <- fitted(rdaout)
 dim(bob)
@@ -133,17 +156,120 @@ dim(boob)
 
 str(G)
 
+# This option in the `predict` function outputs the scores for each locus in RDA space
+loci_scores_predict <- predict(rdaout, type="sp", newdata=G, scaling=2)
+str(loci_scores_predict)
 
-boob1 <- predict(rdaout, type="sp", newdata=G, scaling=2)
+# This option in the `predict` function outputs the fitted values from the multiple regression
+# performed on each locus within each individual 
+fitted_values_predict <- predict(rdaout, newdata=G, type="response")
+str(fitted_values_predict)
+  
+  # As a side note, it outputs the same thing as the `fitted` funciton
+  fitted_values_predict2 <- fitted(rdaout)
+  str(fitted_values_predict2)
 
-boob2 <- predict(rdaout, type="lc", new=data.frame(A1 = 3, Management="NM", Moisture="2"), scal=2)
+# This option  in the `predict` function outputs the individual scores in RDA space based on a linear combination of the predictor variables
+X <- data.frame(ind$env1_mat ,
+                ind$env2_MTWetQ ,
+                ind$env3_MTDQ ,
+                ind$env4_PDM ,
+                ind$env5_PwarmQ ,
+                ind$env6_PWM)
+ind_scores_predict <- predict(rdaout, type="lc", new=X, scal=2)
+str(ind_scores_predict)
+```
 
-boob3 <- predict(rdaout, type="wa", newdata=G)
+The `predict` function and it's variations make predictions in RDA space, and therefore do not output the same kind of predictions as `RDA_trait_predict`.
+
+
+
+
+
+
+### Understanding how the RDA is built on multiple regressions
+
+Prior to ordination in the RDA, each locus is used in a multiple regression model with the environmental variables to produce fitted values for that locus across individuals.
+
+<SNP Genotype > ~ <Env1> + <Env2> + <Env3> etc.
+
+For example for the first SNP in the data:
+
+```{r}
+ # multiple regression of 1st locus
+
+mod <- lm(G[,1] ~ ind$env1_mat + ind$env2_MTWetQ + ind$env3_MTDQ +  ind$env4_PDM +
+                ind$env5_PwarmQ +   ind$env6_PWM)
+ coef(summary(mod))
+```
+
+Although multiple regression is a linear combination of multiple variables, it is able to model complex multivariate responses that appear to be non-monotonic in any one dimension. For example, let's look at a the relationship between explanatory variable temperature and the response variable, across decreasing and increasing values of the other explanatory variables:
+
+```{r}
+otherenv <- c(seq(1,0,length.out=100), seq(0,1,length.out=101))
+newdata=data.frame(ind.env1_mat = seq(-1,1, by=0.01),
+                   ind.env2_MTWetQ = otherenv,
+                   ind.env3_MTDQ = otherenv,
+                   ind.env4_PDM = otherenv,
+                   ind.env5_PwarmQ =otherenv,
+                   ind.env6_PWM = otherenv)
+pred <- t(newdata)*(coef(summary(mod))[2:7,1]) + coef(summary(mod))[1,1]
+plot(seq(-1,1, by=0.01), colSums(pred), xlab="Temperature", ylab="Standardized genotype score")
 ```
 
 
-### Compare to a regression with the environmental variable as the respone variable and PCs of the genotype matrix as the predictor variable
+Thus, there is flexibility with the RDA to capture the way environmental variables may influence the patterns at one locus in a different way than at another locus, which may not correlate with the relationship between the environment and population structure.
+
+It may be interesting for some studies to understand how each locus is shaped by the environment - in other words, what are the slopes associated with the environmental variables in the multiple regression model for each locus?
+
+Unfortunately there is not a way to output these slopes in the R package `vegan`, but we can reproduce the first step of the RDA to get the regression coefficients:
+(vegan source code at https://github.com/cran/vegan/blob/master/R/simpleRDA2.R)
 
 ```{r}
-ind$env1_mat ~ 
+
+X <- data.frame(ind$env1_mat ,
+                ind$env2_MTWetQ ,
+                ind$env3_MTDQ ,
+                ind$env4_PDM ,
+                ind$env5_PwarmQ ,
+                ind$env6_PWM)
+    
+# Perform qr decomposition to do the regression for all SNPs at the same time 
+ Q <- qr(X, tol=1e-6)
+ str(Q)
+ 
+# Get the matrix of regression coefficients
+ Qr.coeff <- qr.coef(Q, G)
+ # This matrix has each SNP in a column and the regression coefficients for that SNP corresponds to each environmental variable. 
+ # This is the step that is not performed in the `vegan` package - the package skips directly to predicting the fitted values, on which the ordination is performed.
+ 
+# Here is an example of regression coefficients for the first 10 SNPs:
+ head(Qr.coeff[,1:10])
+ 
+# Note that the regression coefficients for the first SNP from this approach is exactly the same as from our model above:
+ Qr.coeff[,1]
+ coef(summary(mod))
+```
+
+We can visualize the regression coefficients with a heatmap. In this case, we know the causal loci in the simulations, so we will just visualize those loci.
+
+This visualization illustrates how there are unique ways in which environments are combined to predict the pattern at each SNP.
+```{r}
+# 
+summary(as.numeric(Qr.coeff[,which(muts$causal)]))
+
+brks <- seq(-0.7, 0.7, by=0.05) #set the color scale
+
+heatmap(t(Qr.coeff[,which(muts$causal)]),
+        scale="none", col = cm.colors(length(brks)-1), breaks=brks)
+ 
+```
+
+ 
+
+
+LFMM trait prediction on the sims
+```{r}
+dim(G)
+
 ```

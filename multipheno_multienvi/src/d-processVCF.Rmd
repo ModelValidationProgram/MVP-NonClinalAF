@@ -19,14 +19,16 @@ for (i in 1:length(libraries_needed)){
   library(libraries_needed[i],character.only = TRUE) #laptop
 }
 
-
+knitr::opts_knit$set(root.dir = "~/Documents/GitHub/MVP-NonClinalAF/multipheno_multienvi/output_multisim/")
 ```
+
+path <- "~/Documents/GitHub/MVP-NonClinalAF/multipheno_multienvi/output_multisim/"
+#setwd("/work/lotterhos/MVP-NonClinalAF") #OOD
+setwd(path)
 
 ## Load VCF and data files
 ```{r}
 path <- "~/Documents/GitHub/MVP-NonClinalAF/multipheno_multienvi/output_multisim/"
-#setwd("/work/lotterhos/MVP-NonClinalAF") #OOD
-setwd(path)
 seed <- 892657863
 vcf_full <- read.vcfR(paste0(path,seed,"_plusneut_MAF01.recode2.vcf.gz"))
 
@@ -876,6 +878,8 @@ FDR <- c(t1$FDR,
 
 plotlab <- paste0("# GEA outliers = ", numoutliers, " (FDR = ", round(FDR,2), ")")
 ```
+
+
 
 # RDAbarplot
 ```{r}

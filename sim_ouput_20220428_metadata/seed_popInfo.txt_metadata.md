@@ -4,7 +4,7 @@
 * `seed`  simulation seed
 * `subpopID`
 * `N` number of individuals simmulated in that deme
-* `opt0` salinity optimum
-* `opt1` Temperature optimum
+* `opt0` optimum for the first trait (salinity)
+* `opt1` optimum for the second trait (Temperature)
 * `x` x location on grid
 * `y` y location on grid

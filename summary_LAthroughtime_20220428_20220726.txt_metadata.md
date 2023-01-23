@@ -5,6 +5,8 @@ A table summarizing the local adaptation through time in each simulation.
 This data was output from the SLiM run and compiled for analysis. The data was used
 to check that the amount of local adaptation reached equilibrium.
 
+For simplicity, `Env2` in the main paper was called `salinity` or `sal` in the simulations
+
 -------------------------
 ### Basic outputs
 -------------------------

@@ -1,3 +1,4 @@
+SliM output
 
 # `1231094_ind.txt` Individual information output last generation
 

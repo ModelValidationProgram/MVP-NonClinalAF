@@ -2,23 +2,29 @@
 title: "Non-clinal sims analysis"
 author: "KE Lotterhos"
 date: "9/20/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = '/work/lotterhos/MVP-NonClinalAF')
 library(ggplot2)
 library(viridis)
 library(gridExtra)
 library(tidyr)
-library(dplyr)
 library(plyr)
+library(dplyr)
 #library(tidyverse)
-outputs <- "figures_20220428_20220726/"
+outputs <- "figures_20220428_20221112/"
 ```
 
-`setwd("~/Documents/GitHub/MVP-NonClinalAF")`
-`setwd("/work/lotterhos/MVP-NonClinalAF")`
+Make sure to set the working directory in the above code chunk
+```{r, echo=FALSE, eval=FALSE}
+setwd("~/Documents/GitHub/MVP-NonClinalAF")
+setwd("/work/lotterhos/MVP-NonClinalAF")
+```
 ## Read in data
 
 ```{r read data}
@@ -78,7 +84,7 @@ final.df$seed[which(final.df$arch_level=="mod-polygenic" & final.df$demog_level=
 #}
 
 i = 1231214#1232792#1232117#1231441 #seed example for publication
-system(paste0("cp sim_output_20220428/",i,"*.pdf figures_20220428_20220726/"))
+system(paste0("cp sim_output_20220428/",i,"*.pdf figures_20220428_20221112/"))
 
 # Seeds needed for 10x2 demography graph are the first 15 seeds
 #for (i in 1:15){ #unhash to run
@@ -416,6 +422,28 @@ dev.off()
 
 ```
 
+## Percent of GWAS hits with clines
+```{r}
+head(final.df$clinalparadigm_temp_propsigGWASclines)
+sum(is.na(final.df$clinalparadigm_temp_propsigGWASclines))
+
+plotdf <- data.frame(propsigGWASclines=c(final.df$clinalparadigm_sal_propsigGWASclines,final.df$clinalparadigm_temp_propsigGWASclines),
+                     propClines=c(final.df$cor_TPR_sal,final.df$cor_TPR_temp),
+                     arch_level=factor(rep("a",nrow(final.df)*2)))
+plotdf$arch_level <- c(as.character(final.df$arch_level, final.df$arch_level))
+str(plotdf)
+
+summary(lm(propsigGWASclines~propClines*arch_level, data=plotdf))
+
+pdf(paste0(outputs,"PropGWASClinal.pdf"), width=6, height=5)
+ggplot(plotdf, aes(y=propsigGWASclines, 
+                 x=propClines, color=arch_level)) + 
+  geom_point( alpha=0.5) +xlim(0,1) + ylim(0,1) + ggtheme +
+  geom_smooth(method="glm", level=0.95) + xlab("Proportion of QTNs that are clinal (ground truth)") + ylab("Proportion of GWAS hits that are clinal") + scale_color_viridis(name="Genic level", discrete=TRUE, option="rocket", begin=0, end=0.9) +
+  geom_abline(intercept=0, slope=1, color="grey")
+dev.off()
+```
+
 ## Percent of Va explained by clinal loci
 
 Same plots as above, but for the percent of the additive genetic variance (Va). If clinal loci explain a major proportion of Va, then it could be argued that QTN loci that do not have clinal patterns are not as "important" to discover.
@@ -427,22 +455,23 @@ pleiotropy.df2 <- gather(subdf_arch, key=trait, value=cor_VA_prop, cor_VA_temp_p
 pleiotropy.df3 <- gather(subdf_arch, key=trait, value=cor_TPR, cor_TPR_temp, cor_TPR_sal)
 
 fboth2 <-   ggplot() + 
-  geom_boxplot(aes(x=arch_level, y=cor_TPR), data=pleiotropy.df3, color="grey70", alpha=0.8, fill="grey90") +
-  geom_boxplot(aes(x=arch_level, y=cor_VA_prop, fill=arch_level), data=pleiotropy.df2, color="grey20") + ggtheme + xlab("") + ylab("Proportion of explainable VA \n explained by loci with significant clines") + scale_fill_viridis(option="rocket", discrete=TRUE, end=1)  + ylim(0,1) + ggtitle("A") + theme(legend.position = "none")
+  geom_boxplot(aes(x=arch_level, y=1-cor_TPR), data=pleiotropy.df3, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(aes(x=arch_level, y=1-cor_VA_prop, fill=arch_level), data=pleiotropy.df2, color="grey20") + ggtheme + xlab("") + ylab("Proportion of VA \n explained by non-clinal QTNs") + scale_fill_viridis(option="rocket", discrete=TRUE, end=1)  + ylim(0,1) + ggtitle("A") + theme(legend.position = "none")
 fboth2
 
 a1<- ggplot() + 
-  geom_boxplot(aes(x=demog_level, y=cor_TPR_temp), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
-  geom_boxplot(data=final.df, aes(x=demog_level, y=cor_VA_temp_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of explainable VA in temp. \n explained by loci with significant clines") + scale_fill_viridis(discrete=TRUE, option="viridis", begin=0, end=1) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
+  geom_boxplot(aes(x=demog_level, y=1-cor_TPR_temp), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(data=final.df, aes(x=demog_level, y=1-cor_VA_temp_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of VA in temp. \n explained by non-clinal QTNs") + scale_fill_viridis(discrete=TRUE, option="viridis", begin=0, end=1) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("A")
 a1
 
 b1<- ggplot()+
-    geom_boxplot(aes(x=demog_level, y=cor_TPR_sal), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
-  geom_boxplot(data=final.df, aes(x=demog_level, y=cor_VA_sal_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of explainable VA in Env2 \n explained by loci with significant clines") + scale_fill_viridis(discrete=TRUE, option="viridis", begin=0, end=1) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("C")
+    geom_boxplot(aes(x=demog_level, y=1-cor_TPR_sal), data=final.df, color="grey70", alpha=0.8, fill="grey90") +
+  geom_boxplot(data=final.df, aes(x=demog_level, y=1-cor_VA_sal_prop, fill=demog_level),color="grey20") + ggtheme + xlab("Landscape") + ylab("Proportion of VA in Env2 \n explained by non-clinal QTNs") + scale_fill_viridis(discrete=TRUE, option="viridis", begin=0, end=1) + theme(legend.position = "none")+ ylim(0,1) + ggtitle("B")
 b1
 
-pdf(paste0(outputs,"WhatDrivesNonClines_VA.pdf"), width=8, height=8)
-  grid.arrange(fboth2, a1,b1, nrow=2, ncol=2, layout_matrix=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
+pdf(paste0(outputs,"WhatDrivesNonClines_VA.pdf"), width=7, height=3)
+ # grid.arrange(fboth2, a1,b1, nrow=2, ncol=2, layout_matrix=matrix(c(1,1,2,3), nrow=2, byrow=TRUE))
+  grid.arrange(a1,b1, ncol=2)
 dev.off()
 ```
 
@@ -809,7 +838,7 @@ g2
 # They show the same pattern, so combine for analysis:
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_RDAmutpred_cor_tempEffect, RDA_RDAmutpred_cor_salEffect)
 
-g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (QTN effect size)") 
+g3 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme + coord_cartesian(xlim = c(-1, 1))  + xlab("Accuracy\nCor(evolved effect size,\n predicted effect size from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("D) Accuracy of RDA prediction \n     (QTN effect size, no structure correction)") 
 g3
 # 450 missing values expected
 
@@ -851,7 +880,7 @@ library(plyr)
   # check again for missing data
   sum(is.na(RDA_mutpredict$Accuracy))
   
-  n <- ggplot(RDA_mutpredict, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme  +  coord_cartesian(ylim = c(-1, 1))   + ylab("Accuracy of RDA prediction\n(worse <<----->> better)") + ggtitle("D) RDA prediction accuracy: QTN effect size on Temp.")  + guides(fill=guide_legend(title="Structure\nCorrection?")) + 
+  n <- ggplot(RDA_mutpredict, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme  +  coord_cartesian(ylim = c(-1, 1))   + ylab("Accuracy of RDA prediction\n(worse <<----->> better)") + ggtitle("C) RDA prediction accuracy: QTN effect size on Temp.")  + guides(fill=guide_legend(title="Structure\nCorrection?")) + 
     theme(axis.text.x=element_blank()) + xlab("")
   # Cor(Mutation effect on Temp.,\nRDA-predicted Temp. effect)
   n
@@ -870,12 +899,16 @@ library(plyr)
     sum(is.na(RDA_mutpredict_sal$Accuracy))
     # 900 expected (450 from each set combined to one data frame)
   
-  o <- ggplot(RDA_mutpredict_sal, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme +  coord_cartesian(ylim = c(-1, 1))    +  ylab("Accuracy of RDA prediction \n(worse <<----->> better)") + ggtitle("E) RDA prediction accuracy: QTN effect size on Env2")  + guides(fill=guide_legend(title="Structure\nCorrection?"))  + xlab("Landscape")
+  o <- ggplot(RDA_mutpredict_sal, aes(y=Accuracy,x=demog_level, fill=structcorr)) + geom_boxplot(color="grey40") + ggtheme +  coord_cartesian(ylim = c(-1, 1))    +  ylab("Accuracy of RDA prediction \n(worse <<----->> better)") + ggtitle("D) RDA prediction accuracy: QTN effect size on Env2")  + guides(fill=guide_legend(title="Structure\nCorrection?"))  + xlab("Landscape")
   # "Cor(Mutation effect on Env2,\nRDA-predicted Env2 effect)"
   o
 
 pdf(paste0(outputs,"RDA-Predict-Muts.pdf"), width=5.5, height=7)
   grid.arrange(g3, n,o)
+dev.off()
+
+pdf(paste0(outputs,"RDA-Predict-Muts-nohist.pdf"), width=4, height=5.5)
+  grid.arrange(n,o)
 dev.off()
 ```
 
@@ -930,7 +963,7 @@ Visualize the effect of genetic architecture on phenotype prediction
 ```{r RDA phenotype prediction}
 forhist <- gather(final.df, key=env, value=Accuracy, RDA_cor_RDA20000temppredict_tempPhen, RDA_cor_RDA20000salpredict_salPhen) %>% filter(num_neut_postfilter>20000)
 
-g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))   + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (individual environmental trait, no structure correction)") 
+g4 <- ggplot(forhist, aes(x=Accuracy, fill=arch_level)) + geom_histogram(color="grey40", binwidth=0.05) + ggtheme +  coord_cartesian(xlim = c(-1, 1))   + xlab("Accuracy\nCor(evolved phenotype,\n predicted phenotype from RDA)") + guides(fill=guide_legend(title="Genetic\nArchitecture")) + scale_fill_viridis(option="rocket", discrete=TRUE) +  ggtitle("C) Accuracy of RDA prediction \n     (individual trait value,\n     no structure correction)") 
 g4
 ```
 
@@ -950,7 +983,7 @@ n1 <- ggplot(forscatter) +   geom_point(aes(x=subsamp_corr_phen_temp,
      ggtheme + geom_abline(slope=1, color="grey") + 
   scale_shape_manual(values = c(21, 22, 23), name="Landscape") + guides(bg = "none") +
   xlab("Evolved phenotypic cline\nCor(Temp. phenotype, Deme Temp.)") +
-  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)") + ggtitle("D) Accuracy of RDA prediction\n     (Temp. trait, no structure correction)")
+  ylab("Prediction accuracy\nCor(RDA prediction,\nTemp. phenotype)") + ggtitle("A) Accuracy of RDA prediction\n     (Temp. trait, no structure correction)")
   
 n1 
 
@@ -961,13 +994,22 @@ n2<-  ggplot(forscatter) +   geom_point(aes(x=subsamp_corr_phen_sal,
   scale_shape_manual(values = c(21, 22, 23), name="Landscape") + guides(bg = "none") +
   xlab("Evolved phenotypic cline\nCor(Env2 phenotype, Deme Env2)") +
   ylab("Prediction accuracy\nCor(RDA prediction,\nEnv2 phenotype)")  +
-  ggtitle("E) Accuracy of RDA prediction\n     (Env2 trait, no structure correction)")
+  ggtitle("B) Accuracy of RDA prediction\n     (Env2 trait, no structure correction)")
 n2  
 # missing values expected due to filtering
 
 pdf(paste0(outputs,"RDA-Demog-scatter.pdf"), width=6, height=10)
   grid.arrange(g4,  n1,  n2, ncol=1)
 dev.off()
+
+pdf(paste0(outputs,"RDA-Demog-scatter-noHist.pdf"), width=4.5, height=7)
+  grid.arrange(n1,  n2)
+dev.off()
+
+pdf(paste0(outputs,"RDA-Hists-PopMut.pdf"), width=5, height=7)
+  grid.arrange(g4, g3)
+dev.off()
+
 
 ```
 
@@ -1156,7 +1198,7 @@ hist(final.df$RDA_RDAmutpred_cor_salEffect_structcorr - final.df$RDA_RDAmutpred_
                          final.df$seed[i4], i5$seed, i6$seed, i7$seed)))
   
   for (i in All_example_seeds){ #unhash to run
-    file <- paste0("cp sim_output_20220428/",i,"*.pdf examples_20220428/")
+    file <- paste0("cp sim_output_20220428/",i,"*.pdf examples_20220428_20221112/")
     system(file)
   }
   

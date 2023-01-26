@@ -1,0 +1,15 @@
+
+VCFtools - 0.1.16
+(C) Adam Auton and Anthony Marcketta 2009
+
+Parameters as interpreted:
+	--vcf multipheno_multienvi/output_multisim/892657863_PlusNeuts.vcf
+	--recode-INFO-all
+	--maf 0.01
+	--out multipheno_multienvi/output_multisim/892657863_plusneut_MAF01
+	--recode
+
+After filtering, kept 8596 out of 8596 Individuals
+Outputting VCF file...
+After filtering, kept 29387 out of a possible 267287 Sites
+Run Time = 266.00 seconds

@@ -12,12 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 setwd("/work/lotterhos/MVP-NonClinalAF")
 
-out.df <- read.table(file = "summary_20220202.txt", header=TRUE)
-
+out.df <- read.table(file = "summary_20220428_20220726.txt", header=TRUE)
+dim(out.df)
 head(out.df)
 tail(out.df)
 
-sim.df1 <- read.table("src/0b-final_params-fastruns-20220201.txt", header=TRUE)
+sim.df1 <- read.table("src/0b-final_params-20220428.txt", header=TRUE)
 
 head(sim.df1)
 
@@ -27,7 +27,7 @@ head(final.df)
 
 sum(is.na(final.df$K))
 
-final.df[is.na(final.df$K), c("seed", "K", "level")]
+#final.df[is.na(final.df$K), c("seed", "K", "level")]
 ```
 
 ```{r}
@@ -36,10 +36,11 @@ failed.df <- final.df[(is.na(final.df$K)),]
 
 
 ```{r}
-ran_mutpdf <- data.frame(seed = substr( system("ls sim_output_20220128/*_2muts.pdf", intern = TRUE), 21, 27), ran_mut = TRUE)
+ran_mutpdf <- data.frame(seed = substr( system("ls sim_output_20220428/*_2muts.pdf", intern = TRUE), 21, 27), ran_mut = TRUE)
 head(ran_mutpdf)
+sum(ran_mutpdf$ran_mut)
 
-ran_pca <- data.frame(seed = substr( system("ls sim_output_20220128/*_pdf_3pca.pdf", intern = TRUE), 21, 27), ran_pca = TRUE)
+ran_pca <- data.frame(seed = substr( system("ls sim_output_20220428/*_pdf_3pca.pdf", intern = TRUE), 21, 27), ran_pca = TRUE)
 head(ran_pca)
 
 ran_rda <- data.frame(seed = substr( system("ls sim_output_20220128/*_pdf_5RDA.pdf", intern = TRUE), 21, 27), ran_rda = TRUE)

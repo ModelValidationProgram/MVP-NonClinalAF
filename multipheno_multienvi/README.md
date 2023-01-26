@@ -1,12 +1,9 @@
-# TTT_2pheno_2envi
-Two-phenotype two-environment simulations IBD
+`multipheno_multienv\`
 
-The **figures\/** directory provides figures that are output from analyses.
+This directory contains the code for the 6 trait - 6 environment simulations
 
-The **inputfiles\/** directory has the real BC environments that are used as input files in the SLiM simulations.
+`src/` contains scripts to process and visualize SLiM output. 
 
-The **results\/** directory contains output from the SLiM simulations, which are used for analysis using genome scan methods as well as data visualization to parameterize simulations.
+`output_multisim/` contains outputs from the scripts in the `src` directory
 
-The **simfiles\/** directory contains the simulation file I've been using/tweaking to run our two phenotype-two environment model.
-
-The **src\/** directory contains scripts to process and visualize SLiM output. 
+`bioclim/` contains the bioclim environments downloaded from western canada and used in the simulation

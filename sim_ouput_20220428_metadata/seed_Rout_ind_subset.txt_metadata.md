@@ -1,19 +1,20 @@
 
 ### seed_Rout_ind_subset.txt  
 
-(output after analysis of simulations) 
+(output after analysis of simulations in R) 
 A table with information about each individual that was sampled for analysis (10 ind/deme x 100 demes)
+Note that what is called "Env2" in the manuscript is called "salinity" in the simulations
 
 * `seed`    simulation seed
 * `subpopID` ID of deme in SliM sim
 * `indID`   individual ID for the subset of individuals
 * `indSubpopIndex` index of individual within that subpop    
 * `subpop`        redundant with `subpopID`   
-* `phen_sal`     salinity (Env2) phenotype
-* `phen_temp`    temperature phenotype
+* `phen_sal`     evolved salinity (Env2) phenotype
+* `phen_temp`    evolved temperature phenotype
 * `sal_opt`      optimum salinity (Env2) of the deme where it was sampled    
 * `temp_opt`      optimum temperature of the deme where it was sampled    
-* `fitness`       fitness in the deme where it was sampled
+* `fitness`       fitness of the individual in the deme where it was sampled
 * `subset`       logical indicating if the individual was included in all analyses (should be all TRUE)    
 * `N`             population size of the deme that the individual was sampled from      
 * `opt0`          redundant with `sal_opt`       
@@ -31,7 +32,12 @@ A table with information about each individual that was sampled for analysis (10
 * `RDA2`           loading of individual on second RDA axis for RDA model: genotype~Env
 * `RDA1_corr` 	loading of individual on first RDA axis for RDA model with structure correction: genotype~Env + Condition(PC1 + PC2)
 * `RDA2_corr`  loading of individual on second RDA axis for RDA model with structure correction: genotype~Env + Condition(PC1 + PC2)
-* `RDA_predict_tempPhen_20KSNPs`temperature phenotype prediction from an RDA with 20K random loci. RDA model: genotype~Env. See `seed_Rout_RDA_predictions.txt`
-* `RDA_predict_salPhen_20KSNPs`salinity (Env2) phenotype prediction from an RDA with 20K random loci. RDA model: genotype~Env.  See `seed_Rout_RDA_predictions.txt`
-* `RDA_predict_tempPhen_20KSNPs_structcorr`temperature phenotype prediction from an RDA with structure correction and 20K random loci. RDA model: genotype~Env + Condition(PC1 + PC2). See `seed_Rout_RDA_predictions.txt`
-* `RDA_predict_salPhen_20KSNPs_structcorr` salinity (Env2) phenotype prediction from an RDA with structure correction and 20K random loci. RDA model: genotype~Env+ Condition(PC1 + PC2).  See `seed_Rout_RDA_predictions.txt`
+* `RDA_PC1` loading of individual on first unconstrained axis of RDA
+* `RDA_PC2`  loading of individual on second unconstrained axis of RDA
+* `RDA_PC1_corr` loading of individual on first unconstrained axis of RDA model with structure correction: genotype~Env + Condition(PC1 + PC2)
+* `RDA_PC2_corr` loading of individual on second unconstrained axis of RDAmodel with structure correction: genotype~Env + Condition(PC1 + PC2)
+* `RDA_predict_tempPhen_20KSNPs`temperature phenotype prediction (Equation 1) from an RDA with 20K random loci. RDA model: genotype~Env. See `seed_Rout_RDA_predictions.txt`
+* `RDA_predict_salPhen_20KSNPs`salinity (Env2) phenotype prediction (Equation 1) from an RDA with 20K random loci. RDA model: genotype~Env.  See `seed_Rout_RDA_predictions.txt`
+* `RDA_predict_tempPhen_20KSNPs_structcorr`temperature phenotype prediction (Equation 1) from an RDA with structure correction and 20K random loci. RDA model: genotype~Env + Condition(PC1 + PC2). See `seed_Rout_RDA_predictions.txt`
+* `RDA_predict_salPhen_20KSNPs_structcorr` salinity (Env2) phenotype prediction (Equation 1) from an RDA with structure correction and 20K random loci. RDA model: genotype~Env+ Condition(PC1 + PC2).  See `seed_Rout_RDA_predictions.txt`
+

@@ -38,6 +38,7 @@ resolution of the SLiM genetic map.
 * `af_cor_sal_P`  P-value for correlation between allele frequency and salinity based on subset of individuals sampled according to their fitness
 * `af_cor_sal_mlog10P` -log10 P value of above measure    
 
+
 * `causal_temp` a categorical variable indicating the locus type (see sub-bullets below)
 * `causal_sal` a categorical variable if the locus type  (see sub-bullets below)
     * `causal`  the locus has an allele with a non-zero effect on the phenotype

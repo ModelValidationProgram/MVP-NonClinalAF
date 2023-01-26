@@ -49,7 +49,7 @@ I will also check the dates on the replaced files to make sure they are for the 
 ```
 sbatch e-run_nonAF_sims_1R-fastruns-20220428.sh #Submitted batch job 32304308
 
-sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job  32313384
+sbatch e-run_nonAF_sims_1R-fastruns-20220428-b.sh #Submitted batch job 32500214
 
 sbatch e-run_nonAF_sims_1R-longruns-20220428.sh #Submitted batch job 32320018
 ```
@@ -71,10 +71,21 @@ ls -la | grep "July" | wc -l # should be ? based on Slim runs
 ls -la | grep "Oct" | wc -l # should be ? based on rerun of R code
 
 ```
+## Wed Nov 9 Check runs are complete
+
+ls sim_output_20220428/*_2muts.pdf | wc -l
+
+ls -l *_Rout_simSummary.txt | wc -l 
+
+2250 Simulations are complete!
+
+## Sat Nov 12
+Cat outputs together. I accidently overwrote the 20220726 outputs - so those are the final files
+
 
 ## Outputs to copy for Jeff Ross-Ibarra
 
-https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/main/notebook/20220914_JeffRossIbarra.md
+-[x] https://github.com/ModelValidationProgram/MVP-NonClinalAF/blob/main/notebook/20220914_JeffRossIbarra.md
 
 ## Multvariate Sims
 I dug up an old 2-trait range expansion continuous space simulation from TTT. Edits:
@@ -84,7 +95,10 @@ I dug up an old 2-trait range expansion continuous space simulation from TTT. Ed
 -  I tested the sims from 2 traits to 6 traits and they all seem to be working well!
 
 **Oct 24 2022**
+- Running recapitation and vcf filtering on multivariate simulations - job ID 32337815
+
 - Running recapitation and vcf filtering on multivariate simulations - job ID 32337835
 
 **Oct 27 2022**
 - Bug in getting the individual environments in the output. It shouldn't have affected the trees file, but running everything again just in case.
+

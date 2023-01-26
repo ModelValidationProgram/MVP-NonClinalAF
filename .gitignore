@@ -1,4 +1,7 @@
+*tutorial-extra-files*
+*output_multisim*
 /slurm_log/
+*.Rapp.history
 /finalTest/
 /output/
 /output_archived/

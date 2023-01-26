@@ -1,4 +1,4 @@
-"BIO" "ABBRV" "DESC"
+ "BIO" "ABBRV" "DESC"
 "1" "BIO1" "MAT" "Annual Mean Temperature"
 "2" "BIO2" "MDR" "Mean Diurnal Range (Mean of monthly (max temp - min temp))"
 "3" "BIO3" "ISO" "Isothermality (BIO2/BIO7) (×100)"

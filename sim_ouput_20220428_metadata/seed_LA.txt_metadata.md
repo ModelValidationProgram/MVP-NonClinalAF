@@ -10,6 +10,6 @@
 * `mean_phen0` mean of first phenotype (salinity in this simulation) across the whole metapopulation (should be near 0)
 * `mean_phen1` mean of second phenotype (temperature in this simulation) across the whole metapopulation (should be near 0)
 * `cor_sal_popmean` correlation between salinity and population mean phenotype (often inflated due to central limit theorem)
-* `cor_temp_popmean` correlation between temperature and population mean phenotype (often inflated due to central limit theorem)
+* `cor_temp_popeman` correlation between temperature and population mean phenotype (often inflated due to central limit theorem)
 * `cor_sal_ind` correlation between salinity and individual phenotypes
 * `cor_temp_ind` correlation between temperature and individual phenotypes

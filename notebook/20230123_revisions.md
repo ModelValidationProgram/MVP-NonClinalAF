@@ -86,34 +86,7 @@ I synced everything today and cleaned up the working directories.
 
 
 
-- [ ] `src/` 
-	- [ ] README.md
-	- [ ] env
-	- [ ] 0a-setUpSims.Rmd
-	- [ ] 0b-final_params-20220428.RData
-	- [ ] 0b-final_params-20220428.txt
-	- [ ] 0b-final_params-20220428.txt_metadata.md
-	- [ ] 0b-final_params-fastruns-20220428-b.txt
-	- [ ] 0b-final_params-fastruns-20220428.txt
-	- [ ] 0b-final_params-longruns-20220428.txt
-	- [ ] a-PleiotropyDemog_20220428.slim
-	- [ ] b-process_trees.py
-	- [ ] c-AnalyzeSimOutput.R
-	- [ ] c2-ContributionToLA.R
-	- [ ] d-run_nonAF_sims_0Slim-fastruns-20220428-b.sh
-	- [ ] d-run_nonAF_sims_0Slim-fastruns-20220428.sh
-	- [ ] d-run_nonAF_sims_0Slim-longruns-20220428.sh
-	- [ ] e-run_nonAF_sims_1R-fastruns-20220428-b.sh
-	- [ ] e-run_nonAF_sims_1R-fastruns-20220428.sh
-	- [ ] e-run_nonAF_sims_1R-longruns-20220428.sh
-	- [ ] f-catoutputs.sh
-	- [ ] g-CheckRunsAreComplete.Rmd
-	- [ ] g-FinalAnalysis.html
-	- [ ] g-FinalAnalysis.pdf -- DOWNLOAD AND KEEP A COPY TO ENSURE REPROD.
-	- [ ] g-FinalAnalysis.Rmd -- CHECK TO MAKE SURE RUNS ON CLUSTER AND MAKE PDF
-	- [ ] g2-FinalAnalysis-ContributionToLA.Rmd
-	- [ ] g3-LAthroughTime.Rmd
-	- [ ] g4-DifferentArchSameGenotype.Rmd
-	- [ ] parameterOrderForShellScript.txt
-	- [ ] plot_mig_Graphs.R
+- [x] `src/` 
+	- [x] README.md
+	- Checked all files here!
 

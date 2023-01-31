@@ -5,27 +5,38 @@ The scripts are run in the order of their filenames.
 * `0a-setUpSims.Rmd` A markdown file used to create the list of simulations to run. Outputs:
 	* `0b-final_params-20220428.RData` and `0b-final_params-20220428.txt` are equivalent files, the former as an R object
 	* `0b-final_params-20220428.txt_metadata.md` metadata for the above two files
-	* related files only for dividing up runs on the cluster
+	* `0b-final_params-xxxxruns-20220428` related files only for dividing up runs as arrays on the cluster
 
 * `a-PleiotropyDemog_20220428.slim` The SLiM code for all simulations.
 * `b-process_trees.py` The pyslim code for recapitation and adding neutral mutations.
 * `c-AnalyzeSimOutput.R` The R code that samples individuals from the metapopulation and conducts the pop gen analyses (clines, pca, lfmm, rda, etc)
-* `d-run_nonAF_sims_0Slim.sh` The bash script that takes input from file `0a` and calls files `a` and `b`, then conducts VCF filtering.
+* `c2-ContributionToLA.R` Script for calculating the proportion of local adaptation due to clinal alleles for a single seed
+* `d-run_nonAF_sims_0Slim_xxxxxxx.sh` 
+	* The bash script that takes input from file `0b-final_params-20220428.txt` and runs SLiM and pyslim, then conducts VCF filtering.
 	* related files only for dividing up runs on the cluster
-* `e-run_nonAF_sims_1R.sh` The bash script that runs file `c` after `d` is finished
+* `e-run_nonAF_sims_1R_xxxxxxx.sh` 
+	* The bash script that runs the R code `c-AnalyzeSimOutput.R` on the filtered VCF file
+	* related files only for dividing up runs on the cluster
 
 * `env` the conda environments for the runs
+	* `MVP_env.yml` used to run `d-run_nonAF_sims_0Slim_xxxxxxx.sh` 
+	* `MVP_env_R4.0.3.yml` used to fun `e-run_nonAF_sims_1R_xxxxxxx.sh` 
 
-* `extraRcode.R` extra code not used for analysis
 * `f-catoutputs.sh` cat together outputs from R runs
 * `g-CheckRunsAreComplete.Rmd` extra code not used for analysis, was used for earlier debugging
 * `g-FinalAnalysis.Rmd` the code used to create the plots for publication
+* `g2-FinalAnalysis-ContributionToLA.Rmd` R code used to do final analysis of the proportion of local adaptation due to clinal alleles
+* `g3-LAthroughTime.Rmd` analysis of local adaptation through time in the sims
+* `g4-DifferentArchSameGenotype.Rmd` script used to create a supplemental figure in the paper
 * `parameterOrderForShellScript.txt` parameter order based on columns in `0b-final_params-20220428.txt`, beware hard coding
 * `plot_mig_Graphs.R` some R code for plotting migration graphs for manuscript
 
 
 
 ## Preparing a run
+
+The following instructions are specific to running the simulations on the `lotterhos` nodes at NU's Discovery Cluster
+
 In `d-run_nonAF_sims_0Slim.sh` copy it to a file name with the date, e.g. `d-run_nonAF_sims_0Slim-fastruns-20220117.sh` and specify:
 * Use the same date in the `jobname`, `output`, and `error` files at the top
 * Use the same date in the `outpath` 
@@ -40,7 +51,8 @@ For low memory jobs:
 #SBATCH --nodes=1
 #SBATCH --array=2-1000%70
 ```
-Each core can have up to 5G memory, and an array won't run more jobs than cores available. So up to 72 jobs in the array can be requested at a time. I like to leave a couple open for `srun`.
+Each core can have up to 5G memory, and an array won't run more jobs than cores available. 
+So up to 72 jobs in the array can be requested at a time. I like to leave a couple open for `srun`.
 
 From `/work/lotterhos/MVP_NonClinalAF/` run the SliM Script: `sbatch d-run_nonAF_sims_0Slim-fastruns-20220117.sh`
 

@@ -5,7 +5,6 @@ output:
 ---
 ### Process vcf file for multivariate simulations
 ### KE Lotterhos
-### Oct 2022
 
 ## Libraries
 ```{r}
@@ -42,7 +41,7 @@ throughtime <- read.table(paste0(path,seed,"_throughtime.txt"), header=TRUE)
 muts_df <- read.table(paste0(path,seed,"_muts.txt"), header=TRUE)
 
 adp_env <- read.table("../bioclim/adaptive_env.txt", header=TRUE) 
-ext_env <- read.table("../bioclim/extra_env.txt", header=TRUE) 
+ext_env <- read.table("../bioclim/nuisance_env.txt", header=TRUE) 
 bioclim <- read.table("../bioclim/bioclim.txt", header=TRUE)
 ```
 

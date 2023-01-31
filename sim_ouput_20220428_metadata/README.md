@@ -9,7 +9,7 @@ Note: The origin of the simulations was to better understand how oysters adapt t
 
 Shown is an example below for the seed `1231094`
 
-## SLiM outputs _METADATA DONE, BUT NEEDS SECOND CHECK__
+## SLiM outputs 
 * `1231094.trees` The tree sequencing file that is input to pyslim. See the SLiM manual for details.
 * `1231094_LA.txt` Local adaptation of the metapopulation through time. See Metadata for details.
 * `1231094_fitnessmat.txt` an n_deme x n_deme table that indicates the mean fitness of individuals from the source deme (in columns) in the transplant deme (in rows)
@@ -29,7 +29,7 @@ Shown is an example below for the seed `1231094`
 * `1231094_popInfo.txt` deme information. See Metadata for details.
 * `1231094_popInfo_m.txt` migration rates between populations, used for plotting. See Metadata for details.
 
-## Output after pyslim and VCF filtering _METADATA DONE_
+## Output after pyslim and VCF filtering 
 * `1231094_pytree.error.txt` This is the command line error output `>>` for the pyslim run
 * `1231094_pytree.out.txt` This is the command line standard output `>>` for the pyslim run
 * `1231094_plusneut_MAF01.recode2.vcf.gz`

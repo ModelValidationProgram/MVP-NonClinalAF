@@ -8,12 +8,3 @@ Folder and files
 metadata for details. 
 - `sim_ouput_20220428_metadata/` metadata for the base simulation outputs
 - `multipheno_multienvi/` - scripts and code for the complex multivariate simulations
-
-
-
-* `figures_20220428_20220726` - Figure outputs for manuscript. The first
-date refers to the simulation code date, the second date refers to the
-final figure generation 
-* `examples_20220428_20220726` example of the
-files that are produced from all the code for a single seed. See
-`sim_ouput_20220428_metadata` for file metadata 

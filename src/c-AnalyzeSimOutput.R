@@ -2035,9 +2035,11 @@ out_full <- data.frame(seed=as.character(seed),
                       num_RDA_sig_neutral, #only for neutral half of genome
                       num_RDA_sig_causal_corr, #with structure correction
                       num_RDA_sig_neutral_corr, #with structure correction
-                      RDA_FDR_neutSNPs,
+                      
+                  RDA_FDR_neutSNPs,
                       RDA_FDR_neutSNPs_corr,  #with structure correction
-                      RDA_AUCPR_allSNPs,
+                      
+                    RDA_AUCPR_allSNPs,
                       RDA_AUCPR_neutSNPs,
                       RDA_AUCPR_neutSNPs_corr, #with structure correction
                       RDA_FPR_neutSNPs, 

@@ -120,7 +120,7 @@ write.table(df_sub,"adaptive_env.txt", col.names=TRUE)
 
 ## Write uncorrelated non-adaptive envis to file
 extravars <- c("x", "slim_x", "y", "slim_y", "ISO", "PSsd", "TSsd")
-write.table(df[,which(colnames(df) %in% extravars)], "extra_env.txt", col.names=TRUE)
+write.table(df[,which(colnames(df) %in% extravars)], "nuisance_env.txt", col.names=TRUE)
 
 
 

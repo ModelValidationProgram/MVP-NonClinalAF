@@ -8,3 +8,4 @@ Folder and files
 metadata for details. 
 - `sim_ouput_20220428_metadata/` metadata for the base simulation outputs
 - `multipheno_multienvi/` - scripts and code for the complex multivariate simulations
+- `tutorial` - a tutorial for implementing the equations in the paper

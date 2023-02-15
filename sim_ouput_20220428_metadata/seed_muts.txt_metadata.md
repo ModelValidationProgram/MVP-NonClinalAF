@@ -1,7 +1,6 @@
 
 ### seed_muts.txt (SLiM output) mutation table
-This is a table of information about each mutation that is simulated SLIM AND has an allele frequency > 0.01 or < 0.99
-
+This is a table of information about each mutation that is simulated SLIM 
 * `seed`  simulation seed
 * `mutID` mutation ID - should match mutID in other tables and VCF file
 * `muttype` mutation type in SLiM

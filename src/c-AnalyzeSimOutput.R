@@ -695,6 +695,7 @@ vcf_muts <- read.vcfR(paste0(path,seed,"_VCF_causal.vcf.gz"))
   if (is.infinite(K)){print("Error K is not definite"); break}
   print(c("K=",K))
   print(c("K1=", K1, "K2=", K2, "K3=", K3))
+  propvarpc <- pc$sdev[1:15]/sum(pc$sdev)
   
   pdf(paste0(path,seed,"_pdf_3pca.pdf"), width=9, height=8)
   

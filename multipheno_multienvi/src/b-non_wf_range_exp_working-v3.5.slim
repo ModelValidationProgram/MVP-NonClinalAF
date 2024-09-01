@@ -3,7 +3,7 @@ Initialize and define constants
 *////////////////////////////////
 initialize() {
 	// paths
-	defineConstant("root", "~/Desktop/MVP_multipheno_multienvi/");
+	defineConstant("root", "~/Documents/GitHub/MVP-NonClinalAF/multipheno_multienvi/");
 	defineConstant("path", root + "results/");
 	defineConstant("inputpath", root + "bioclim/");
 	// constants from orig script
@@ -25,7 +25,7 @@ initialize() {
 	defineConstant("sigma_C", 0.01); //0.27 smaller is weaker competition; weaker competition allows more similar phenotypes to coexist
 	defineConstant("sigma_K", 2.00); // smaller is stronger stabilizing selection, // larger is weaker (wider) stabilizing selection
 	defineConstant("sigma_xy", 0.25); // set sigma_xy based on dispersal scale!! (modified child callback)
-	defineConstant("sigma_d", 0.009); // set sigma_xy based on dispersal scale!! 
+	defineConstant("sigma_d", 0.009); 
 	defineConstant("sigma_stat", 5.0); //strength of selection for the first burnin generation
 	defineConstant("sigma_M", 2.0); // larger is less assortative mating
 	//defineConstant("N", 1000); // samples size
@@ -136,6 +136,7 @@ reproduction() {
 	p1.setSpatialBounds(c(0.0, 0.0, 1.0, 0.1));
 	
 	mapscale = 3.0; // make smaller to create more extreme environments
+	
 	// Add map adaptive mean annual temperature
 	matmapLines = (readFile(inputpath + "MAT_BC_360x360.csv"));
 	matmapLines = sapply(matmapLines, "strsplit(applyValue, ',');");
@@ -176,7 +177,6 @@ reproduction() {
 		valueRange=c(-1.0, 1.0), colors=colors(100, "magma"));
 	
 	// add map precipitation of warmest quarter
-	
 	PwarmQmapLines = (readFile(inputpath + "PwarmQ_BC_360x360.csv"));
 	PwarmQmapLines = sapply(PwarmQmapLines, "strsplit(applyValue, ',');");
 	PwarmQmapValues = (matrix(asFloat(PwarmQmapLines), 360, 360));
